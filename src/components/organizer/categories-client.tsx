@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,24 +12,27 @@ import type { CompetitionCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { toast } from '@/hooks/use-toast';
 
 export default function CategoriesClient() {
   const [categories, setCategories] = useState<CompetitionCategory[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CompetitionCategory | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCategories = useCallback(async () => {
+    setLoading(true);
+    const categoriesCollection = collection(db, 'categories');
+    const categoriesSnapshot = await getDocs(categoriesCollection);
+    const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+    setCategories(categoriesList);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      const categoriesCollection = collection(db, 'categories');
-      const categoriesSnapshot = await getDocs(categoriesCollection);
-      const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
-      setCategories(categoriesList);
-    };
-
     fetchCategories();
-  }, []);
+  }, [fetchCategories]);
 
   const openDialog = (category: CompetitionCategory | null = null) => {
     setEditingCategory(category);
@@ -41,18 +44,33 @@ export default function CategoriesClient() {
     setEditingCategory(null);
   };
 
-  const handleSave = (categoryData: Omit<CompetitionCategory, 'id'>) => {
-    if (editingCategory) {
-      setCategories(categories.map(c => c.id === editingCategory.id ? { ...editingCategory, ...categoryData } : c));
-    } else {
-      const newCategory = { id: `cat${Date.now()}`, ...categoryData };
-      setCategories([...categories, newCategory]);
+  const handleSave = async (categoryData: Omit<CompetitionCategory, 'id'>) => {
+    try {
+      if (editingCategory) {
+        const categoryDoc = doc(db, "categories", editingCategory.id);
+        await updateDoc(categoryDoc, categoryData);
+        toast({ title: "Success", description: "Category updated successfully." });
+      } else {
+        await addDoc(collection(db, "categories"), categoryData);
+        toast({ title: "Success", description: "Category added successfully." });
+      }
+      fetchCategories();
+      closeDialog();
+    } catch (error) {
+      console.error("Error saving category: ", error);
+      toast({ title: "Error", description: "Could not save category.", variant: "destructive" });
     }
-    closeDialog();
   };
 
-  const handleDelete = (categoryId: string) => {
-      setCategories(categories.filter(c => c.id !== categoryId));
+  const handleDelete = async (categoryId: string) => {
+    try {
+      await deleteDoc(doc(db, "categories", categoryId));
+      toast({ title: "Success", description: "Category deleted successfully." });
+      fetchCategories();
+    } catch (error) {
+      console.error("Error deleting category: ", error);
+      toast({ title: "Error", description: "Could not delete category.", variant: "destructive" });
+    }
   }
 
   return (
@@ -73,7 +91,11 @@ export default function CategoriesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categories.map(category => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={2} className="text-center">Loading categories...</TableCell>
+                </TableRow>
+              ) : categories.map(category => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell className="text-right">
@@ -125,7 +147,8 @@ type CategoryFormDialogProps = {
 }
 
 function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormDialogProps) {
-    const [name, setName] = useState(category?.name || '');
+    const [name, setName] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
@@ -133,10 +156,12 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
         }
     }, [isOpen, category]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (name) {
-            onSave({ name });
+            setIsSaving(true);
+            await onSave({ name });
+            setIsSaving(false);
         }
     };
 
@@ -153,9 +178,9 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
-                            <Button type="button" variant="ghost">Cancel</Button>
+                            <Button type="button" variant="ghost" disabled={isSaving}>Cancel</Button>
                          </DialogClose>
-                        <Button type="submit">Save Category</Button>
+                        <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Category'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

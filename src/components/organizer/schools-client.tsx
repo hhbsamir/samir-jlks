@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,24 +13,27 @@ import type { School, SchoolCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { toast } from '@/hooks/use-toast';
 
 export default function SchoolsClient() {
   const [schools, setSchools] = useState<School[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSchools = useCallback(async () => {
+    setLoading(true);
+    const schoolsCollection = collection(db, 'schools');
+    const schoolsSnapshot = await getDocs(schoolsCollection);
+    const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+    setSchools(schoolsList);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    const fetchSchools = async () => {
-      const schoolsCollection = collection(db, 'schools');
-      const schoolsSnapshot = await getDocs(schoolsCollection);
-      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
-      setSchools(schoolsList);
-    };
-
     fetchSchools();
-  }, []);
+  }, [fetchSchools]);
 
   const openDialog = (school: School | null = null) => {
     setEditingSchool(school);
@@ -42,18 +45,33 @@ export default function SchoolsClient() {
     setEditingSchool(null);
   };
 
-  const handleSave = (schoolData: Omit<School, 'id'>) => {
-    if (editingSchool) {
-      setSchools(schools.map(s => s.id === editingSchool.id ? { ...editingSchool, ...schoolData } : s));
-    } else {
-      const newSchool = { id: `sch${Date.now()}`, ...schoolData };
-      setSchools([...schools, newSchool]);
+  const handleSave = async (schoolData: Omit<School, 'id'>) => {
+    try {
+        if (editingSchool) {
+            const schoolDoc = doc(db, "schools", editingSchool.id);
+            await updateDoc(schoolDoc, schoolData);
+            toast({ title: "Success", description: "School updated successfully." });
+        } else {
+            await addDoc(collection(db, "schools"), schoolData);
+            toast({ title: "Success", description: "School added successfully." });
+        }
+        fetchSchools();
+        closeDialog();
+    } catch (error) {
+        console.error("Error saving school: ", error);
+        toast({ title: "Error", description: "Could not save school.", variant: "destructive" });
     }
-    closeDialog();
   };
 
-  const handleDelete = (schoolId: string) => {
-      setSchools(schools.filter(s => s.id !== schoolId));
+  const handleDelete = async (schoolId: string) => {
+    try {
+        await deleteDoc(doc(db, "schools", schoolId));
+        toast({ title: "Success", description: "School deleted successfully." });
+        fetchSchools();
+    } catch (error) {
+        console.error("Error deleting school: ", error);
+        toast({ title: "Error", description: "Could not delete school.", variant: "destructive" });
+    }
   }
 
   return (
@@ -75,7 +93,11 @@ export default function SchoolsClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {schools.map(school => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">Loading schools...</TableCell>
+                </TableRow>
+              ) : schools.map(school => (
                 <TableRow key={school.id}>
                   <TableCell className="font-medium">{school.name}</TableCell>
                   <TableCell>{school.category}</TableCell>
@@ -128,8 +150,9 @@ type SchoolFormDialogProps = {
 }
 
 function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogProps) {
-    const [name, setName] = useState(school?.name || '');
-    const [category, setCategory] = useState<SchoolCategory | undefined>(school?.category);
+    const [name, setName] = useState('');
+    const [category, setCategory] = useState<SchoolCategory | undefined>();
+    const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
@@ -138,10 +161,12 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         }
     }, [isOpen, school]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (name && category) {
-            onSave({ name, category });
+            setIsSaving(true);
+            await onSave({ name, category });
+            setIsSaving(false);
         }
     };
 
@@ -171,9 +196,9 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
-                            <Button type="button" variant="ghost">Cancel</Button>
+                            <Button type="button" variant="ghost" disabled={isSaving}>Cancel</Button>
                          </DialogClose>
-                        <Button type="submit">Save School</Button>
+                        <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save School'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

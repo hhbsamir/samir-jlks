@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,23 +12,27 @@ import type { Judge } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { toast } from '@/hooks/use-toast';
 
 export default function JudgesClient() {
   const [judges, setJudges] = useState<Judge[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchJudges = useCallback(async () => {
+    setLoading(true);
+    const judgesCollection = collection(db, 'judges');
+    const judgesSnapshot = await getDocs(judgesCollection);
+    const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+    setJudges(judgesList);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    const fetchJudges = async () => {
-      const judgesCollection = collection(db, 'judges');
-      const judgesSnapshot = await getDocs(judgesCollection);
-      const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-      setJudges(judgesList);
-    };
-
     fetchJudges();
-  }, []);
+  }, [fetchJudges]);
 
   const openDialog = (judge: Judge | null = null) => {
     setEditingJudge(judge);
@@ -40,18 +44,33 @@ export default function JudgesClient() {
     setEditingJudge(null);
   };
 
-  const handleSave = (judgeData: Omit<Judge, 'id'>) => {
-    if (editingJudge) {
-      setJudges(judges.map(j => j.id === editingJudge.id ? { ...editingJudge, ...judgeData } : j));
-    } else {
-      const newJudge = { id: `jud${Date.now()}`, ...judgeData };
-      setJudges([...judges, newJudge]);
+  const handleSave = async (judgeData: Omit<Judge, 'id'>) => {
+    try {
+      if (editingJudge) {
+        const judgeDoc = doc(db, "judges", editingJudge.id);
+        await updateDoc(judgeDoc, judgeData);
+        toast({ title: "Success", description: "Judge updated successfully." });
+      } else {
+        await addDoc(collection(db, "judges"), judgeData);
+        toast({ title: "Success", description: "Judge added successfully." });
+      }
+      fetchJudges();
+      closeDialog();
+    } catch (error) {
+      console.error("Error saving judge: ", error);
+      toast({ title: "Error", description: "Could not save judge.", variant: "destructive" });
     }
-    closeDialog();
   };
   
-  const handleDelete = (judgeId: string) => {
-      setJudges(judges.filter(j => j.id !== judgeId));
+  const handleDelete = async (judgeId: string) => {
+    try {
+        await deleteDoc(doc(db, "judges", judgeId));
+        toast({ title: "Success", description: "Judge deleted successfully." });
+        fetchJudges();
+    } catch(error) {
+        console.error("Error deleting judge: ", error);
+        toast({ title: "Error", description: "Could not delete judge.", variant: "destructive" });
+    }
   }
 
 
@@ -74,7 +93,11 @@ export default function JudgesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {judges.map(judge => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">Loading judges...</TableCell>
+                </TableRow>
+              ) : judges.map(judge => (
                 <TableRow key={judge.id}>
                   <TableCell className="font-medium">{judge.name}</TableCell>
                   <TableCell>{judge.mobile}</TableCell>
@@ -127,8 +150,9 @@ type JudgeFormDialogProps = {
 }
 
 function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProps) {
-    const [name, setName] = useState(judge?.name || '');
-    const [mobile, setMobile] = useState(judge?.mobile || '');
+    const [name, setName] = useState('');
+    const [mobile, setMobile] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
@@ -137,10 +161,12 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         }
     }, [isOpen, judge]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (name && mobile) {
-            onSave({ name, mobile });
+            setIsSaving(true);
+            await onSave({ name, mobile });
+            setIsSaving(false);
         }
     };
 
@@ -161,9 +187,9 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
-                            <Button type="button" variant="ghost">Cancel</Button>
+                            <Button type="button" variant="ghost" disabled={isSaving}>Cancel</Button>
                          </DialogClose>
-                        <Button type="submit">Save Judge</Button>
+                        <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Judge'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
