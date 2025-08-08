@@ -2,7 +2,7 @@
 import LeaderboardClient from '@/components/organizer/leaderboard-client';
 import { School, CompetitionCategory, Score, Feedback, Judge } from '@/lib/data';
 import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, Timestamp } from 'firebase/firestore';
 
 async function getLeaderboardData() {
     const schoolsCollection = collection(db, 'schools');
@@ -23,7 +23,16 @@ async function getLeaderboardData() {
     
     const judgesCollection = collection(db, 'judges');
     const judgesSnapshot = await getDocs(judgesCollection);
-    const judges = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+    const judges = judgesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const createdAt = data.createdAt;
+        const serializableCreatedAt = createdAt instanceof Timestamp ? createdAt.toMillis() : (createdAt || null);
+        return { 
+          id: doc.id, 
+          ...data,
+          createdAt: serializableCreatedAt,
+        } as unknown as Judge;
+    });
 
     return { schools, categories, scores, feedbacks, judges };
 }
