@@ -14,7 +14,7 @@ import type { School, SchoolCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, getDocs } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { useRouter } from 'next/navigation';
@@ -149,7 +149,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
   return (
     <>
       <PageHeader title="Manage Schools">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
             <input 
                 type="file" 
                 ref={fileInputRef}
@@ -295,3 +295,5 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
+
+    
