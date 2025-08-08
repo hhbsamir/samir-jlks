@@ -3,8 +3,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import NavLinks from '@/components/organizer/nav-links';
 import { Crown, ShieldAlert } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
@@ -12,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 const PASSWORD = "3568";
 
@@ -110,39 +109,28 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <Button variant="ghost" className="h-auto p-2 justify-start" asChild>
-            <Link href="/">
-              <Crown className="w-8 h-8 text-primary" />
-              <div className="ml-3 group-data-[collapsible=icon]:hidden">
-                <h2 className="font-headline text-xl">JLKS Paradip</h2>
-                <p className="text-sm text-sidebar-foreground/70">Organizer's Dashboard</p>
-              </div>
+    <div className="flex flex-col min-h-screen">
+       <header className="sticky top-0 z-30 flex flex-col items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between w-full">
+            <Link href="/" className="flex items-center gap-2">
+                <Crown className="w-8 h-8 text-primary" />
+                <div>
+                    <h2 className="font-headline text-xl">JLKS Paradip</h2>
+                    <p className="text-sm text-foreground/70">Organizer's Dashboard</p>
+                </div>
             </Link>
-          </Button>
-        </SidebarHeader>
-        <SidebarContent>
-          <NavLinks />
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger />
+            <div className="flex-1 flex justify-center">
+                 <h1 className="font-headline text-3xl hidden md:block">Organizer's Dashboard</h1>
             </div>
-            <div className="flex-1 text-center">
-                <h1 className="font-headline text-3xl hidden sm:block">Organizer's Dashboard</h1>
-            </div>
-             <div className="w-10">
-                <NavButtons />
-            </div>
-        </header>
-        <main className="p-4 sm:p-6 lg:p-8">
-            {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+            <NavButtons />
+          </div>
+          <div className="w-full">
+            <NavLinks />
+          </div>
+      </header>
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+          {children}
+      </main>
+    </div>
   );
 }
