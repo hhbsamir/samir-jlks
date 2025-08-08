@@ -93,7 +93,8 @@ export default function SettingsPage() {
                     doc.setFontSize(10);
                     doc.setFont('helvetica', 'italic');
                     doc.setTextColor(80, 80, 80);
-                    doc.text(remarks, 105, 22, { align: 'center' });
+                    const remarksLines = doc.splitTextToSize(remarks, 180);
+                    doc.text(remarksLines, 105, 22, { align: 'center' });
                 }
 
                 // Footer
@@ -166,7 +167,10 @@ export default function SettingsPage() {
                 theme: 'striped',
                 headStyles: { fillColor: primaryColor, textColor: 255 },
                 styles: { fontSize: 10, cellPadding: 2 },
-                margin: { left: pageMargin, right: pageMargin }
+                margin: { left: pageMargin, right: pageMargin },
+                columnStyles: {
+                    1: { cellWidth: 'auto' }, // School name column
+                }
             });
 
             // --- Judge Breakdown Section ---
@@ -207,7 +211,10 @@ export default function SettingsPage() {
                     theme: 'grid',
                     headStyles: { fillColor: '#475569', textColor: 255, fontSize: 9 },
                     styles: { fontSize: 9, cellPadding: 2 },
-                    margin: { left: pageMargin, right: pageMargin }
+                    margin: { left: pageMargin, right: pageMargin },
+                    columnStyles: {
+                        0: { cellWidth: 'auto' }, // Judge name column
+                    }
                 });
                 lastY = (doc as any).lastAutoTable.finalY + 10;
             });
@@ -274,7 +281,10 @@ export default function SettingsPage() {
                         theme: 'striped',
                         headStyles: { fillColor: '#8b5cf6', textColor: 255 },
                         styles: { fontSize: 10, cellPadding: 2.5 },
-                        margin: { left: pageMargin, right: pageMargin }
+                        margin: { left: pageMargin, right: pageMargin },
+                        columnStyles: {
+                            1: { cellWidth: 'auto' }, // School name column
+                        }
                     });
                     lastY = (doc as any).lastAutoTable.finalY + 15;
                 }
@@ -314,7 +324,10 @@ export default function SettingsPage() {
                     body: feedbackBody,
                     theme: 'grid',
                     headStyles: { fillColor: primaryColor, textColor: 255 },
-                    columnStyles: { 1: { cellWidth: 'auto' } },
+                    columnStyles: { 
+                        0: { cellWidth: 'auto' },
+                        1: { cellWidth: 'auto' } 
+                    },
                     margin: { left: pageMargin, right: pageMargin }
                 });
                 lastY = (doc as any).lastAutoTable.finalY + 10;
