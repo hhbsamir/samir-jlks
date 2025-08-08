@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -177,6 +177,11 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         }
     };
 
+    const generateRandomPassword = () => {
+        const randomPassword = Math.floor(1000 + Math.random() * 9000).toString();
+        setPassword(randomPassword);
+    };
+
     return (
          <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
@@ -194,14 +199,20 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="password" className="text-lg">4-Digit Password</Label>
-                        <Input 
-                            id="password" 
-                            value={password} 
-                            onChange={e => setPassword(e.target.value)} 
-                            className="text-base"
-                            maxLength={4}
-                            placeholder="Enter 4-digit password"
-                        />
+                        <div className="flex gap-2">
+                            <Input 
+                                id="password" 
+                                value={password} 
+                                onChange={e => setPassword(e.target.value)} 
+                                className="text-base"
+                                maxLength={4}
+                                placeholder="Enter 4-digit password"
+                            />
+                            <Button type="button" variant="outline" onClick={generateRandomPassword}>
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Generate
+                            </Button>
+                        </div>
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
