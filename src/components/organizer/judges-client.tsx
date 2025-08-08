@@ -10,11 +10,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, RefreshCw, MessageSquare } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+
+const WhatsAppIcon = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5 text-green-500"
+    >
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+);
+
 
 export default function JudgesClient() {
   const [judges, setJudges] = useState<Judge[]>([]);
@@ -91,7 +111,7 @@ export default function JudgesClient() {
 
 
   return (
-    <>
+    <TooltipProvider>
       <PageHeader title="Manage Judges">
         <Button onClick={() => openDialog()}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Judge
@@ -122,10 +142,17 @@ export default function JudgesClient() {
                     {judge.password || 'Not Set'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => handleSendWhatsApp(judge)} className="mr-2">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Send via WhatsApp
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" onClick={() => handleSendWhatsApp(judge)} className="mr-2">
+                          <WhatsAppIcon />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Send via WhatsApp</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    
                     <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
                       <Edit className="h-4 w-4 text-accent" />
                     </Button>
@@ -162,7 +189,7 @@ export default function JudgesClient() {
         onSave={handleSave}
         judge={editingJudge} 
       />
-    </>
+    </TooltipProvider>
   );
 }
 
