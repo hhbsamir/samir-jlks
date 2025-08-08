@@ -2,9 +2,22 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { Belleza, Alegreya } from 'next/font/google';
+
+const belleza = Belleza({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-headline',
+});
+
+const alegreya = Alegreya({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-body',
+});
 
 export const metadata: Metadata = {
-  title: "JLKS Paradip",
+  title: "Adjudicator's Arena",
   description: 'The ultimate platform for fair and transparent competition scoring.',
 };
 
@@ -14,12 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" suppressHydrationWarning className={`${belleza.variable} ${alegreya.variable}`}>
       <body className="font-body antialiased flex flex-col min-h-screen">
         <div className="flex-grow">{children}</div>
         <footer className="text-center p-4 text-foreground/60">
