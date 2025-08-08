@@ -47,20 +47,18 @@ export default function Home() {
           href="/judges"
           icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
           title="Judge's Portal"
-          description="Enter the arena to score performances with precision and expertise."
         />
         <PortalCard
           href="/organizers"
           icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
           title="Organizer's Dashboard"
-          description="Manage events, track scores in real-time, and declare the champions."
         />
       </div>
     </main>
   );
 }
 
-function PortalCard({ href, icon, title, description }: { href: string; icon: React.ReactNode; title: string; description: string; }) {
+function PortalCard({ href, icon, title }: { href: string; icon: React.ReactNode; title: string; }) {
   return (
     <Card className="group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden">
       <CardHeader className="items-center text-center p-6 sm:p-8">
@@ -70,7 +68,6 @@ function PortalCard({ href, icon, title, description }: { href: string; icon: Re
         <CardTitle className="font-headline text-3xl sm:text-4xl">{title}</CardTitle>
       </CardHeader>
       <CardContent className="text-center flex flex-col items-center gap-6 p-6 sm:p-8 pt-0">
-        <p className="text-base sm:text-lg text-foreground/70">{description}</p>
         <Button asChild className="rounded-full font-bold group-hover:bg-accent group-hover:text-accent-foreground" size="lg">
           <Link href={href}>
             Enter <MoveRight className="ml-2 transition-transform group-hover:translate-x-1" />
