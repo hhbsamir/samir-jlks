@@ -13,15 +13,15 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {
-    // Set initial date
-    setCurrentDate(format(new Date(), 'dd-MMMM-yyyy'));
-    
-    // Update time every second
-    const timer = setInterval(() => {
-      setCurrentTime(format(new Date(), 'HH:mm:ss'));
-    }, 1000);
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentDate(format(now, 'dd-MMMM-yyyy, EEEE'));
+      setCurrentTime(format(now, 'hh:mm:ss a'));
+    };
 
-    // Cleanup interval on component unmount
+    updateDateTime();
+    const timer = setInterval(updateDateTime, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
