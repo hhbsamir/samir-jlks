@@ -383,14 +383,14 @@ export default function JudgesPage() {
                                                 />
                                              </div>
                                         ) : (
-                                            <div className="flex flex-row justify-around items-start gap-4">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                               {categories.map(category => (
-                                                  <div key={category.id} className="flex-1 flex flex-col items-center gap-2">
+                                                  <div key={category.id} className="flex flex-col items-center gap-2">
                                                     <div className="flex items-center gap-2 text-center">
                                                       {categoryIcons[category.name] || categoryIcons.default}
                                                       <label className="text-sm font-medium">{category.name}</label>
                                                     </div>
-                                                      <div className="w-24">
+                                                      <div className="w-full">
                                                           <Select
                                                           value={(scores[school.id]?.[category.id] ?? 0).toString()}
                                                           onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
