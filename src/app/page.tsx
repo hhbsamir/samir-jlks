@@ -13,17 +13,11 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState('');
   const [currentTime, setCurrentTime] = useState('');
 
+  // This effect runs only once on the client after the initial render
   useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      setCurrentDate(format(now, 'dd-MMMM-yyyy, EEEE'));
-      setCurrentTime(format(now, 'hh:mm:ss a'));
-    };
-
-    updateDateTime();
-    const timer = setInterval(updateDateTime, 1000);
-
-    return () => clearInterval(timer);
+    const now = new Date();
+    setCurrentDate(format(now, 'dd-MMMM-yyyy, EEEE'));
+    setCurrentTime(format(now, 'hh:mm:ss a'));
   }, []);
 
   return (
@@ -37,12 +31,12 @@ export default function Home() {
             JLKS Paradip
           </h1>
           <div className="font-body text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
-              {currentDate && <p>({currentDate})</p>}
-              {currentTime && (
+              {currentDate ? <p>({currentDate})</p> : <div className="h-7" /> }
+              {currentTime ? (
                 <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg shadow-[0_0_15px] shadow-primary/30">
                   <p className="text-2xl md:text-4xl font-bold text-primary">{currentTime}</p>
                 </div>
-              )}
+              ) : <div className="h-[76px] mt-4" />}
           </div>
         </div>
 
