@@ -51,14 +51,24 @@ export default function JudgesClient() {
         const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
         setJudges(judgesList);
     } catch (e) {
-        console.error("Error fetching judges: ", e);
+        console.error("Error fetching judges with sorting, falling back to unsorted:", e);
         // Fallback for when createdAt is not available on all documents
         const judgesCollection = collection(db, 'judges');
         const judgesSnapshot = await getDocs(judgesCollection);
         const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+        // Manually sort client-side if possible, new items without timestamp go first
+        judgesList.sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+                return a.createdAt.toMillis() - b.createdAt.toMillis();
+            }
+            if (a.createdAt) return 1; // a is new, b is old, so b comes first
+            if (b.createdAt) return -1; // b is new, a is old, so a comes first
+            return a.name.localeCompare(b.name); // fallback to name sort if no timestamps
+        });
         setJudges(judgesList);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -79,7 +89,7 @@ export default function JudgesClient() {
     try {
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
-        await updateDoc(judgeDoc, judgeData);
+        await updateDoc(judgeDoc, { ...judgeData, createdAt: editingJudge.createdAt || serverTimestamp() });
         toast({ title: "Success", description: "Judge updated successfully." });
       } else {
         await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
