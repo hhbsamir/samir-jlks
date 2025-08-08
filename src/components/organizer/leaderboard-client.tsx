@@ -6,7 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PageHeader } from '@/components/page-header';
 import { initialSchools, initialCategories, initialScores, initialJudges } from '@/lib/data';
 import type { School, CompetitionCategory, Score, SchoolCategory } from '@/lib/data';
-import { Trophy } from 'lucide-react';
 
 type SchoolScore = {
   school: School;
@@ -17,18 +16,6 @@ type SchoolScore = {
 type CategorizedLeaderboard = {
   [key in SchoolCategory]?: SchoolScore[];
 };
-
-const winnerColors = [
-  'border-yellow-400', // Gold
-  'border-slate-400', // Silver
-  'border-amber-600'  // Bronze
-];
-
-const winnerTextColors = [
-  'text-yellow-400', // Gold
-  'text-slate-400', // Silver
-  'text-amber-600'  // Bronze
-]
 
 export default function LeaderboardClient() {
   const [schools] = useState(initialSchools);
@@ -77,27 +64,10 @@ export default function LeaderboardClient() {
           const leaderboardData = categorizedLeaderboardData[category];
           if (!leaderboardData || leaderboardData.length === 0) return null;
 
-          const topThree = leaderboardData.slice(0, 3);
-
           return (
             <section key={category}>
               <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Category</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
-                {topThree.map((entry, index) => (
-                  <Card key={entry.school.id} className={`relative text-center border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 ${winnerColors[index]}`}>
-                    <CardHeader className="items-center p-4 md:p-6">
-                      <Trophy className={`w-12 h-12 md:w-16 md:h-16 mb-2 ${winnerTextColors[index] || 'text-primary'}`} />
-                      <CardTitle className="font-headline text-2xl md:text-3xl">{entry.school.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 md:p-6 pt-0">
-                      <p className="text-5xl md:text-6xl font-bold text-primary">{entry.total}</p>
-                      <p className="text-sm text-muted-foreground">Total Score</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
               <Card>
                 <Table>
                   <TableHeader>
