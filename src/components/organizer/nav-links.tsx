@@ -11,11 +11,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 
 const navItems = [
-  { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'bg-yellow-400/20 text-yellow-500 hover:bg-yellow-400/30' },
-  { href: '/organizers/schools', label: 'Schools', icon: School, color: 'bg-blue-400/20 text-blue-500 hover:bg-blue-400/30' },
-  { href: '/organizers/judges', label: 'Judges', icon: Users, color: 'bg-green-400/20 text-green-500 hover:bg-green-400/30' },
-  { href: '/organizers/categories', label: 'Categories', icon: Shapes, color: 'bg-purple-400/20 text-purple-500 hover:bg-purple-400/30' },
-  { href: '/organizers/settings', label: 'Settings', icon: Settings, color: 'bg-red-400/20 text-red-500 hover:bg-red-400/30' },
+  { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10' },
+  { href: '/organizers/schools', label: 'Schools', icon: School, color: 'text-blue-500', bgColor: 'bg-blue-400/10' },
+  { href: '/organizers/judges', label: 'Judges', icon: Users, color: 'text-green-500', bgColor: 'bg-green-400/10' },
+  { href: '/organizers/categories', label: 'Categories', icon: Shapes, color: 'text-purple-500', bgColor: 'bg-purple-400/10' },
+  { href: '/organizers/settings', label: 'Settings', icon: Settings, color: 'text-red-500', bgColor: 'bg-red-400/10' },
 ];
 
 export default function NavLinks() {
@@ -31,18 +31,21 @@ export default function NavLinks() {
                           asChild
                           variant="ghost"
                           className={cn(
-                            'rounded-full h-16 w-16 sm:h-20 sm:w-20 flex flex-col items-center justify-center gap-1 transition-all duration-300',
+                            'relative rounded-full h-16 w-16 sm:h-20 sm:w-20 flex flex-col items-center justify-center gap-1 transition-all duration-300 ease-in-out',
+                            'border border-transparent bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-50',
                             item.color,
-                            pathname === item.href ? 'ring-2 ring-primary scale-110' : 'scale-100'
+                            item.bgColor,
+                            'hover:scale-110 hover:shadow-lg hover:shadow-primary/20',
+                            pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg shadow-primary/30' : 'scale-100'
                           )}
                       >
                           <Link href={item.href}>
                               <item.icon className="h-6 w-6 sm:h-8 sm:w-8" />
-                              <span className="text-xs hidden sm:block">{item.label}</span>
+                              <span className="text-xs hidden sm:block font-medium">{item.label}</span>
                           </Link>
                       </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="sm:hidden">
+                  <TooltipContent className="sm:hidden bg-background/80 backdrop-blur-sm border-primary/20">
                     <p>{item.label}</p>
                   </TooltipContent>
               </Tooltip>
