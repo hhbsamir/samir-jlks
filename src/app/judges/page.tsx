@@ -32,9 +32,7 @@ type SchoolScores = {
 };
 
 type SchoolFeedbacks = {
-    [schoolId: string]: {
-        [categoryId: string]: string;
-    };
+    [schoolId: string]: string;
 };
 
 const schoolCategoryOrder: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
@@ -116,19 +114,13 @@ export default function JudgesPage() {
       const feedbacksSnapshot = await getDocs(feedbacksQuery);
       const judgeFeedbacks = feedbacksSnapshot.docs.reduce((acc: SchoolFeedbacks, doc) => {
           const feedback = doc.data() as Feedback;
-          if (!acc[feedback.schoolId]) {
-              acc[feedback.schoolId] = {};
-          }
-          acc[feedback.schoolId][feedback.categoryId] = feedback.feedback;
+          acc[feedback.schoolId] = feedback.feedback;
           return acc;
       }, {});
 
       const initialFeedbacksForJudge: SchoolFeedbacks = {};
       schools.filter(s => s.category === 'Sub-Junior').forEach(school => {
-          initialFeedbacksForJudge[school.id] = {};
-          categories.forEach(category => {
-              initialFeedbacksForJudge[school.id][category.id] = judgeFeedbacks[school.id]?.[category.id] ?? '';
-          });
+          initialFeedbacksForJudge[school.id] = judgeFeedbacks[school.id] ?? '';
       });
       setFeedbacks(initialFeedbacksForJudge);
     };
@@ -194,13 +186,10 @@ export default function JudgesPage() {
     }));
   };
 
-  const handleFeedbackChange = (schoolId: string, categoryId: string, value: string) => {
+  const handleFeedbackChange = (schoolId: string, value: string) => {
     setFeedbacks(prev => ({
         ...prev,
-        [schoolId]: {
-            ...(prev?.[schoolId] || {}),
-            [categoryId]: value,
-        },
+        [schoolId]: value,
     }));
   };
   
@@ -212,19 +201,15 @@ export default function JudgesPage() {
         const batch = writeBatch(db);
 
         if (schoolCategory === 'Sub-Junior') {
-            const schoolFeedbacks = feedbacks[schoolId];
-            for (const categoryId in schoolFeedbacks) {
-                const feedbackValue = schoolFeedbacks[categoryId];
-                const feedbackData: Feedback = {
-                    judgeId: authenticatedJudge.id,
-                    schoolId: schoolId,
-                    categoryId: categoryId,
-                    feedback: feedbackValue,
-                };
-                const feedbackDocId = `${authenticatedJudge.id}_${schoolId}_${categoryId}`;
-                const feedbackRef = doc(db, "feedbacks", feedbackDocId);
-                batch.set(feedbackRef, feedbackData, { merge: true });
-            }
+            const feedbackValue = feedbacks[schoolId];
+            const feedbackData: Omit<Feedback, 'id'> = {
+                judgeId: authenticatedJudge.id,
+                schoolId: schoolId,
+                feedback: feedbackValue,
+            };
+            const feedbackDocId = `${authenticatedJudge.id}_${schoolId}`;
+            const feedbackRef = doc(db, "feedbacks", feedbackDocId);
+            batch.set(feedbackRef, feedbackData, { merge: true });
         } else {
             const schoolScores = scores[schoolId];
             for (const categoryId in schoolScores) {
@@ -383,42 +368,48 @@ export default function JudgesPage() {
                                     </CardHeader>
                                     <CardContent className="space-y-6 flex-grow flex flex-col">
                                       <div className="space-y-4 flex-grow">
-                                        {categories.map(category => (
-                                            <div key={category.id} className="space-y-3">
-                                              <div className="flex items-center justify-between">
-                                                  <div className="flex items-center gap-3">
-                                                    {schoolCategory === 'Sub-Junior' ? <MessageSquare className="w-6 h-6 text-accent" /> : categoryIcons[category.name] || categoryIcons.default}
-                                                    <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                        {schoolCategory === 'Sub-Junior' ? (
+                                             <div className="space-y-3">
+                                                <div className="flex items-center gap-3">
+                                                    <MessageSquare className="w-6 h-6 text-accent" />
+                                                    <label className="text-base md:text-lg font-medium">Notes</label>
+                                                </div>
+                                                <Textarea
+                                                    placeholder={`Enter feedback for ${school.name}...`}
+                                                    value={feedbacks[school.id] ?? ''}
+                                                    onChange={(e) => handleFeedbackChange(school.id, e.target.value)}
+                                                    disabled={submitting === school.id}
+                                                    rows={5}
+                                                />
+                                             </div>
+                                        ) : (
+                                            categories.map(category => (
+                                                <div key={category.id} className="space-y-3">
+                                                  <div className="flex items-center justify-between">
+                                                      <div className="flex items-center gap-3">
+                                                        {categoryIcons[category.name] || categoryIcons.default}
+                                                        <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                                      </div>
                                                   </div>
-                                              </div>
-                                                {schoolCategory === 'Sub-Junior' ? (
-                                                    <Textarea
-                                                        placeholder={`Enter feedback for ${category.name}...`}
-                                                        value={feedbacks[school.id]?.[category.id] ?? ''}
-                                                        onChange={(e) => handleFeedbackChange(school.id, category.id, e.target.value)}
+                                                    <div className="w-24 ml-auto">
+                                                        <Select
+                                                        value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                                                        onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
                                                         disabled={submitting === school.id}
-                                                        rows={3}
-                                                    />
-                                                ) : (
-                                                  <div className="w-24 ml-auto">
-                                                    <Select
-                                                      value={(scores[school.id]?.[category.id] ?? 0).toString()}
-                                                      onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                                                      disabled={submitting === school.id}
-                                                    >
-                                                      <SelectTrigger>
-                                                          <SelectValue placeholder="Score" />
-                                                      </SelectTrigger>
-                                                      <SelectContent>
-                                                          {Array.from({ length: 11 }, (_, i) => (
-                                                              <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                                          ))}
-                                                      </SelectContent>
-                                                    </Select>
-                                                  </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                                        >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Score" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {Array.from({ length: 11 }, (_, i) => (
+                                                                <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                       </div>
                                       <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
                                           {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
@@ -457,5 +448,3 @@ export default function JudgesPage() {
     </div>
   );
 }
-
-    

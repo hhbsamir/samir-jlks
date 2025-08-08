@@ -20,9 +20,7 @@ type SchoolScore = {
 type SchoolFeedback = {
     school: School;
     feedbacks: {
-        [judgeId: string]: {
-            [categoryId: string]: string;
-        };
+        [judgeId: string]: string;
     };
 };
 
@@ -115,20 +113,16 @@ export default function LeaderboardClient() {
         };
 
         judges.forEach(judge => {
-            schoolData.feedbacks[judge.id] = {};
-            categories.forEach(category => {
-                const feedbackEntry = feedbacks.find(f => 
-                    f.schoolId === school.id && 
-                    f.judgeId === judge.id && 
-                    f.categoryId === category.id
-                );
-                schoolData.feedbacks[judge.id][category.id] = feedbackEntry?.feedback || 'No feedback yet.';
-            });
+            const feedbackEntry = feedbacks.find(f => 
+                f.schoolId === school.id && 
+                f.judgeId === judge.id
+            );
+            schoolData.feedbacks[judge.id] = feedbackEntry?.feedback || 'No feedback yet.';
         });
 
         return schoolData;
     });
-  }, [schools, categories, feedbacks, judges]);
+  }, [schools, feedbacks, judges]);
 
   const renderJuniorSenior = (category: 'Junior' | 'Senior') => {
     const leaderboardData = categorizedLeaderboardData[category];
@@ -188,12 +182,7 @@ export default function LeaderboardClient() {
                                             <CardTitle>{judge.name}</CardTitle>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            {categories.map(category => (
-                                                <div key={category.id}>
-                                                    <h4 className="font-semibold">{category.name}</h4>
-                                                    <p className="text-sm text-muted-foreground">{entry.feedbacks[judge.id]?.[category.id]}</p>
-                                                </div>
-                                            ))}
+                                            <p className="text-sm text-muted-foreground">{entry.feedbacks[judge.id]}</p>
                                         </CardContent>
                                     </Card>
                                 ))}
@@ -218,5 +207,3 @@ export default function LeaderboardClient() {
     </div>
   );
 }
-
-    

@@ -30,7 +30,6 @@ export type Score = {
 export type Feedback = {
   schoolId: string;
   judgeId: string;
-  categoryId: string;
   feedback: string;
 }
 
