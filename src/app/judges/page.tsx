@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2 } from "lucide-react";
+import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,7 +69,6 @@ export default function JudgesPage() {
       if (!selectedJudge) return;
 
       const scoresCollection = collection(db, 'scores');
-      // A compound query to fetch scores for a specific judge, ordered by school and category
       const q = query(
         scoresCollection, 
         where("judgeId", "==", selectedJudge.id)
@@ -153,42 +152,57 @@ export default function JudgesPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen p-4 sm:p-8 pt-20">
-      <div className="absolute top-4 left-4">
-        <NavButtons />
-      </div>
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="font-headline text-5xl md:text-6xl text-primary">Judge's Portal</h1>
-          <p className="text-lg md:text-xl text-foreground/80 mt-2">Assign your scores with precision and expertise.</p>
+  const renderJudgeSelection = () => (
+    <div className="max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader className="items-center text-center p-8">
+                           <div className="p-4 bg-accent/10 rounded-full mb-4">
+                               <Loader2 className="w-16 h-16 text-accent animate-spin" />
+                           </div>
+                           <CardTitle className="font-headline text-3xl">Loading...</CardTitle>
+                        </CardHeader>
+                    </Card>
+                ))
+            ) : (
+                judges.map(judge => (
+                    <Card key={judge.id} className="group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden cursor-pointer" onClick={() => setSelectedJudge(judge)}>
+                        <CardHeader className="items-center text-center p-8">
+                            <div className="p-4 bg-accent/10 rounded-full mb-4 group-hover:animate-pulse">
+                                <User className="w-16 h-16 text-accent" />
+                            </div>
+                            <CardTitle className="font-headline text-3xl">{judge.name}</CardTitle>
+                        </CardHeader>
+                    </Card>
+                ))
+            )}
         </div>
+    </div>
+  );
 
-        <div className="max-w-md mx-auto mb-12">
-            <Select onValueChange={(judgeId) => setSelectedJudge(judges.find(j => j.id === judgeId) || null)} disabled={loading}>
-                <SelectTrigger className="h-12 text-base md:h-14 md:text-lg">
-                    <SelectValue placeholder={loading ? "Loading judges..." : "Select your name to begin..."} />
-                </SelectTrigger>
-                <SelectContent>
-                    {judges.map(judge => (
-                        <SelectItem key={judge.id} value={judge.id} className="text-base md:text-lg">{judge.name}</SelectItem>
-                    ))}
-                </SelectContent>
-            </Select>
-        </div>
-
+  const renderScoringSheet = () => (
+    <>
         {selectedJudge && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="flex justify-center mb-10">
+                <Button onClick={() => setSelectedJudge(null)} variant="outline">
+                    <ArrowLeft className="mr-2 h-5 w-5" />
+                    Back to Judge Selection
+                </Button>
+            </div>
+        )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {schools.map(school => (
-              <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20">
+            <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20">
                 <CardHeader>
-                  <CardTitle className="font-headline text-2xl md:text-3xl">{school.name}</CardTitle>
-                  <CardDescription className="text-base">{school.category}</CardDescription>
+                <CardTitle className="font-headline text-2xl md:text-3xl">{school.name}</CardTitle>
+                <CardDescription className="text-base">{school.category}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {categories.map(category => (
+                {categories.map(category => (
                     <div key={category.id} className="space-y-3">
-                      <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                            {categoryIcons[category.name] || categoryIcons.default}
                            <label className="text-base md:text-lg font-medium">{category.name}</label>
@@ -211,16 +225,34 @@ export default function JudgesPage() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                  <Button className="w-full mt-4 font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
+                ))}
+                <Button className="w-full mt-4 font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
                     {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
                     {submitting === school.id ? "Submitting..." : `Submit Scores for ${school.name}`}
-                  </Button>
+                </Button>
                 </CardContent>
-              </Card>
+            </Card>
             ))}
-          </div>
-        )}
+        </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen p-4 sm:p-8 pt-20">
+      <div className="absolute top-4 left-4">
+        <NavButtons />
+      </div>
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="font-headline text-5xl md:text-6xl text-primary">
+            {selectedJudge ? `Scoring for ${selectedJudge.name}` : "Judge's Portal"}
+          </h1>
+          <p className="text-lg md:text-xl text-foreground/80 mt-2">
+            {selectedJudge ? "Assign your scores with precision and expertise." : "Select your name to begin scoring."}
+          </p>
+        </div>
+        
+        {selectedJudge ? renderScoringSheet() : renderJudgeSelection()}
       </div>
     </div>
   );
