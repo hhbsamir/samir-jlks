@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import type { School, CompetitionCategory, Judge, Score, SchoolCategory } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
@@ -302,68 +303,72 @@ export default function JudgesPage() {
                 </Button>
             </div>
         )}
-        <div className="space-y-12">
+        <Accordion type="multiple" defaultValue={schoolCategoryOrder} className="w-full space-y-8">
             {schoolCategoryOrder.map(schoolCategory => (
                 categorizedSchools[schoolCategory]?.length > 0 && (
-                    <section key={schoolCategory}>
-                        <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{schoolCategory} Schools</h2>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                            {categorizedSchools[schoolCategory].map((school, index) => (
-                            <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 flex flex-col">
-                                <CardHeader className="flex-row items-center gap-4">
-                                  <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                                    <SchoolIcon className="w-6 h-6 text-primary" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <CardTitle className="font-headline text-2xl md:text-3xl">
-                                      {school.name}
-                                    </CardTitle>
-                                    <CardDescription>
-                                       Sl. No: {index + 1}
-                                    </CardDescription>
-                                  </div>
-                                </CardHeader>
-                                <CardContent className="space-y-6 flex-grow flex flex-col">
-                                  <div className="space-y-4 flex-grow">
-                                    {categories.map(category => (
-                                        <div key={category.id} className="space-y-3">
-                                          <div className="flex items-center justify-between">
-                                              <div className="flex items-center gap-3">
-                                                {categoryIcons[category.name] || categoryIcons.default}
-                                                <label className="text-base md:text-lg font-medium">{category.name}</label>
+                     <AccordionItem value={schoolCategory} key={schoolCategory} className="border-b-0">
+                        <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+                          {schoolCategory} Schools
+                        </AccordionTrigger>
+                        <AccordionContent>
+                           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 pt-8">
+                                {categorizedSchools[schoolCategory].map((school, index) => (
+                                <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 flex flex-col">
+                                    <CardHeader className="flex-row items-center gap-4">
+                                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                        <SchoolIcon className="w-6 h-6 text-primary" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <CardTitle className="font-headline text-2xl md:text-3xl">
+                                          {school.name}
+                                        </CardTitle>
+                                        <CardDescription>
+                                           Sl. No: {index + 1}
+                                        </CardDescription>
+                                      </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-6 flex-grow flex flex-col">
+                                      <div className="space-y-4 flex-grow">
+                                        {categories.map(category => (
+                                            <div key={category.id} className="space-y-3">
+                                              <div className="flex items-center justify-between">
+                                                  <div className="flex items-center gap-3">
+                                                    {categoryIcons[category.name] || categoryIcons.default}
+                                                    <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                                  </div>
+                                                  <div className="w-24">
+                                                    <Select
+                                                      value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                                                      onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
+                                                      disabled={submitting === school.id}
+                                                    >
+                                                      <SelectTrigger>
+                                                          <SelectValue placeholder="Score" />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                          {Array.from({ length: 11 }, (_, i) => (
+                                                              <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                                          ))}
+                                                      </SelectContent>
+                                                    </Select>
+                                                  </div>
                                               </div>
-                                              <div className="w-24">
-                                                <Select
-                                                  value={(scores[school.id]?.[category.id] ?? 0).toString()}
-                                                  onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                                                  disabled={submitting === school.id}
-                                                >
-                                                  <SelectTrigger>
-                                                      <SelectValue placeholder="Score" />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                      {Array.from({ length: 11 }, (_, i) => (
-                                                          <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                                      ))}
-                                                  </SelectContent>
-                                                </Select>
-                                              </div>
-                                          </div>
-                                        </div>
-                                    ))}
-                                  </div>
-                                  <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
-                                      {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
-                                      {submitting === school.id ? "Submitting..." : `Submit Scores`}
-                                  </Button>
-                                </CardContent>
-                            </Card>
-                            ))}
-                        </div>
-                    </section>
+                                            </div>
+                                        ))}
+                                      </div>
+                                      <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
+                                          {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
+                                          {submitting === school.id ? "Submitting..." : `Submit Scores`}
+                                      </Button>
+                                    </CardContent>
+                                </Card>
+                                ))}
+                            </div>
+                        </AccordionContent>
+                     </AccordionItem>
                 )
             ))}
-        </div>
+        </Accordion>
     </>
   );
 
@@ -388,3 +393,5 @@ export default function JudgesPage() {
     </div>
   );
 }
+
+    
