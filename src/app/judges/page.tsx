@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert } from "lucide-react";
+import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert, School as SchoolIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -112,7 +112,10 @@ export default function JudgesPage() {
 
   const categorizedSchools = useMemo(() => {
     return schoolCategoryOrder.reduce((acc, category) => {
-        acc[category] = schools.filter(school => school.category === category);
+        const sortedSchools = schools
+          .filter(school => school.category === category)
+          .sort((a, b) => a.name.localeCompare(b.name));
+        acc[category] = sortedSchools;
         return acc;
     }, {} as Record<SchoolCategory, School[]>);
   }, [schools]);
@@ -305,42 +308,54 @@ export default function JudgesPage() {
                     <section key={schoolCategory}>
                         <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{schoolCategory} Schools</h2>
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                            {categorizedSchools[schoolCategory].map(school => (
-                            <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20">
-                                <CardHeader>
-                                <CardTitle className="font-headline text-2xl md:text-3xl">{school.name}</CardTitle>
+                            {categorizedSchools[schoolCategory].map((school, index) => (
+                            <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 flex flex-col">
+                                <CardHeader className="flex-row items-center gap-4">
+                                  <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    <SchoolIcon className="w-6 h-6 text-primary" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <CardTitle className="font-headline text-2xl md:text-3xl">
+                                      {school.name}
+                                    </CardTitle>
+                                    <CardDescription>
+                                       Sl. No: {index + 1}
+                                    </CardDescription>
+                                  </div>
                                 </CardHeader>
-                                <CardContent className="space-y-6">
-                                {categories.map(category => (
-                                    <div key={category.id} className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                        {categoryIcons[category.name] || categoryIcons.default}
-                                        <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                <CardContent className="space-y-6 flex-grow flex flex-col">
+                                  <div className="space-y-4 flex-grow">
+                                    {categories.map(category => (
+                                        <div key={category.id} className="space-y-3">
+                                          <div className="flex items-center justify-between">
+                                              <div className="flex items-center gap-3">
+                                                {categoryIcons[category.name] || categoryIcons.default}
+                                                <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                              </div>
+                                              <div className="w-24">
+                                                <Select
+                                                  value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                                                  onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
+                                                  disabled={submitting === school.id}
+                                                >
+                                                  <SelectTrigger>
+                                                      <SelectValue placeholder="Score" />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                      {Array.from({ length: 11 }, (_, i) => (
+                                                          <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                                      ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              </div>
+                                          </div>
                                         </div>
-                                        <div className="w-24">
-                                        <Select
-                                            value={(scores[school.id]?.[category.id] ?? 0).toString()}
-                                            onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                                            disabled={submitting === school.id}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Score" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Array.from({ length: 11 }, (_, i) => (
-                                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        </div>
-                                    </div>
-                                    </div>
-                                ))}
-                                <Button className="w-full mt-4 font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
-                                    {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
-                                    {submitting === school.id ? "Submitting..." : `Submit Scores for ${school.name}`}
-                                </Button>
+                                    ))}
+                                  </div>
+                                  <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
+                                      {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
+                                      {submitting === school.id ? "Submitting..." : `Submit Scores`}
+                                  </Button>
                                 </CardContent>
                             </Card>
                             ))}
@@ -373,5 +388,3 @@ export default function JudgesPage() {
     </div>
   );
 }
-
-    
