@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import NavLinks from '@/components/organizer/nav-links';
-import { Crown, ShieldAlert } from 'lucide-react';
+import { Crown, ShieldAlert, Home } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -109,20 +109,14 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
        <header className="sticky top-0 z-30 flex flex-col items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between w-full">
-            <Link href="/" className="flex items-center gap-2">
-                <Crown className="w-8 h-8 text-primary" />
-                <div>
-                    <h2 className="font-headline text-xl">JLKS Paradip</h2>
-                    <p className="text-sm text-foreground/70">Organizer's Dashboard</p>
-                </div>
-            </Link>
+            <NavButtons showBack={false} />
             <div className="flex-1 flex justify-center">
-                 <h1 className="font-headline text-3xl hidden md:block">Organizer's Dashboard</h1>
+                 <h1 className="font-headline text-3xl">Organizer's Dashboard</h1>
             </div>
-            <NavButtons />
+             <div className="w-10"></div>
           </div>
           <div className="w-full">
             <NavLinks />
@@ -131,6 +125,6 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
       </main>
-    </>
+    </div>
   );
 }
