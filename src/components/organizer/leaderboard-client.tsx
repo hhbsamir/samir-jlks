@@ -57,17 +57,17 @@ export default function LeaderboardClient() {
       <PageHeader title="Leaderboard" />
       
       <section className="mb-12">
-        <h2 className="font-headline text-4xl text-foreground/90 mb-6 text-center">Top Performers</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6 text-center">Top Performers</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {topThree.map((entry, index) => (
              <Card key={entry.school.id} className="relative text-center border-2 border-transparent transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20" style={{borderColor: winnerColors[index].replace('text-','').replace('-400','').replace('-600','')}}>
-              <CardHeader className="items-center">
-                 <Trophy className={`w-16 h-16 mb-2 ${winnerColors[index]}`} />
-                 <CardTitle className="font-headline text-3xl">{entry.school.name}</CardTitle>
-                 <p className="text-lg text-muted-foreground">{entry.school.category}</p>
+              <CardHeader className="items-center p-4 md:p-6">
+                 <Trophy className={`w-12 h-12 md:w-16 md:h-16 mb-2 ${winnerColors[index]}`} />
+                 <CardTitle className="font-headline text-2xl md:text-3xl">{entry.school.name}</CardTitle>
+                 <p className="text-base text-muted-foreground">{entry.school.category}</p>
               </CardHeader>
-              <CardContent>
-                <p className="text-6xl font-bold text-primary">{entry.total}</p>
+              <CardContent className="p-4 md:p-6 pt-0">
+                <p className="text-5xl md:text-6xl font-bold text-primary">{entry.total}</p>
                 <p className="text-sm text-muted-foreground">Total Score</p>
               </CardContent>
              </Card>
@@ -76,7 +76,7 @@ export default function LeaderboardClient() {
       </section>
 
       <section>
-        <h2 className="font-headline text-4xl text-foreground/90 mb-6">Full Rankings</h2>
+        <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">Full Rankings</h2>
         <Card>
           <Table>
             <TableHeader>
@@ -84,7 +84,7 @@ export default function LeaderboardClient() {
                 <TableHead className="w-[50px]">Rank</TableHead>
                 <TableHead>School</TableHead>
                 {categories.map(cat => (
-                  <TableHead key={cat.id} className="text-center">{cat.name}</TableHead>
+                  <TableHead key={cat.id} className="text-center hidden sm:table-cell">{cat.name}</TableHead>
                 ))}
                 <TableHead className="text-right font-bold">Total</TableHead>
               </TableRow>
@@ -98,7 +98,7 @@ export default function LeaderboardClient() {
                     <div className="text-sm text-muted-foreground">{entry.school.category}</div>
                   </TableCell>
                   {categories.map(cat => (
-                    <TableCell key={cat.id} className="text-center text-lg">{entry.scores[cat.id]}</TableCell>
+                    <TableCell key={cat.id} className="text-center text-lg hidden sm:table-cell">{entry.scores[cat.id]}</TableCell>
                   ))}
                   <TableCell className="text-right font-bold text-primary text-xl">{entry.total}</TableCell>
                 </TableRow>

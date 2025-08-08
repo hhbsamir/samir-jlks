@@ -83,18 +83,18 @@ export default function JudgesPage() {
           </Link>
         </Button>
         <div className="text-center mb-10">
-          <h1 className="font-headline text-6xl text-primary">Judge's Portal</h1>
-          <p className="text-xl text-foreground/80 mt-2">Assign your scores with precision and expertise.</p>
+          <h1 className="font-headline text-5xl md:text-6xl text-primary">Judge's Portal</h1>
+          <p className="text-lg md:text-xl text-foreground/80 mt-2">Assign your scores with precision and expertise.</p>
         </div>
 
         <div className="max-w-md mx-auto mb-12">
             <Select onValueChange={(judgeId) => setSelectedJudge(judges.find(j => j.id === judgeId) || null)}>
-                <SelectTrigger className="h-14 text-lg">
+                <SelectTrigger className="h-12 text-base md:h-14 md:text-lg">
                     <SelectValue placeholder="Select your name to begin..." />
                 </SelectTrigger>
                 <SelectContent>
                     {judges.map(judge => (
-                        <SelectItem key={judge.id} value={judge.id} className="text-lg">{judge.name}</SelectItem>
+                        <SelectItem key={judge.id} value={judge.id} className="text-base md:text-lg">{judge.name}</SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -105,7 +105,7 @@ export default function JudgesPage() {
             {schools.map(school => (
               <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20">
                 <CardHeader>
-                  <CardTitle className="font-headline text-3xl">{school.name}</CardTitle>
+                  <CardTitle className="font-headline text-2xl md:text-3xl">{school.name}</CardTitle>
                   <CardDescription className="text-base">{school.category}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -114,9 +114,9 @@ export default function JudgesPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                            {categoryIcons[category.name] || categoryIcons.default}
-                           <label className="text-lg font-medium">{category.name}</label>
+                           <label className="text-base md:text-lg font-medium">{category.name}</label>
                         </div>
-                        <span className="text-xl font-bold text-primary w-10 text-center">
+                        <span className="text-lg md:text-xl font-bold text-primary w-10 text-center">
                           {scores[school.id]?.[category.id] ?? 0}
                         </span>
                       </div>
