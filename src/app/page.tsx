@@ -27,7 +27,9 @@ export default function Home() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-background">
-      <NavButtons showBack={false} />
+      <div className="absolute top-4 left-4">
+        <NavButtons showBack={false} showHome={false} />
+      </div>
       <div className="text-center mb-12">
         <h1 className="font-headline text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
           JLKS Paradip

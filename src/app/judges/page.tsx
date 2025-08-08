@@ -69,7 +69,11 @@ export default function JudgesPage() {
       if (!selectedJudge) return;
 
       const scoresCollection = collection(db, 'scores');
-      const q = query(scoresCollection, where("judgeId", "==", selectedJudge.id));
+      // A compound query to fetch scores for a specific judge, ordered by school and category
+      const q = query(
+        scoresCollection, 
+        where("judgeId", "==", selectedJudge.id)
+      );
       const scoresSnapshot = await getDocs(q);
       const judgeScores = scoresSnapshot.docs.reduce((acc: SchoolScores, doc) => {
         const score = doc.data() as Score;
@@ -151,7 +155,9 @@ export default function JudgesPage() {
 
   return (
     <div className="min-h-screen p-4 sm:p-8 pt-20">
-      <NavButtons />
+      <div className="absolute top-4 left-4">
+        <NavButtons />
+      </div>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="font-headline text-5xl md:text-6xl text-primary">Judge's Portal</h1>
