@@ -13,9 +13,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 type SchoolScore = {
   school: School;
-  scores: { [categoryId: string]: number };
-  total: number;
+  scoresByJudge: {
+    [judgeId: string]: {
+      judgeName: string;
+      categoryScores: { [categoryId: string]: number };
+      total: number;
+    }
+  };
+  averageScores: { [categoryId: string]: number };
+  totalAverage: number;
 };
+
 
 type SchoolFeedback = {
     school: School;
@@ -80,23 +88,43 @@ export default function LeaderboardClient() {
         const schoolScores = schoolsInCategory.map(school => {
           const schoolData: SchoolScore = {
             school,
-            scores: {},
-            total: 0,
+            scoresByJudge: {},
+            averageScores: {},
+            totalAverage: 0,
           };
+
+          judges.forEach(judge => {
+            let judgeTotal = 0;
+            const categoryScores: { [categoryId: string]: number } = {};
+
+            categories.forEach(category => {
+              const score = scores.find(
+                s => s.schoolId === school.id && s.categoryId === category.id && s.judgeId === judge.id
+              )?.score || 0;
+              categoryScores[category.id] = score;
+              judgeTotal += score;
+            });
+            
+            schoolData.scoresByJudge[judge.id] = {
+              judgeName: judge.name,
+              categoryScores,
+              total: judgeTotal,
+            };
+          });
 
           categories.forEach(category => {
             const categoryScores = scores.filter(
               s => s.schoolId === school.id && s.categoryId === category.id
             );
             const avgScore = categoryScores.reduce((sum, s) => sum + s.score, 0) / (judges.length || 1);
-            schoolData.scores[category.id] = parseFloat(avgScore.toFixed(2));
-            schoolData.total += avgScore;
+            schoolData.averageScores[category.id] = parseFloat(avgScore.toFixed(2));
+            schoolData.totalAverage += avgScore;
           });
-          schoolData.total = parseFloat(schoolData.total.toFixed(2));
+          schoolData.totalAverage = parseFloat(schoolData.totalAverage.toFixed(2));
           return schoolData;
         });
 
-        acc[category] = schoolScores.sort((a, b) => b.total - a.total);
+        acc[category] = schoolScores.sort((a, b) => b.totalAverage - a.totalAverage);
       }
       return acc;
     }, {});
@@ -132,32 +160,64 @@ export default function LeaderboardClient() {
         <section key={category}>
             <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Category</h2>
             <Card>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead className="w-[50px]">Rank</TableHead>
-                    <TableHead>School</TableHead>
-                    {categories.map(cat => (
-                    <TableHead key={cat.id} className="text-center hidden sm:table-cell">{cat.name}</TableHead>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[50px]">Rank</TableHead>
+                            <TableHead>School</TableHead>
+                            {categories.map(cat => (
+                            <TableHead key={cat.id} className="text-center hidden sm:table-cell">{cat.name}</TableHead>
+                            ))}
+                            <TableHead className="text-right font-bold">Total</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                </Table>
+                 <Accordion type="multiple" className="w-full">
+                    {leaderboardData.map((entry, index) => (
+                        <AccordionItem value={entry.school.id} key={entry.school.id} className="border-b">
+                            <AccordionTrigger className="hover:no-underline [&_svg]:mx-4">
+                                <TableRow className="flex-1 hover:bg-transparent border-b-0">
+                                    <TableCell className="w-[50px] font-bold text-lg">{index + 1}</TableCell>
+                                    <TableCell>
+                                        <div className="font-medium">{entry.school.name}</div>
+                                    </TableCell>
+                                    {categories.map(cat => (
+                                        <TableCell key={cat.id} className="text-center text-lg hidden sm:table-cell">{entry.averageScores[cat.id]}</TableCell>
+                                    ))}
+                                    <TableCell className="text-right font-bold text-primary text-xl">{entry.totalAverage}</TableCell>
+                                </TableRow>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="px-4 pb-4">
+                                  <Card className="bg-primary/5">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Judge</TableHead>
+                                                {categories.map(cat => (
+                                                  <TableHead key={cat.id} className="text-center">{cat.name}</TableHead>
+                                                ))}
+                                                <TableHead className="text-right">Total</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {judges.map(judge => (
+                                            <TableRow key={judge.id}>
+                                              <TableCell className="font-medium">{judge.name}</TableCell>
+                                              {categories.map(cat => (
+                                                <TableCell key={cat.id} className="text-center">{entry.scoresByJudge[judge.id]?.categoryScores[cat.id] || 0}</TableCell>
+                                              ))}
+                                              <TableCell className="text-right font-bold">{entry.scoresByJudge[judge.id]?.total || 0}</TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                    </Table>
+                                  </Card>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
                     ))}
-                    <TableHead className="text-right font-bold">Total</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {leaderboardData.map((entry, index) => (
-                    <TableRow key={entry.school.id} className={index < 3 ? 'bg-primary/5' : ''}>
-                    <TableCell className="font-bold text-lg">{index + 1}</TableCell>
-                    <TableCell>
-                        <div className="font-medium">{entry.school.name}</div>
-                    </TableCell>
-                    {categories.map(cat => (
-                        <TableCell key={cat.id} className="text-center text-lg hidden sm:table-cell">{entry.scores[cat.id]}</TableCell>
-                    ))}
-                    <TableCell className="text-right font-bold text-primary text-xl">{entry.total}</TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
+                </Accordion>
             </Card>
         </section>
     );
