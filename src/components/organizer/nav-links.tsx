@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { Trophy, School, Users, Shapes } from 'lucide-react';
+import { Trophy, School, Users, Shapes, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/organizers/schools', label: 'Schools', icon: School },
   { href: '/organizers/judges', label: 'Judges', icon: Users },
   { href: '/organizers/categories', label: 'Categories', icon: Shapes },
+  { href: '/organizers/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function NavLinks() {
