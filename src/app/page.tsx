@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -26,37 +27,42 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-background">
-      <div className="absolute top-4 left-4">
-        <NavButtons showBack={false} showHome={false} />
-      </div>
-      <div className="text-center mb-12">
-        <h1 className="font-headline text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
-          JLKS Paradip
-        </h1>
-        <div className="font-body text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
-            {currentDate && <p>({currentDate})</p>}
-            {currentTime && (
-              <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg shadow-[0_0_15px] shadow-primary/30">
-                <p className="text-2xl md:text-4xl font-bold text-primary">{currentTime}</p>
-              </div>
-            )}
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-grow flex flex-col items-center justify-center p-4 sm:p-8 bg-background">
+        <div className="absolute top-4 left-4">
+          <NavButtons showBack={false} showHome={false} />
         </div>
-      </div>
+        <div className="text-center mb-12">
+          <h1 className="font-headline text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
+            JLKS Paradip
+          </h1>
+          <div className="font-body text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
+              {currentDate && <p>({currentDate})</p>}
+              {currentTime && (
+                <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg shadow-[0_0_15px] shadow-primary/30">
+                  <p className="text-2xl md:text-4xl font-bold text-primary">{currentTime}</p>
+                </div>
+              )}
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-sm">
-        <PortalCard
-          href="/judges"
-          icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
-          title="Judge's Portal"
-        />
-        <PortalCard
-          href="/organizers"
-          icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
-          title="Organizer's Dashboard"
-        />
-      </div>
-    </main>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-sm">
+          <PortalCard
+            href="/judges"
+            icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
+            title="Judge's Portal"
+          />
+          <PortalCard
+            href="/organizers"
+            icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
+            title="Organizer's Dashboard"
+          />
+        </div>
+      </main>
+      <footer className="text-center p-4 text-foreground/60">
+        <p>ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏 ସମୀର କୁମାର ମାହାପତ୍ର</p>
+      </footer>
+    </div>
   );
 }
 
