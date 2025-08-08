@@ -1,10 +1,14 @@
+
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User } from "lucide-react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
 import type { School, CompetitionCategory, Judge, Score } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
@@ -31,8 +35,13 @@ export default function JudgesPage() {
   const [judges, setJudges] = useState<Judge[]>([]);
   const [scores, setScores] = useState<SchoolScores>({});
   const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
+  const [authenticatedJudge, setAuthenticatedJudge] = useState<Judge | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,12 +75,12 @@ export default function JudgesPage() {
 
   useEffect(() => {
     const fetchScores = async () => {
-      if (!selectedJudge) return;
+      if (!authenticatedJudge) return;
 
       const scoresCollection = collection(db, 'scores');
       const q = query(
         scoresCollection, 
-        where("judgeId", "==", selectedJudge.id)
+        where("judgeId", "==", authenticatedJudge.id)
       );
       const scoresSnapshot = await getDocs(q);
       const judgeScores = scoresSnapshot.docs.reduce((acc: SchoolScores, doc) => {
@@ -94,11 +103,43 @@ export default function JudgesPage() {
       setScores(initialScoresForJudge);
     };
 
-    if (selectedJudge) {
+    if (authenticatedJudge) {
         fetchScores();
     }
-  }, [selectedJudge, schools, categories]);
+  }, [authenticatedJudge, schools, categories]);
 
+  const handleJudgeSelection = (judge: Judge) => {
+    if (!judge.password) {
+      setAuthenticatedJudge(judge);
+    } else {
+      setSelectedJudge(judge);
+      setIsAuthModalOpen(true);
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAuthenticating(true);
+
+    if (selectedJudge && password === selectedJudge.password) {
+      setAuthenticatedJudge(selectedJudge);
+      setIsAuthModalOpen(false);
+      setSelectedJudge(null);
+      setPassword('');
+      toast({
+        title: "Access Granted",
+        description: `Welcome, ${selectedJudge.name}. You can now start scoring.`
+      });
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "The password you entered is incorrect.",
+        variant: "destructive"
+      });
+      setPassword('');
+    }
+    setIsAuthenticating(false);
+  };
 
   const handleScoreChange = (schoolId: string, categoryId: string, value: string) => {
     setScores(prev => ({
@@ -111,7 +152,7 @@ export default function JudgesPage() {
   };
   
   const handleSubmit = async (schoolId: string) => {
-    if (!selectedJudge) return;
+    if (!authenticatedJudge) return;
     setSubmitting(schoolId);
     
     try {
@@ -121,13 +162,13 @@ export default function JudgesPage() {
         for (const categoryId in schoolScores) {
             const scoreValue = schoolScores[categoryId];
             const scoreData: Score = {
-                judgeId: selectedJudge.id,
+                judgeId: authenticatedJudge.id,
                 schoolId: schoolId,
                 categoryId: categoryId,
                 score: scoreValue,
             };
             
-            const scoreDocId = `${selectedJudge.id}_${schoolId}_${categoryId}`;
+            const scoreDocId = `${authenticatedJudge.id}_${schoolId}_${categoryId}`;
             const scoreRef = doc(db, "scores", scoreDocId);
             batch.set(scoreRef, scoreData, { merge: true });
         }
@@ -152,6 +193,57 @@ export default function JudgesPage() {
     }
   };
 
+  const renderAuthModal = () => (
+    <Dialog open={isAuthModalOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+            setIsAuthModalOpen(false);
+            setSelectedJudge(null);
+            setPassword('');
+        }
+    }}>
+        <DialogContent 
+            className="sm:max-w-md"
+            onOpenAutoFocus={(e) => {
+                e.preventDefault();
+                inputRef.current?.focus();
+            }}
+        >
+            <DialogHeader>
+                <DialogTitle className="font-headline text-3xl text-primary flex items-center gap-2">
+                    <ShieldAlert className="w-8 h-8"/>
+                    Authentication for {selectedJudge?.name}
+                </DialogTitle>
+                <DialogDescription>
+                    Please enter your 4-digit password to proceed.
+                </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handlePasswordSubmit}>
+                <div className="grid flex-1 gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="password" className="text-right text-base">
+                            Password
+                        </Label>
+                        <Input 
+                            id="password"
+                            type="password" 
+                            className="col-span-3 text-base"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            ref={inputRef}
+                            maxLength={4}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={isAuthenticating} className="w-full">
+                    {isAuthenticating ? 'Verifying...' : 'Enter Scoring Sheet'}
+                  </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
+  );
+
   const renderJudgeSelection = () => (
     <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -168,7 +260,7 @@ export default function JudgesPage() {
                 ))
             ) : (
                 judges.map(judge => (
-                    <Card key={judge.id} className="group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden cursor-pointer" onClick={() => setSelectedJudge(judge)}>
+                    <Card key={judge.id} className="group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden cursor-pointer" onClick={() => handleJudgeSelection(judge)}>
                         <CardHeader className="items-center text-center p-8">
                             <div className="p-4 bg-accent/10 rounded-full mb-4 group-hover:animate-pulse">
                                 <User className="w-16 h-16 text-accent" />
@@ -184,9 +276,9 @@ export default function JudgesPage() {
 
   const renderScoringSheet = () => (
     <>
-        {selectedJudge && (
+        {authenticatedJudge && (
             <div className="flex justify-center mb-10">
-                <Button onClick={() => setSelectedJudge(null)} variant="outline">
+                <Button onClick={() => setAuthenticatedJudge(null)} variant="outline">
                     <ArrowLeft className="mr-2 h-5 w-5" />
                     Back to Judge Selection
                 </Button>
@@ -245,14 +337,15 @@ export default function JudgesPage() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="font-headline text-5xl md:text-6xl text-primary">
-            {selectedJudge ? `Scoring for ${selectedJudge.name}` : "Judge's Portal"}
+            {authenticatedJudge ? `Scoring for ${authenticatedJudge.name}` : "Judge's Portal"}
           </h1>
           <p className="text-lg md:text-xl text-foreground/80 mt-2">
-            {selectedJudge ? "Assign your scores with precision and expertise." : "Select your name to begin scoring."}
+            {authenticatedJudge ? "Assign your scores with precision and expertise." : "Select your name to begin scoring."}
           </p>
         </div>
         
-        {selectedJudge ? renderScoringSheet() : renderJudgeSelection()}
+        {authenticatedJudge ? renderScoringSheet() : renderJudgeSelection()}
+        {renderAuthModal()}
       </div>
     </div>
   );

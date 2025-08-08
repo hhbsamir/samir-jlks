@@ -1,3 +1,4 @@
+
 export type SchoolCategory = "Sub-Junior" | "Junior" | "Senior";
 
 export type School = {
@@ -10,6 +11,7 @@ export type Judge = {
   id: string;
   name: string;
   mobile: string;
+  password?: string;
 };
 
 export type CompetitionCategory = {

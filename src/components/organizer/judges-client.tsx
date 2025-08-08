@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -89,18 +90,22 @@ export default function JudgesClient() {
               <TableRow>
                 <TableHead>Judge Name</TableHead>
                 <TableHead>Mobile Number</TableHead>
+                <TableHead>Password</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">Loading judges...</TableCell>
+                  <TableCell colSpan={4} className="text-center">Loading judges...</TableCell>
                 </TableRow>
               ) : judges.map(judge => (
                 <TableRow key={judge.id}>
                   <TableCell className="font-medium">{judge.name}</TableCell>
                   <TableCell>{judge.mobile}</TableCell>
+                  <TableCell>
+                    {judge.password ? '****' : 'Not Set'}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
                       <Edit className="h-4 w-4 text-accent" />
@@ -152,12 +157,14 @@ type JudgeFormDialogProps = {
 function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProps) {
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
+    const [password, setPassword] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
             setName(judge?.name || '');
             setMobile(judge?.mobile || '');
+            setPassword(judge?.password || '');
         }
     }, [isOpen, judge]);
 
@@ -165,7 +172,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         e.preventDefault();
         if (name && mobile) {
             setIsSaving(true);
-            await onSave({ name, mobile });
+            await onSave({ name, mobile, password });
             setIsSaving(false);
         }
     };
@@ -184,6 +191,17 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     <div className="space-y-2">
                         <Label htmlFor="mobile" className="text-lg">Mobile Number</Label>
                         <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required className="text-base"/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="password" className="text-lg">4-Digit Password</Label>
+                        <Input 
+                            id="password" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            className="text-base"
+                            maxLength={4}
+                            placeholder="Enter 4-digit password"
+                        />
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
