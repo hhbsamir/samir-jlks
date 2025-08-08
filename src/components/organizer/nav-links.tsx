@@ -11,9 +11,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 
 const navItems = [
-  { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10' },
   { href: '/organizers/schools', label: 'Schools', icon: School, color: 'text-blue-500', bgColor: 'bg-blue-400/10' },
   { href: '/organizers/judges', label: 'Judges', icon: Users, color: 'text-green-500', bgColor: 'bg-green-400/10' },
+  { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10', isCentral: true },
   { href: '/organizers/categories', label: 'Categories', icon: Shapes, color: 'text-purple-500', bgColor: 'bg-purple-400/10' },
   { href: '/organizers/settings', label: 'Settings', icon: Settings, color: 'text-red-500', bgColor: 'bg-red-400/10' },
 ];
@@ -36,12 +36,13 @@ export default function NavLinks() {
                             item.color,
                             item.bgColor,
                             'hover:scale-110 hover:shadow-lg hover:shadow-primary/20',
-                            pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg shadow-primary/30' : 'scale-100'
+                             pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg shadow-primary/30' : 'scale-100',
+                             item.isCentral && 'h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-2 border-primary/50 shadow-xl shadow-primary/30'
                           )}
                       >
                           <Link href={item.href}>
-                              <item.icon className="h-6 w-6 sm:h-8 sm:w-8" />
-                              <span className="text-xs hidden sm:block font-medium">{item.label}</span>
+                              <item.icon className={cn("h-6 w-6 sm:h-8 sm:w-8", item.isCentral && "h-8 w-8 sm:h-10 sm:w-10")} />
+                              <span className="text-xs sm:block font-medium">{item.label}</span>
                           </Link>
                       </Button>
                   </TooltipTrigger>
