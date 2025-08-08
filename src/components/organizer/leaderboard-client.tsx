@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PageHeader } from '@/components/page-header';
 import type { School, CompetitionCategory, Score, SchoolCategory, Judge, Feedback } from '@/lib/data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal, Award, Star } from 'lucide-react';
 
 
 type SchoolScore = {
@@ -37,6 +37,11 @@ type SchoolFeedback = {
 type CategorizedLeaderboard = {
   [key in SchoolCategory]?: SchoolScore[];
 };
+
+type ThemeWinner = {
+    school: School;
+    themeScore: number;
+}
 
 type LeaderboardClientProps = {
     schools: School[];
@@ -128,6 +133,33 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
         return schoolData;
     });
   }, [schools, feedbacks, judges]);
+
+  const themeWinners = useMemo(() => {
+    const themeCategory = categories.find(c => c.name.toLowerCase() === 'theme');
+    if (!themeCategory) return { Senior: [], Junior: [] };
+
+    const getWinners = (category: 'Senior' | 'Junior'): ThemeWinner[] => {
+        const categoryLeaderboard = categorizedLeaderboardData[category];
+        if (!categoryLeaderboard) return [];
+
+        const top3OverallIds = categoryLeaderboard.slice(0, 3).map(entry => entry.school.id);
+
+        const themeContenders = categoryLeaderboard
+            .filter(entry => !top3OverallIds.includes(entry.school.id))
+            .map(entry => ({
+                school: entry.school,
+                themeScore: entry.totalScores[themeCategory.id] ?? 0
+            }))
+            .sort((a, b) => b.themeScore - a.themeScore);
+        
+        return themeContenders.slice(0, 3);
+    };
+
+    return {
+        Senior: getWinners('Senior'),
+        Junior: getWinners('Junior'),
+    };
+  }, [categorizedLeaderboardData, categories]);
   
   const getRankIcon = (rank: number) => {
     if(rank === 1) return <Trophy className="w-8 h-8 text-yellow-500" />;
@@ -241,9 +273,88 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     )
   }
 
+  const renderThemePrizes = () => {
+    const hasSeniorWinners = themeWinners.Senior.length > 0;
+    const hasJuniorWinners = themeWinners.Junior.length > 0;
+    if (!hasSeniorWinners && !hasJuniorWinners) return null;
+
+    return (
+      <AccordionItem value="theme-prizes">
+        <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-lg" style={{fontSize: '20px'}}>
+          Theme Prize Winners
+        </AccordionTrigger>
+        <AccordionContent className="pt-8">
+          <div className="space-y-8">
+            {hasSeniorWinners && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl text-purple-700">Senior Category - Theme Winners</CardTitle>
+                  <CardDescription>Top 3 schools based on Theme score, excluding overall top 3 winners.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Rank</TableHead>
+                        <TableHead>School</TableHead>
+                        <TableHead className="text-right">Theme Score</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {themeWinners.Senior.map((winner, index) => (
+                        <TableRow key={winner.school.id}>
+                          <TableCell className="font-bold flex items-center gap-2">
+                             <Star className="w-6 h-6 text-purple-500" /> {index + 1}
+                          </TableCell>
+                          <TableCell>{winner.school.name}</TableCell>
+                          <TableCell className="text-right font-bold">{winner.themeScore}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+            {hasJuniorWinners && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-headline text-2xl text-purple-700">Junior Category - Theme Winners</CardTitle>
+                   <CardDescription>Top 3 schools based on Theme score, excluding overall top 3 winners.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[100px]">Rank</TableHead>
+                        <TableHead>School</TableHead>
+                        <TableHead className="text-right">Theme Score</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {themeWinners.Junior.map((winner, index) => (
+                        <TableRow key={winner.school.id}>
+                          <TableCell className="font-bold flex items-center gap-2">
+                            <Star className="w-6 h-6 text-purple-500" /> {index + 1}
+                          </TableCell>
+                          <TableCell>{winner.school.name}</TableCell>
+                          <TableCell className="text-right font-bold">{winner.themeScore}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    );
+  };
+
   const hasSeniorData = categorizedLeaderboardData.Senior && categorizedLeaderboardData.Senior.length > 0;
   const hasJuniorData = categorizedLeaderboardData.Junior && categorizedLeaderboardData.Junior.length > 0;
   const hasSubJuniorData = subJuniorFeedbackData.length > 0;
+  const hasThemeWinners = themeWinners.Senior.length > 0 || themeWinners.Junior.length > 0;
 
 
   return (
@@ -271,6 +382,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
             </AccordionContent>
           </AccordionItem>
         )}
+        {hasThemeWinners && renderThemePrizes()}
         {hasSubJuniorData && (
           <AccordionItem value="sub-junior">
             <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-lg" style={{fontSize: '20px'}}>
@@ -281,7 +393,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
             </AccordionContent>
           </AccordionItem>
         )}
-         {!hasSeniorData && !hasJuniorData && !hasSubJuniorData && (
+         {!hasSeniorData && !hasJuniorData && !hasSubJuniorData && !hasThemeWinners && (
             <div className="text-center py-12">
                 <p className="text-muted-foreground text-lg">The leaderboard is currently empty.</p>
                 <p className="text-muted-foreground">Scores and feedback will appear here as judges submit them.</p>
