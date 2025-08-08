@@ -18,7 +18,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-2xl">
         <PortalCard
           href="/judges"
           icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16 text-accent" />}
