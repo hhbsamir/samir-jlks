@@ -250,10 +250,10 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     <div>
       <PageHeader title="Leaderboard" />
       
-      <Accordion type="multiple" className="w-full space-y-8" defaultValue={["senior", "junior", "sub-junior"]}>
+      <Accordion type="multiple" className="w-full space-y-8">
         {hasSeniorData && (
           <AccordionItem value="senior">
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-lg">
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-lg" style={{fontSize: '20px'}}>
               Senior Category
             </AccordionTrigger>
             <AccordionContent className="pt-8">
@@ -263,7 +263,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
         )}
         {hasJuniorData && (
           <AccordionItem value="junior">
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-lg">
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-lg" style={{fontSize: '20px'}}>
               Junior Category
             </AccordionTrigger>
             <AccordionContent className="pt-8">
@@ -273,7 +273,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
         )}
         {hasSubJuniorData && (
           <AccordionItem value="sub-junior">
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-lg">
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-lg" style={{fontSize: '20px'}}>
               Sub-Junior Category Feedback
             </AccordionTrigger>
             <AccordionContent className="pt-8">
