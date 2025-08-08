@@ -38,7 +38,6 @@ const WhatsAppIcon = () => (
 
 
 export default function JudgesClient({ initialJudges }: { initialJudges: Judge[] }) {
-  const [judges, setJudges] = useState<Judge[]>(initialJudges);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
   const router = useRouter();
