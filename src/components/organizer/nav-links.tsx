@@ -3,7 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { Trophy, School, Users, Shapes, Home } from 'lucide-react';
+import { Trophy, School, Users, Shapes } from 'lucide-react';
 import Link from 'next/link';
 
 const navItems = [
@@ -12,8 +12,6 @@ const navItems = [
   { href: '/organizers/judges', label: 'Judges', icon: Users },
   { href: '/organizers/categories', label: 'Categories', icon: Shapes },
 ];
-
-const homeItem = { href: '/', label: 'Back to Home', icon: Home };
 
 export default function NavLinks() {
   const pathname = usePathname();
@@ -35,19 +33,6 @@ export default function NavLinks() {
                 </SidebarMenuButton>
                 </SidebarMenuItem>
             ))}
-        </SidebarMenu>
-        <SidebarMenu>
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                    asChild
-                    tooltip={{ children: homeItem.label, side: "right", className: "text-accent-foreground bg-accent" }}
-                >
-                    <Link href={homeItem.href}>
-                    <homeItem.icon className="text-accent" />
-                    <span>{homeItem.label}</span>
-                    </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
         </SidebarMenu>
     </div>
   );
