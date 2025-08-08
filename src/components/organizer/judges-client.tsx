@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw, MessageSquare } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -74,6 +74,21 @@ export default function JudgesClient() {
     }
   }
 
+  const handleSendWhatsApp = (judge: Judge) => {
+    if (!judge.mobile || !judge.password) {
+        toast({
+            title: "Missing Information",
+            description: "Judge's mobile number or password is not set.",
+            variant: "destructive"
+        });
+        return;
+    }
+    const message = `Hello ${judge.name}, your password for the JLKS Paradip competition is: *${judge.password}*`;
+    // The '91' is the country code for India.
+    const whatsappUrl = `https://wa.me/91${judge.mobile}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  }
+
 
   return (
     <>
@@ -107,6 +122,10 @@ export default function JudgesClient() {
                     {judge.password || 'Not Set'}
                   </TableCell>
                   <TableCell className="text-right">
+                    <Button variant="outline" size="sm" onClick={() => handleSendWhatsApp(judge)} className="mr-2">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Send via WhatsApp
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
                       <Edit className="h-4 w-4 text-accent" />
                     </Button>
@@ -195,7 +214,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="mobile" className="text-lg">Mobile Number</Label>
-                        <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required className="text-base"/>
+                        <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required className="text-base" placeholder="Enter 10-digit number"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="password" className="text-lg">4-Digit Password</Label>
