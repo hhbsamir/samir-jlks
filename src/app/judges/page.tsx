@@ -383,32 +383,32 @@ export default function JudgesPage() {
                                                 />
                                              </div>
                                         ) : (
-                                            categories.map(category => (
-                                                <div key={category.id} className="space-y-3">
-                                                  <div className="flex items-center justify-between">
-                                                      <div className="flex items-center gap-3">
-                                                        {categoryIcons[category.name] || categoryIcons.default}
-                                                        <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                            <div className="flex flex-row justify-around items-start gap-4">
+                                              {categories.map(category => (
+                                                  <div key={category.id} className="flex-1 flex flex-col items-center gap-2">
+                                                    <div className="flex items-center gap-2 text-center">
+                                                      {categoryIcons[category.name] || categoryIcons.default}
+                                                      <label className="text-sm font-medium">{category.name}</label>
+                                                    </div>
+                                                      <div className="w-24">
+                                                          <Select
+                                                          value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                                                          onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
+                                                          disabled={submitting === school.id}
+                                                          >
+                                                          <SelectTrigger>
+                                                              <SelectValue placeholder="Score" />
+                                                          </SelectTrigger>
+                                                          <SelectContent>
+                                                              {Array.from({ length: 11 }, (_, i) => (
+                                                                  <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                                              ))}
+                                                          </SelectContent>
+                                                          </Select>
                                                       </div>
                                                   </div>
-                                                    <div className="w-24 ml-auto">
-                                                        <Select
-                                                        value={(scores[school.id]?.[category.id] ?? 0).toString()}
-                                                        onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                                                        disabled={submitting === school.id}
-                                                        >
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Score" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {Array.from({ length: 11 }, (_, i) => (
-                                                                <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                </div>
-                                            ))
+                                              ))}
+                                            </div>
                                         )}
                                       </div>
                                       <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
