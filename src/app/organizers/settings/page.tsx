@@ -26,7 +26,7 @@ const REMARKS_STORAGE_KEY = 'competition-report-remarks';
 
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingReportType, setGeneratingReportType] = useState<'full' | 'summary' | null>(null);
   const [remarks, setRemarks] = useState('');
   const { toast } = useToast();
   
@@ -42,8 +42,8 @@ export default function SettingsPage() {
     localStorage.setItem(REMARKS_STORAGE_KEY, e.target.value);
   }
 
-  const generatePdf = async () => {
-    setIsGenerating(true);
+  const generatePdf = async (reportType: 'full' | 'summary') => {
+    setGeneratingReportType(reportType);
     toast({ title: "Generating Report", description: "Please wait while the PDF is being created..." });
 
     try {
@@ -87,7 +87,7 @@ export default function SettingsPage() {
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(primaryColor);
-                doc.text('JLKS Paradip - Competition Full Report', 105, 15, { align: 'center' });
+                doc.text(`JLKS Paradip - Competition ${reportType === 'full' ? 'Full' : 'Summary'} Report`, 105, 15, { align: 'center' });
                 
                 if (remarks) {
                     doc.setFontSize(10);
@@ -109,7 +109,7 @@ export default function SettingsPage() {
         doc.setFontSize(36);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
-        doc.text('Competition Score Report', 105, 120, { align: 'center' });
+        doc.text(`Competition ${reportType === 'summary' ? 'Summary' : 'Score'} Report`, 105, 120, { align: 'center' });
 
         doc.setFontSize(20);
         doc.setFont('helvetica', 'normal');
@@ -173,51 +173,53 @@ export default function SettingsPage() {
                 }
             });
 
-            // --- Judge Breakdown Section ---
-            let lastY = (doc as any).lastAutoTable.finalY || 45;
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(accentColor);
-            doc.text(`Judge Score Breakdown`, pageMargin, lastY + 15);
-            lastY += 20;
-
-            schoolsInCategory.forEach(school => {
-                const judgeHead = [['Judge', ...categories.map(c => c.name), 'Total']];
-                const judgeBody = judges.map(judge => {
-                    const judgeCategoryScores = categories.map(cat => {
-                        return scores.find(s => s.schoolId === school.id && s.categoryId === cat.id && s.judgeId === judge.id)?.score || 0;
-                    });
-                    const judgeTotal = judgeCategoryScores.reduce((sum, score) => sum + score, 0);
-                    return [
-                        judge.name,
-                        ...judgeCategoryScores.map(String),
-                        judgeTotal
-                    ]
-                });
-
-                if (lastY + (judgeBody.length + 2) * 8 > 280) { // Estimate table height
-                    doc.addPage();
-                    lastY = 30;
-                }
-
-                doc.setFontSize(12);
+            // --- Judge Breakdown Section (Full Report Only) ---
+            if (reportType === 'full') {
+                let lastY = (doc as any).lastAutoTable.finalY || 45;
+                doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
-                doc.text(school.name, pageMargin, lastY);
-                
-                doc.autoTable({
-                    startY: lastY + 3,
-                    head: judgeHead,
-                    body: judgeBody,
-                    theme: 'grid',
-                    headStyles: { fillColor: '#475569', textColor: 255, fontSize: 9 },
-                    styles: { fontSize: 9, cellPadding: 2 },
-                    margin: { left: pageMargin, right: pageMargin },
-                    columnStyles: {
-                        0: { cellWidth: 'auto' }, // Judge name column
+                doc.setTextColor(accentColor);
+                doc.text(`Judge Score Breakdown`, pageMargin, lastY + 15);
+                lastY += 20;
+
+                schoolsInCategory.forEach(school => {
+                    const judgeHead = [['Judge', ...categories.map(c => c.name), 'Total']];
+                    const judgeBody = judges.map(judge => {
+                        const judgeCategoryScores = categories.map(cat => {
+                            return scores.find(s => s.schoolId === school.id && s.categoryId === cat.id && s.judgeId === judge.id)?.score || 0;
+                        });
+                        const judgeTotal = judgeCategoryScores.reduce((sum, score) => sum + score, 0);
+                        return [
+                            judge.name,
+                            ...judgeCategoryScores.map(String),
+                            judgeTotal
+                        ]
+                    });
+
+                    if (lastY + (judgeBody.length + 2) * 8 > 280) { // Estimate table height
+                        doc.addPage();
+                        lastY = 30;
                     }
+
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(school.name, pageMargin, lastY);
+                    
+                    doc.autoTable({
+                        startY: lastY + 3,
+                        head: judgeHead,
+                        body: judgeBody,
+                        theme: 'grid',
+                        headStyles: { fillColor: '#475569', textColor: 255, fontSize: 9 },
+                        styles: { fontSize: 9, cellPadding: 2 },
+                        margin: { left: pageMargin, right: pageMargin },
+                        columnStyles: {
+                            0: { cellWidth: 'auto' }, // Judge name column
+                        }
+                    });
+                    lastY = (doc as any).lastAutoTable.finalY + 10;
                 });
-                lastY = (doc as any).lastAutoTable.finalY + 10;
-            });
+            }
         });
         
         // --- Theme Prize Section ---
@@ -291,51 +293,53 @@ export default function SettingsPage() {
             });
         }
         
-        // --- Sub-Junior Feedback Section ---
-        const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
-        if (subJuniorSchools.length > 0) {
-            doc.addPage();
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(primaryColor);
-            doc.text('Sub-Junior Category Feedback', pageMargin, 30);
-            
-            let lastY = 35;
-            subJuniorSchools.forEach(school => {
-                const feedbackBody = judges.map(judge => {
-                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
-                    return [judge.name, feedback];
-                });
-
-                const tableHeight = (feedbackBody.length + 1) * 10 + 10; // Approximate height
-                if (lastY + tableHeight > 280) {
-                    doc.addPage();
-                    lastY = 30;
-                }
-                
-                doc.setFontSize(14);
+        // --- Sub-Junior Feedback Section (Full Report Only) ---
+        if (reportType === 'full') {
+            const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
+            if (subJuniorSchools.length > 0) {
+                doc.addPage();
+                doc.setFontSize(22);
                 doc.setFont('helvetica', 'bold');
-                doc.setTextColor(accentColor);
-                doc.text(school.name, pageMargin, lastY + 5);
+                doc.setTextColor(primaryColor);
+                doc.text('Sub-Junior Category Feedback', pageMargin, 30);
+                
+                let lastY = 35;
+                subJuniorSchools.forEach(school => {
+                    const feedbackBody = judges.map(judge => {
+                        const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
+                        return [judge.name, feedback];
+                    });
 
-                doc.autoTable({
-                    startY: lastY + 8,
-                    head: [['Judge', 'Feedback']],
-                    body: feedbackBody,
-                    theme: 'grid',
-                    headStyles: { fillColor: primaryColor, textColor: 255 },
-                    columnStyles: { 
-                        0: { cellWidth: 'auto' },
-                        1: { cellWidth: 'auto' } 
-                    },
-                    margin: { left: pageMargin, right: pageMargin }
-                });
-                lastY = (doc as any).lastAutoTable.finalY + 10;
-            })
+                    const tableHeight = (feedbackBody.length + 1) * 10 + 10; // Approximate height
+                    if (lastY + tableHeight > 280) {
+                        doc.addPage();
+                        lastY = 30;
+                    }
+                    
+                    doc.setFontSize(14);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(accentColor);
+                    doc.text(school.name, pageMargin, lastY + 5);
+
+                    doc.autoTable({
+                        startY: lastY + 8,
+                        head: [['Judge', 'Feedback']],
+                        body: feedbackBody,
+                        theme: 'grid',
+                        headStyles: { fillColor: primaryColor, textColor: 255 },
+                        columnStyles: { 
+                            0: { cellWidth: 'auto' },
+                            1: { cellWidth: 'auto' } 
+                        },
+                        margin: { left: pageMargin, right: pageMargin }
+                    });
+                    lastY = (doc as any).lastAutoTable.finalY + 10;
+                })
+            }
         }
         
         addHeaderAndFooter();
-        doc.save(`Competition-Report-${date}.pdf`);
+        doc.save(`Competition-Report-${reportType === 'summary' ? 'Summary-': ''}${date}.pdf`);
 
         toast({
           title: "Report Generated",
@@ -352,13 +356,13 @@ export default function SettingsPage() {
         });
         return false; // PDF generation failed
     } finally {
-        setIsGenerating(false);
+        setGeneratingReportType(null);
     }
   };
 
   const handleStartNewCompetition = async () => {
     setIsDeleting(true);
-    const pdfGenerated = await generatePdf();
+    const pdfGenerated = await generatePdf('full');
 
     if (!pdfGenerated) {
         toast({
@@ -424,14 +428,24 @@ export default function SettingsPage() {
                         onChange={handleRemarksChange}
                     />
                 </div>
-                <Button onClick={generatePdf} disabled={isGenerating}>
-                    {isGenerating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Download className="mr-2 h-4 w-4" />
-                    )}
-                    {isGenerating ? "Generating..." : "Download Report PDF"}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button onClick={() => generatePdf('full')} disabled={!!generatingReportType}>
+                        {generatingReportType === 'full' ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Download className="mr-2 h-4 w-4" />
+                        )}
+                        {generatingReportType === 'full' ? "Generating..." : "Download Full Report"}
+                    </Button>
+                    <Button onClick={() => generatePdf('summary')} disabled={!!generatingReportType} variant="outline">
+                        {generatingReportType === 'summary' ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Download className="mr-2 h-4 w-4" />
+                        )}
+                        {generatingReportType === 'summary' ? "Generating..." : "Download Summary Report"}
+                    </Button>
+                </div>
             </CardContent>
         </Card>
         <Card className="border-destructive">
@@ -472,3 +486,5 @@ export default function SettingsPage() {
     </>
   );
 }
+
+    
