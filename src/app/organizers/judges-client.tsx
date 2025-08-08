@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,47 +13,19 @@ import type { Judge } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { useRouter } from 'next/navigation';
 
-
-const WhatsAppIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-5 w-5 text-green-500"
-    >
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    </svg>
-);
-
-
-export default function JudgesClient() {
-  const [judges, setJudges] = useState<Judge[]>([]);
+export default function JudgesClient({ initialJudges }: { initialJudges: Judge[] }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  const fetchJudges = useCallback(async () => {
-    setLoading(true);
-    const judgesCollection = collection(db, 'judges');
-    const judgesSnapshot = await getDocs(judgesCollection);
-    const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-    setJudges(judgesList);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchJudges();
-  }, [fetchJudges]);
+  const refreshData = () => {
+    router.refresh();
+  };
 
   const openDialog = (judge: Judge | null = null) => {
     setEditingJudge(judge);
@@ -65,17 +37,17 @@ export default function JudgesClient() {
     setEditingJudge(null);
   };
 
-  const handleSave = async (judgeData: Omit<Judge, 'id'>) => {
+  const handleSave = async (judgeData: Omit<Judge, 'id' | 'createdAt'>) => {
     try {
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
-        await updateDoc(judgeDoc, judgeData);
+        await updateDoc(judgeDoc, { ...judgeData });
         toast({ title: "Success", description: "Judge updated successfully." });
       } else {
-        await addDoc(collection(db, "judges"), judgeData);
+        await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
         toast({ title: "Success", description: "Judge added successfully." });
       }
-      fetchJudges();
+      refreshData();
       closeDialog();
     } catch (error) {
       console.error("Error saving judge: ", error);
@@ -87,28 +59,12 @@ export default function JudgesClient() {
     try {
         await deleteDoc(doc(db, "judges", judgeId));
         toast({ title: "Success", description: "Judge deleted successfully." });
-        fetchJudges();
+        refreshData();
     } catch(error) {
         console.error("Error deleting judge: ", error);
         toast({ title: "Error", description: "Could not delete judge.", variant: "destructive" });
     }
   }
-
-  const handleSendWhatsApp = (judge: Judge) => {
-    if (!judge.mobile || !judge.password) {
-        toast({
-            title: "Missing Information",
-            description: "Judge's mobile number or password is not set.",
-            variant: "destructive"
-        });
-        return;
-    }
-    const message = `Hello ${judge.name}, your password for the JLKS Paradip competition is: *${judge.password}*`;
-    // The '91' is the country code for India.
-    const whatsappUrl = `https://wa.me/91${judge.mobile}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  }
-
 
   return (
     <TooltipProvider>
@@ -130,11 +86,7 @@ export default function JudgesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">Loading judges...</TableCell>
-                </TableRow>
-              ) : judges.map(judge => (
+              {initialJudges.map(judge => (
                 <TableRow key={judge.id}>
                   <TableCell className="font-medium">{judge.name}</TableCell>
                   <TableCell>{judge.mobile}</TableCell>
@@ -142,17 +94,6 @@ export default function JudgesClient() {
                     {judge.password || 'Not Set'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" onClick={() => handleSendWhatsApp(judge)} className="mr-2">
-                          <WhatsAppIcon />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Send via WhatsApp</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    
                     <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
                       <Edit className="h-4 w-4 text-accent" />
                     </Button>
@@ -196,7 +137,7 @@ export default function JudgesClient() {
 type JudgeFormDialogProps = {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<Judge, 'id'>) => void;
+    onSave: (data: Omit<Judge, 'id' | 'createdAt'>) => void;
     judge: Judge | null;
 }
 
