@@ -33,7 +33,7 @@ export default function Home() {
       </div>
       <div className="text-center mb-12">
         <h1 className="font-headline text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
-          Adjudicator's Arena
+          JLKS Paradip
         </h1>
         <div className="font-body text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
             {currentDate ? <p>{currentDate}</p> : <div className="h-7" /> }
