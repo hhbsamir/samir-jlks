@@ -109,7 +109,7 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <>
        <header className="sticky top-0 z-30 flex flex-col items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between w-full">
             <Link href="/" className="flex items-center gap-2">
@@ -131,6 +131,6 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
       </main>
-    </div>
+    </>
   );
 }
