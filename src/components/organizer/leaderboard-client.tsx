@@ -160,33 +160,39 @@ export default function LeaderboardClient() {
         <section key={category}>
             <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Category</h2>
             <Card>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-[50px]">Rank</TableHead>
-                            <TableHead>School</TableHead>
-                            {categories.map(cat => (
-                            <TableHead key={cat.id} className="text-center hidden sm:table-cell">{cat.name}</TableHead>
-                            ))}
-                            <TableHead className="text-right font-bold">Total</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                </Table>
                  <Accordion type="multiple" className="w-full">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]">Rank</TableHead>
+                                <TableHead>School</TableHead>
+                                {categories.map(cat => (
+                                <TableHead key={cat.id} className="text-center hidden sm:table-cell">{cat.name}</TableHead>
+                                ))}
+                                <TableHead className="text-right font-bold">Total</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                    </Table>
                     {leaderboardData.map((entry, index) => (
                         <AccordionItem value={entry.school.id} key={entry.school.id} className="border-b">
-                            <AccordionTrigger className="hover:no-underline [&_svg]:mx-4">
-                                <TableRow className="flex-1 hover:bg-transparent border-b-0">
-                                    <TableCell className="w-[50px] font-bold text-lg">{index + 1}</TableCell>
-                                    <TableCell>
-                                        <div className="font-medium">{entry.school.name}</div>
-                                    </TableCell>
-                                    {categories.map(cat => (
-                                        <TableCell key={cat.id} className="text-center text-lg hidden sm:table-cell">{entry.averageScores[cat.id]}</TableCell>
-                                    ))}
-                                    <TableCell className="text-right font-bold text-primary text-xl">{entry.totalAverage}</TableCell>
-                                </TableRow>
-                            </AccordionTrigger>
+                           <Table>
+                             <TableBody>
+                               <TableRow>
+                                   <TableCell className="w-[50px] font-bold text-lg">{index + 1}</TableCell>
+                                   <TableCell>
+                                       <div className="font-medium">{entry.school.name}</div>
+                                   </TableCell>
+                                   {categories.map(cat => (
+                                       <TableCell key={cat.id} className="text-center text-lg hidden sm:table-cell">{entry.averageScores[cat.id]}</TableCell>
+                                   ))}
+                                   <TableCell className="text-right font-bold text-primary text-xl">{entry.totalAverage}</TableCell>
+                                   <TableCell className="w-[50px]">
+                                       <AccordionTrigger className="hover:no-underline [&_svg]:mx-4 p-0"></AccordionTrigger>
+                                   </TableCell>
+                               </TableRow>
+                             </TableBody>
+                           </Table>
                             <AccordionContent>
                                 <div className="px-4 pb-4">
                                   <Card className="bg-primary/5">
