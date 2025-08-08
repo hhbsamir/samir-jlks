@@ -70,6 +70,7 @@ export default function JudgesPage() {
       if (!selectedJudge) return;
 
       const scoresCollection = collection(db, 'scores');
+      // A more specific query. This may require a composite index if you add more 'where' clauses or an 'orderBy'.
       const q = query(scoresCollection, where("judgeId", "==", selectedJudge.id));
       const scoresSnapshot = await getDocs(q);
       const judgeScores = scoresSnapshot.docs.reduce((acc: SchoolScores, doc) => {
