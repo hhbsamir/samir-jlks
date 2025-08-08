@@ -1,20 +1,16 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { ArrowLeft, BarChart, Check, Music, Palette, Theater } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "@/hooks/use-toast";
-import {
-  initialCategories,
-  initialJudges,
-  initialSchools,
-  initialScores,
-} from "@/lib/data";
 import type { School, CompetitionCategory, Judge, Score } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
@@ -31,29 +27,64 @@ type SchoolScores = {
 };
 
 export default function JudgesPage() {
-  const [schools] = useState<School[]>(initialSchools);
-  const [categories] = useState<CompetitionCategory[]>(initialCategories);
-  const [judges] = useState<Judge[]>(initialJudges);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
+  const [judges, setJudges] = useState<Judge[]>([]);
+  const [scores, setScores] = useState<SchoolScores>({});
   const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
 
-  const initialSchoolScores = useMemo(() => {
-    if (!selectedJudge) return {};
-    return initialScores.reduce((acc: SchoolScores, score) => {
-      if (score.judgeId === selectedJudge.id) {
+  useEffect(() => {
+    const fetchData = async () => {
+      const schoolsCollection = collection(db, 'schools');
+      const schoolsSnapshot = await getDocs(schoolsCollection);
+      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+      setSchools(schoolsList);
+
+      const categoriesCollection = collection(db, 'categories');
+      const categoriesSnapshot = await getDocs(categoriesCollection);
+      const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+      setCategories(categoriesList);
+
+      const judgesCollection = collection(db, 'judges');
+      const judgesSnapshot = await getDocs(judgesCollection);
+      const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+      setJudges(judgesList);
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchScores = async () => {
+      if (!selectedJudge) return;
+
+      const scoresCollection = collection(db, 'scores');
+      const q = query(scoresCollection, where("judgeId", "==", selectedJudge.id));
+      const scoresSnapshot = await getDocs(q);
+      const judgeScores = scoresSnapshot.docs.reduce((acc: SchoolScores, doc) => {
+        const score = doc.data() as Score;
         if (!acc[score.schoolId]) {
           acc[score.schoolId] = {};
         }
         acc[score.schoolId][score.categoryId] = score.score;
-      }
-      return acc;
-    }, {});
-  }, [selectedJudge]);
+        return acc;
+      }, {});
+      
+      const initialScoresForJudge: SchoolScores = {};
+      schools.forEach(school => {
+        initialScoresForJudge[school.id] = {};
+        categories.forEach(category => {
+          initialScoresForJudge[school.id][category.id] = judgeScores[school.id]?.[category.id] ?? 0;
+        });
+      });
 
-  const [scores, setScores] = useState<SchoolScores>(initialSchoolScores);
+      setScores(initialScoresForJudge);
+    };
 
-  React.useEffect(() => {
-    setScores(initialSchoolScores);
-  }, [initialSchoolScores]);
+    if (selectedJudge) {
+        fetchScores();
+    }
+  }, [selectedJudge, schools, categories]);
 
 
   const handleScoreChange = (schoolId: string, categoryId: string, value: number[]) => {

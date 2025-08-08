@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,15 +8,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { initialCategories } from '@/lib/data';
 import type { CompetitionCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+
 
 export default function CategoriesClient() {
-  const [categories, setCategories] = useState<CompetitionCategory[]>(initialCategories);
+  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CompetitionCategory | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const categoriesCollection = collection(db, 'categories');
+      const categoriesSnapshot = await getDocs(categoriesCollection);
+      const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+      setCategories(categoriesList);
+    };
+
+    fetchCategories();
+  }, []);
 
   const openDialog = (category: CompetitionCategory | null = null) => {
     setEditingCategory(category);

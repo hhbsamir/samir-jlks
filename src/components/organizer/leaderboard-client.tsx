@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/page-header';
-import { initialSchools, initialCategories, initialScores, initialJudges } from '@/lib/data';
 import type { School, CompetitionCategory, Score, SchoolCategory } from '@/lib/data';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+
 
 type SchoolScore = {
   school: School;
@@ -18,14 +20,42 @@ type CategorizedLeaderboard = {
 };
 
 export default function LeaderboardClient() {
-  const [schools] = useState(initialSchools);
-  const [categories] = useState(initialCategories);
-  const [scores] = useState(initialScores);
-  const [judges] = useState(initialJudges);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
+  const [scores, setScores] = useState<Score[]>([]);
+  const [judges, setJudges] = useState<{id:string}[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const schoolsCollection = collection(db, 'schools');
+      const schoolsSnapshot = await getDocs(schoolsCollection);
+      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+      setSchools(schoolsList);
+
+      const categoriesCollection = collection(db, 'categories');
+      const categoriesSnapshot = await getDocs(categoriesCollection);
+      const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+      setCategories(categoriesList);
+
+      const scoresCollection = collection(db, 'scores');
+      const scoresSnapshot = await getDocs(scoresCollection);
+      const scoresList = scoresSnapshot.docs.map(doc => doc.data() as Score);
+      setScores(scoresList);
+      
+      const judgesCollection = collection(db, 'judges');
+      const judgesSnapshot = await getDocs(judgesCollection);
+      const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id }));
+      setJudges(judgesList);
+    };
+
+    fetchData();
+  }, []);
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
 
   const categorizedLeaderboardData = useMemo(() => {
+    if (schools.length === 0 || categories.length === 0 || judges.length === 0) return {};
+
     return schoolCategories.reduce((acc: CategorizedLeaderboard, category) => {
       const schoolsInCategory = schools.filter(school => school.category === category);
       

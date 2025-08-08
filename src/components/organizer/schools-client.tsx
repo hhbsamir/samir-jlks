@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,15 +9,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/page-header';
-import { initialSchools } from '@/lib/data';
 import type { School, SchoolCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+
 
 export default function SchoolsClient() {
-  const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [schools, setSchools] = useState<School[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      const schoolsCollection = collection(db, 'schools');
+      const schoolsSnapshot = await getDocs(schoolsCollection);
+      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+      setSchools(schoolsList);
+    };
+
+    fetchSchools();
+  }, []);
 
   const openDialog = (school: School | null = null) => {
     setEditingSchool(school);

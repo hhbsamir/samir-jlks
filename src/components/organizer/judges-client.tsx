@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,15 +8,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
-import { initialJudges } from '@/lib/data';
 import type { Judge } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 export default function JudgesClient() {
-  const [judges, setJudges] = useState<Judge[]>(initialJudges);
+  const [judges, setJudges] = useState<Judge[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
+
+  useEffect(() => {
+    const fetchJudges = async () => {
+      const judgesCollection = collection(db, 'judges');
+      const judgesSnapshot = await getDocs(judgesCollection);
+      const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+      setJudges(judgesList);
+    };
+
+    fetchJudges();
+  }, []);
 
   const openDialog = (judge: Judge | null = null) => {
     setEditingJudge(judge);
