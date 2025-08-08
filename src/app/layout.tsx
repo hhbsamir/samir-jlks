@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "Adjudicator's Arena",
+  title: "JLKS Paradip",
   description: 'The ultimate platform for fair and transparent competition scoring.',
 };
 

@@ -11,7 +11,7 @@ export default function Home() {
       <NavButtons showBack={false} />
       <div className="text-center mb-12">
         <h1 className="font-headline text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
-          Adjudicator's Arena
+          JLKS Paradip
         </h1>
         <p className="font-body text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
           The ultimate platform for fair, transparent, and electrifying competition scoring.

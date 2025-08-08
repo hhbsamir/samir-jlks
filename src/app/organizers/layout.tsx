@@ -15,7 +15,7 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
             <Link href="/">
               <Crown className="w-8 h-8 text-primary" />
               <div className="ml-3 group-data-[collapsible=icon]:hidden">
-                <h2 className="font-headline text-xl">Adjudicator's Arena</h2>
+                <h2 className="font-headline text-xl">JLKS Paradip</h2>
                 <p className="text-sm text-sidebar-foreground/70">Organizer's Dashboard</p>
               </div>
             </Link>
