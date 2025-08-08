@@ -31,11 +31,9 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
               <div className="md:hidden">
                   <SidebarTrigger />
               </div>
-              <div className="hidden md:block">
-                  <NavButtons />
-              </div>
+              <NavButtons />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 text-center">
                 <h1 className="font-headline text-3xl hidden sm:block">Organizer's Dashboard</h1>
             </div>
         </header>

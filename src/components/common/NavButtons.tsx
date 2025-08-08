@@ -9,7 +9,7 @@ export function NavButtons({ showBack = true }: { showBack?: boolean }) {
   const router = useRouter();
 
   return (
-    <div className="absolute top-4 left-4 flex items-center gap-2 z-20">
+    <div className="flex items-center gap-2 z-20">
       <Button asChild variant="outline" size="lg" className="p-2" aria-label="Home">
         <Link href="/">
           <Home className="h-6 w-6" />
