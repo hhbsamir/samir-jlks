@@ -71,46 +71,56 @@ export default function SettingsPage() {
         // 2. Initialize PDF
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }) as jsPDFWithAutoTable;
         
-        const primaryColor = '#2563eb'; // Rich Blue from your theme
-        const accentColor = '#f97316'; // Golden Amber from your theme
+        const primaryColor = '#2563eb';
+        const accentColor = '#f97316';
         const date = format(new Date(), 'yyyy-MM-dd');
         const reportDate = format(new Date(), 'do MMMM yyyy');
+        const pageMargin = 14;
 
         // --- Helper Functions ---
-        const addHeaderFooter = () => {
+        const addHeaderAndFooter = () => {
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
-                doc.setFontSize(14);
+                
+                // Header
+                doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(primaryColor);
-                doc.text('JLKS Paradip - Competition Report', 105, 15, { align: 'center' });
+                doc.text('JLKS Paradip - Competition Full Report', 105, 15, { align: 'center' });
+                
+                if (remarks) {
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(80, 80, 80);
+                    doc.text(remarks, 105, 22, { align: 'center' });
+                }
 
+                // Footer
                 doc.setFontSize(8);
                 doc.setTextColor(100);
                 doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
-                doc.text(`Generated on: ${reportDate}`, 200, 287, { align: 'right' });
+                doc.text(`Generated on: ${reportDate}`, 210 - pageMargin, 287, { align: 'right' });
             }
         };
 
         // --- Title Page ---
-        doc.rect(0, 0, 210, 297, 'F'); // Full page background - can be white or a light color
-        doc.setFillColor(255, 255, 255);
-        doc.setFontSize(32);
+        doc.setFontSize(36);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
-        doc.text('Competition Score Report', 105, 80, { align: 'center' });
+        doc.text('Competition Score Report', 105, 120, { align: 'center' });
 
-        doc.setFontSize(18);
+        doc.setFontSize(20);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(accentColor);
-        doc.text(`Date: ${reportDate}`, 105, 100, { align: 'center' });
+        doc.text(`Date: ${reportDate}`, 105, 140, { align: 'center' });
 
         if (remarks) {
-            doc.setFontSize(14);
-            doc.setTextColor(80,80,80);
-            const remarksLines = doc.splitTextToSize(remarks, 160);
-            doc.text(remarksLines, 105, 140, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(80, 80, 80);
+            const remarksLines = doc.splitTextToSize(remarks, 180);
+            doc.text(remarksLines, 105, 160, { align: 'center' });
         }
         
         // --- Score Sections ---
@@ -124,13 +134,13 @@ export default function SettingsPage() {
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(primaryColor);
-            doc.text(`${schoolCategory} Category Results`, 14, 20);
+            doc.text(`${schoolCategory} Category Results`, pageMargin, 30);
 
             // --- Summary Table ---
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(accentColor);
-            doc.text('Final Rankings', 14, 35);
+            doc.text('Final Rankings', pageMargin, 42);
             const head = [['Rank', 'School', ...categories.map(c => c.name), 'Total Score']];
             const body = schoolsInCategory
               .map(school => {
@@ -150,22 +160,23 @@ export default function SettingsPage() {
               ]);
 
             doc.autoTable({
-                startY: 40,
+                startY: 45,
                 head,
                 body,
                 theme: 'striped',
                 headStyles: { fillColor: primaryColor, textColor: 255 },
-                styles: { fontSize: 10 },
+                styles: { fontSize: 10, cellPadding: 2 },
+                margin: { left: pageMargin, right: pageMargin }
             });
 
             // --- Judge Breakdown Section ---
-            doc.addPage();
-            doc.setFontSize(18);
+            let lastY = (doc as any).lastAutoTable.finalY || 45;
+            doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(accentColor);
-            doc.text(`Judge Score Breakdown (${schoolCategory})`, 14, 20);
+            doc.text(`Judge Score Breakdown`, pageMargin, lastY + 15);
+            lastY += 20;
 
-            let lastY = 25;
             schoolsInCategory.forEach(school => {
                 const judgeHead = [['Judge', ...categories.map(c => c.name), 'Total']];
                 const judgeBody = judges.map(judge => {
@@ -179,27 +190,26 @@ export default function SettingsPage() {
                         judgeTotal
                     ]
                 });
+
+                if (lastY + (judgeBody.length + 2) * 8 > 280) { // Estimate table height
+                    doc.addPage();
+                    lastY = 30;
+                }
+
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(school.name, pageMargin, lastY);
                 
                 doc.autoTable({
-                    startY: lastY + 5,
+                    startY: lastY + 3,
                     head: judgeHead,
                     body: judgeBody,
                     theme: 'grid',
-                    tableWidth: 'auto',
-                    margin: { left: 14 },
-                    headStyles: { fillColor: '#334155', textColor: 255 },
-                    didParseCell: (data) => {
-                        if (data.section === 'head') {
-                            data.cell.styles.fontStyle = 'bold';
-                        }
-                    },
-                    didDrawPage: (data) => {
-                        doc.setFontSize(14);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(school.name, 14, data.cursor.y - judgeBody.length * 8 - 10);
-                    }
+                    headStyles: { fillColor: '#475569', textColor: 255, fontSize: 9 },
+                    styles: { fontSize: 9, cellPadding: 2 },
+                    margin: { left: pageMargin, right: pageMargin }
                 });
-                lastY = (doc as any).lastAutoTable.finalY;
+                lastY = (doc as any).lastAutoTable.finalY + 10;
             });
         });
         
@@ -210,38 +220,40 @@ export default function SettingsPage() {
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(primaryColor);
-            doc.text('Sub-Junior Category Feedback', 14, 20);
+            doc.text('Sub-Junior Category Feedback', pageMargin, 30);
             
-            let lastY = 25;
+            let lastY = 35;
             subJuniorSchools.forEach(school => {
-                doc.setFontSize(14);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(accentColor);
-                doc.text(school.name, 14, lastY + 5);
-
                 const feedbackBody = judges.map(judge => {
                     const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
                     return [judge.name, feedback];
                 });
 
+                const tableHeight = (feedbackBody.length + 1) * 10 + 10; // Approximate height
+                if (lastY + tableHeight > 280) {
+                    doc.addPage();
+                    lastY = 30;
+                }
+                
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(accentColor);
+                doc.text(school.name, pageMargin, lastY + 5);
+
                 doc.autoTable({
-                    startY: lastY + 10,
+                    startY: lastY + 8,
                     head: [['Judge', 'Feedback']],
                     body: feedbackBody,
                     theme: 'grid',
                     headStyles: { fillColor: primaryColor, textColor: 255 },
-                    columnStyles: { 1: { cellWidth: 'auto' } }
+                    columnStyles: { 1: { cellWidth: 'auto' } },
+                    margin: { left: pageMargin, right: pageMargin }
                 });
-                lastY = (doc as any).lastAutoTable.finalY;
+                lastY = (doc as any).lastAutoTable.finalY + 10;
             })
         }
         
-        // Remove the default blank page if it exists
-        if (doc.internal.getNumberOfPages() > 1) {
-            doc.deletePage(1);
-        }
-
-        addHeaderFooter();
+        addHeaderAndFooter();
         doc.save(`Competition-Report-${date}.pdf`);
 
         toast({
@@ -268,8 +280,13 @@ export default function SettingsPage() {
     const pdfGenerated = await generatePdf();
 
     if (!pdfGenerated) {
+        toast({
+            title: "Action Stopped",
+            description: "Competition data was not cleared because the report failed to generate.",
+            variant: "destructive"
+        });
         setIsDeleting(false);
-        return; // Stop if PDF generation failed
+        return;
     }
 
     try {
@@ -291,8 +308,6 @@ export default function SettingsPage() {
         title: "New Competition Started!",
         description: "All schools, scores, and feedback have been successfully deleted.",
       });
-      // Do not clear remarks
-      // setRemarks('');
 
     } catch (error) {
       console.error("Error starting new competition:", error);
@@ -315,7 +330,7 @@ export default function SettingsPage() {
             <CardTitle>Generate Final Report</CardTitle>
             <CardDescription>
                 Download a complete PDF report of the competition including all scores and feedback. 
-                Enter any final remarks below to include them in the report header.
+                Enter any final remarks below to include them on every page of the report.
             </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -343,8 +358,7 @@ export default function SettingsPage() {
             <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
             <CardDescription>
                 This will permanently delete all existing schools, scores, and feedback. 
-                Judges and Categories will not be affected. This action cannot be undone.
-                It is highly recommended to download the final report before proceeding.
+                Judges and Categories will not be affected. It is highly recommended to download the final report before proceeding.
             </CardDescription>
             </CardHeader>
             <CardContent>
@@ -377,3 +391,5 @@ export default function SettingsPage() {
     </>
   );
 }
+
+    
