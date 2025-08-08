@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
-import type { School, CompetitionCategory, Judge, Score } from "@/lib/data";
+import type { School, CompetitionCategory, Judge, Score, SchoolCategory } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, writeBatch, doc } from "firebase/firestore";
@@ -28,6 +28,8 @@ type SchoolScores = {
     [categoryId: string]: number;
   };
 };
+
+const schoolCategoryOrder: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
 export default function JudgesPage() {
   const [schools, setSchools] = useState<School[]>([]);
@@ -108,6 +110,13 @@ export default function JudgesPage() {
     }
   }, [authenticatedJudge, schools, categories]);
 
+  const categorizedSchools = useMemo(() => {
+    return schoolCategoryOrder.reduce((acc, category) => {
+        acc[category] = schools.filter(school => school.category === category);
+        return acc;
+    }, {} as Record<SchoolCategory, School[]>);
+  }, [schools]);
+
   const handleJudgeSelection = (judge: Judge) => {
     if (!judge.password) {
       setAuthenticatedJudge(judge);
@@ -121,24 +130,27 @@ export default function JudgesPage() {
     e.preventDefault();
     setIsAuthenticating(true);
 
-    if (selectedJudge && password === selectedJudge.password) {
-      setAuthenticatedJudge(selectedJudge);
-      setIsAuthModalOpen(false);
-      setSelectedJudge(null);
-      setPassword('');
-      toast({
-        title: "Access Granted",
-        description: `Welcome, ${selectedJudge.name}. You can now start scoring.`
-      });
-    } else {
-      toast({
-        title: "Access Denied",
-        description: "The password you entered is incorrect.",
-        variant: "destructive"
-      });
-      setPassword('');
-    }
-    setIsAuthenticating(false);
+    // Artificial delay to give feedback
+    setTimeout(() => {
+      if (selectedJudge && password === selectedJudge.password) {
+        setAuthenticatedJudge(selectedJudge);
+        setIsAuthModalOpen(false);
+        setSelectedJudge(null);
+        setPassword('');
+        toast({
+          title: "Access Granted",
+          description: `Welcome, ${selectedJudge.name}. You can now start scoring.`
+        });
+      } else {
+        toast({
+          title: "Access Denied",
+          description: "The password you entered is incorrect.",
+          variant: "destructive"
+        });
+        setPassword('');
+      }
+      setIsAuthenticating(false);
+    }, 500);
   };
 
   const handleScoreChange = (schoolId: string, categoryId: string, value: string) => {
@@ -236,7 +248,7 @@ export default function JudgesPage() {
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={isAuthenticating} className="w-full">
-                    {isAuthenticating ? 'Verifying...' : 'Enter Scoring Sheet'}
+                    {isAuthenticating ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Verifying...</>) : 'Enter Scoring Sheet'}
                   </Button>
                 </DialogFooter>
             </form>
@@ -278,52 +290,63 @@ export default function JudgesPage() {
     <>
         {authenticatedJudge && (
             <div className="flex justify-center mb-10">
-                <Button onClick={() => setAuthenticatedJudge(null)} variant="outline">
+                <Button onClick={() => {
+                  setAuthenticatedJudge(null);
+                  setScores({});
+                }} variant="outline">
                     <ArrowLeft className="mr-2 h-5 w-5" />
                     Back to Judge Selection
                 </Button>
             </div>
         )}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-            {schools.map(school => (
-            <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20">
-                <CardHeader>
-                <CardTitle className="font-headline text-2xl md:text-3xl">{school.name}</CardTitle>
-                <CardDescription className="text-base">{school.category}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                {categories.map(category => (
-                    <div key={category.id} className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                           {categoryIcons[category.name] || categoryIcons.default}
-                           <label className="text-base md:text-lg font-medium">{category.name}</label>
-                        </div>
-                        <div className="w-24">
-                          <Select
-                            value={(scores[school.id]?.[category.id] ?? 0).toString()}
-                            onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                            disabled={submitting === school.id}
-                          >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Score" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: 11 }, (_, i) => (
-                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+        <div className="space-y-12">
+            {schoolCategoryOrder.map(schoolCategory => (
+                categorizedSchools[schoolCategory]?.length > 0 && (
+                    <section key={schoolCategory}>
+                        <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{schoolCategory} Schools</h2>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+                            {categorizedSchools[schoolCategory].map(school => (
+                            <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20">
+                                <CardHeader>
+                                <CardTitle className="font-headline text-2xl md:text-3xl">{school.name}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                {categories.map(category => (
+                                    <div key={category.id} className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                        {categoryIcons[category.name] || categoryIcons.default}
+                                        <label className="text-base md:text-lg font-medium">{category.name}</label>
+                                        </div>
+                                        <div className="w-24">
+                                        <Select
+                                            value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                                            onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
+                                            disabled={submitting === school.id}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Score" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Array.from({ length: 11 }, (_, i) => (
+                                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        </div>
+                                    </div>
+                                    </div>
                                 ))}
-                            </SelectContent>
-                          </Select>
+                                <Button className="w-full mt-4 font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
+                                    {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
+                                    {submitting === school.id ? "Submitting..." : `Submit Scores for ${school.name}`}
+                                </Button>
+                                </CardContent>
+                            </Card>
+                            ))}
                         </div>
-                      </div>
-                    </div>
-                ))}
-                <Button className="w-full mt-4 font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
-                    {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
-                    {submitting === school.id ? "Submitting..." : `Submit Scores for ${school.name}`}
-                </Button>
-                </CardContent>
-            </Card>
+                    </section>
+                )
             ))}
         </div>
     </>
@@ -350,3 +373,5 @@ export default function JudgesPage() {
     </div>
   );
 }
+
+    
