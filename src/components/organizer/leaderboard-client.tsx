@@ -1,13 +1,11 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/page-header';
 import type { School, CompetitionCategory, Score, SchoolCategory, Judge, Feedback } from '@/lib/data';
-import { db } from '@/lib/firebase';
-import { collection, getDocs } from 'firebase/firestore';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Trophy, Medal, Award } from 'lucide-react';
 
@@ -40,43 +38,15 @@ type CategorizedLeaderboard = {
   [key in SchoolCategory]?: SchoolScore[];
 };
 
-export default function LeaderboardClient() {
-  const [schools, setSchools] = useState<School[]>([]);
-  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
-  const [scores, setScores] = useState<Score[]>([]);
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [judges, setJudges] = useState<Judge[]>([]);
+type LeaderboardClientProps = {
+    schools: School[];
+    categories: CompetitionCategory[];
+    scores: Score[];
+    feedbacks: Feedback[];
+    judges: Judge[];
+}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const schoolsCollection = collection(db, 'schools');
-      const schoolsSnapshot = await getDocs(schoolsCollection);
-      const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
-      setSchools(schoolsList);
-
-      const categoriesCollection = collection(db, 'categories');
-      const categoriesSnapshot = await getDocs(categoriesCollection);
-      const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
-      setCategories(categoriesList);
-
-      const scoresCollection = collection(db, 'scores');
-      const scoresSnapshot = await getDocs(scoresCollection);
-      const scoresList = scoresSnapshot.docs.map(doc => doc.data() as Score);
-      setScores(scoresList);
-
-      const feedbacksCollection = collection(db, 'feedbacks');
-      const feedbacksSnapshot = await getDocs(feedbacksCollection);
-      const feedbacksList = feedbacksSnapshot.docs.map(doc => doc.data() as Feedback);
-      setFeedbacks(feedbacksList);
-      
-      const judgesCollection = collection(db, 'judges');
-      const judgesSnapshot = await getDocs(judgesCollection);
-      const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-      setJudges(judgesList);
-    };
-
-    fetchData();
-  }, []);
+export default function LeaderboardClient({ schools, categories, scores, feedbacks, judges }: LeaderboardClientProps) {
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
 
@@ -280,7 +250,7 @@ export default function LeaderboardClient() {
     <div>
       <PageHeader title="Leaderboard" />
       
-      <Accordion type="multiple" className="w-full space-y-8">
+      <Accordion type="multiple" className="w-full space-y-8" defaultValue={['senior', 'junior', 'sub-junior']}>
         {hasSeniorData && (
           <AccordionItem value="senior">
             <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">

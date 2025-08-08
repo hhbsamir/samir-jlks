@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,36 +14,31 @@ import type { School, SchoolCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { useRouter } from 'next/navigation';
 
 const validCategories: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
-export default function SchoolsClient() {
-  const [schools, setSchools] = useState<School[]>([]);
+export default function SchoolsClient({ initialSchools }: { initialSchools: School[] }) {
+  const [schools, setSchools] = useState<School[]>(initialSchools);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
-  const fetchSchools = useCallback(async () => {
-    setLoading(true);
-    const schoolsCollection = collection(db, 'schools');
-    const schoolsSnapshot = await getDocs(schoolsCollection);
-    const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
-    setSchools(schoolsList);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchSchools();
-  }, [fetchSchools]);
+  const refreshData = () => {
+    router.refresh();
+  }
 
   const categorizedSchools = useMemo(() => {
     return validCategories.reduce((acc, category) => {
-        acc[category] = schools.filter(school => school.category === category);
+        const sortedSchools = schools
+            .filter(school => school.category === category)
+            .sort((a,b) => a.name.localeCompare(b.name));
+        acc[category] = sortedSchools;
         return acc;
     }, {} as Record<SchoolCategory, School[]>);
   }, [schools]);
@@ -68,7 +63,9 @@ export default function SchoolsClient() {
             await addDoc(collection(db, "schools"), schoolData);
             toast({ title: "Success", description: "School added successfully." });
         }
-        fetchSchools();
+        refreshData();
+        const newSchoolsSnapshot = await getDocs(collection(db, 'schools'));
+        setSchools(newSchoolsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as School)));
         closeDialog();
     } catch (error) {
         console.error("Error saving school: ", error);
@@ -80,7 +77,7 @@ export default function SchoolsClient() {
     try {
         await deleteDoc(doc(db, "schools", schoolId));
         toast({ title: "Success", description: "School deleted successfully." });
-        fetchSchools();
+        setSchools(schools.filter(s => s.id !== schoolId));
     } catch (error) {
         console.error("Error deleting school: ", error);
         toast({ title: "Error", description: "Could not delete school.", variant: "destructive" });
@@ -131,7 +128,10 @@ export default function SchoolsClient() {
             description: `${newSchools.length} schools have been added.`
         });
 
-        fetchSchools();
+        refreshData();
+        const newSchoolsSnapshot = await getDocs(collection(db, 'schools'));
+        setSchools(newSchoolsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as School)));
+
       } catch (error) {
         console.error("Error processing Excel file: ", error);
         toast({ title: "Upload Failed", description: "There was an error processing your file.", variant: "destructive" });
@@ -168,62 +168,58 @@ export default function SchoolsClient() {
       </PageHeader>
       
       <div className="space-y-12">
-        {loading ? (
-            <p>Loading schools...</p>
-        ) : (
-            validCategories.map(category => (
-                categorizedSchools[category].length > 0 && (
-                <section key={category}>
-                    <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Schools</h2>
-                    <Card>
-                        <CardContent className="pt-6">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[80px]">Sl. No.</TableHead>
-                                        <TableHead>School Name</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {categorizedSchools[category].map((school, index) => (
-                                        <TableRow key={school.id}>
-                                            <TableCell className="font-medium">{index + 1}</TableCell>
-                                            <TableCell className="font-medium">{school.name}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
-                                                <Edit className="h-4 w-4 text-accent" />
+        {validCategories.map(category => (
+            categorizedSchools[category] && categorizedSchools[category].length > 0 && (
+            <section key={category}>
+                <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Schools</h2>
+                <Card>
+                    <CardContent className="pt-6">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[80px]">Sl. No.</TableHead>
+                                    <TableHead>School Name</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {categorizedSchools[category].map((school, index) => (
+                                    <TableRow key={school.id}>
+                                        <TableCell className="font-medium">{index + 1}</TableCell>
+                                        <TableCell className="font-medium">{school.name}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
+                                            <Edit className="h-4 w-4 text-accent" />
+                                            </Button>
+                                            <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                <Trash2 className="h-4 w-4 text-destructive" />
                                                 </Button>
-                                                <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="ghost" size="icon">
-                                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        This action cannot be undone. This will permanently delete the school and all associated scores.
-                                                    </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </section>
-                )
-            ))
-        )}
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone. This will permanently delete the school and all associated scores.
+                                                </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                            </AlertDialog>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </section>
+            )
+        ))}
       </div>
 
       <SchoolFormDialog 
@@ -299,5 +295,3 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
-
-    

@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,27 +13,19 @@ import type { CompetitionCategory } from '@/lib/data';
 import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
-export default function CategoriesClient() {
-  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
+export default function CategoriesClient({ initialCategories }: { initialCategories: CompetitionCategory[] }) {
+  const [categories, setCategories] = useState<CompetitionCategory[]>(initialCategories);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CompetitionCategory | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    const categoriesCollection = collection(db, 'categories');
-    const categoriesSnapshot = await getDocs(categoriesCollection);
-    const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
-    setCategories(categoriesList);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  const refreshData = () => {
+    router.refresh();
+  };
 
   const openDialog = (category: CompetitionCategory | null = null) => {
     setEditingCategory(category);
@@ -54,7 +47,7 @@ export default function CategoriesClient() {
         await addDoc(collection(db, "categories"), categoryData);
         toast({ title: "Success", description: "Category added successfully." });
       }
-      fetchCategories();
+      refreshData();
       closeDialog();
     } catch (error) {
       console.error("Error saving category: ", error);
@@ -66,7 +59,7 @@ export default function CategoriesClient() {
     try {
       await deleteDoc(doc(db, "categories", categoryId));
       toast({ title: "Success", description: "Category deleted successfully." });
-      fetchCategories();
+      setCategories(categories.filter(c => c.id !== categoryId));
     } catch (error) {
       console.error("Error deleting category: ", error);
       toast({ title: "Error", description: "Could not delete category.", variant: "destructive" });
@@ -91,11 +84,7 @@ export default function CategoriesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={2} className="text-center">Loading categories...</TableCell>
-                </TableRow>
-              ) : categories.map(category => (
+              {categories.map(category => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
                   <TableCell className="text-right">

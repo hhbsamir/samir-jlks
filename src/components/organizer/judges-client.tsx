@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -13,9 +13,10 @@ import type { Judge } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useRouter } from 'next/navigation';
 
 
 const WhatsAppIcon = () => (
@@ -36,42 +37,15 @@ const WhatsAppIcon = () => (
 );
 
 
-export default function JudgesClient() {
-  const [judges, setJudges] = useState<Judge[]>([]);
+export default function JudgesClient({ initialJudges }: { initialJudges: Judge[] }) {
+  const [judges, setJudges] = useState<Judge[]>(initialJudges);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchJudges = useCallback(async () => {
-    setLoading(true);
-    try {
-        const judgesCollection = collection(db, 'judges');
-        const judgesSnapshot = await getDocs(judgesCollection);
-        const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-        
-        // Sort client-side to handle documents with and without createdAt
-        judgesList.sort((a, b) => {
-            const aTime = a.createdAt?.toMillis() ?? 0;
-            const bTime = b.createdAt?.toMillis() ?? 0;
-            if (aTime !== bTime) {
-                return aTime - bTime;
-            }
-            // Fallback for items with no timestamp or same timestamp
-            return a.name.localeCompare(b.name);
-        });
-
-        setJudges(judgesList);
-    } catch (e) {
-        console.error("Error fetching judges:", e);
-        toast({ title: "Error", description: "Could not fetch judges.", variant: "destructive" });
-    } finally {
-        setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchJudges();
-  }, [fetchJudges]);
+  const router = useRouter();
+  
+  const refreshData = () => {
+      router.refresh();
+  };
 
   const openDialog = (judge: Judge | null = null) => {
     setEditingJudge(judge);
@@ -93,7 +67,7 @@ export default function JudgesClient() {
         await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
         toast({ title: "Success", description: "Judge added successfully." });
       }
-      fetchJudges();
+      refreshData();
       closeDialog();
     } catch (error) {
       console.error("Error saving judge: ", error);
@@ -105,7 +79,7 @@ export default function JudgesClient() {
     try {
         await deleteDoc(doc(db, "judges", judgeId));
         toast({ title: "Success", description: "Judge deleted successfully." });
-        fetchJudges();
+        setJudges(judges.filter(j => j.id !== judgeId));
     } catch(error) {
         console.error("Error deleting judge: ", error);
         toast({ title: "Error", description: "Could not delete judge.", variant: "destructive" });
@@ -148,11 +122,7 @@ export default function JudgesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center">Loading judges...</TableCell>
-                </TableRow>
-              ) : judges.map(judge => (
+              {judges.map(judge => (
                 <TableRow key={judge.id}>
                   <TableCell className="font-medium">{judge.name}</TableCell>
                   <TableCell>{judge.mobile}</TableCell>
@@ -289,5 +259,3 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         </Dialog>
     )
 }
-
-    
