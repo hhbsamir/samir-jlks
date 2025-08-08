@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -42,9 +42,9 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
   const router = useRouter();
-  
+
   const refreshData = () => {
-      router.refresh();
+    router.refresh();
   };
 
   const openDialog = (judge: Judge | null = null) => {
@@ -61,7 +61,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
     try {
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
-        await updateDoc(judgeDoc, { ...judgeData, createdAt: editingJudge.createdAt || serverTimestamp() });
+        await updateDoc(judgeDoc, { ...judgeData });
         toast({ title: "Success", description: "Judge updated successfully." });
       } else {
         await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
@@ -79,7 +79,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
     try {
         await deleteDoc(doc(db, "judges", judgeId));
         toast({ title: "Success", description: "Judge deleted successfully." });
-        setJudges(judges.filter(j => j.id !== judgeId));
+        refreshData();
     } catch(error) {
         console.error("Error deleting judge: ", error);
         toast({ title: "Error", description: "Could not delete judge.", variant: "destructive" });
@@ -122,7 +122,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
               </TableRow>
             </TableHeader>
             <TableBody>
-              {judges.map(judge => (
+              {initialJudges.map(judge => (
                 <TableRow key={judge.id}>
                   <TableCell className="font-medium">{judge.name}</TableCell>
                   <TableCell>{judge.mobile}</TableCell>
