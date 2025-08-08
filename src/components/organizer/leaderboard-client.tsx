@@ -168,11 +168,10 @@ export default function LeaderboardClient() {
 
   const renderJuniorSenior = (category: 'Junior' | 'Senior') => {
     const leaderboardData = categorizedLeaderboardData[category];
-    if (!leaderboardData || leaderboardData.length === 0) return null;
+    if (!leaderboardData || leaderboardData.length === 0) return <p className="p-4 text-muted-foreground">No data available for this category yet.</p>;
 
     return (
         <section key={category}>
-            <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Category</h2>
              <Accordion type="multiple" className="w-full space-y-4">
                 {leaderboardData.map((entry, index) => {
                     const rank = index + 1;
@@ -241,10 +240,9 @@ export default function LeaderboardClient() {
   }
 
   const renderSubJunior = () => {
-    if (subJuniorFeedbackData.length === 0) return null;
+    if (subJuniorFeedbackData.length === 0) return <p className="p-4 text-muted-foreground">No feedback available for this category yet.</p>;
     return (
         <section>
-            <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">Sub-Junior Category Feedback</h2>
             <div className="space-y-6">
                 {subJuniorFeedbackData.map(entry => (
                      <Card key={entry.school.id}>
@@ -273,17 +271,53 @@ export default function LeaderboardClient() {
     )
   }
 
+  const hasSeniorData = categorizedLeaderboardData.Senior && categorizedLeaderboardData.Senior.length > 0;
+  const hasJuniorData = categorizedLeaderboardData.Junior && categorizedLeaderboardData.Junior.length > 0;
+  const hasSubJuniorData = subJuniorFeedbackData.length > 0;
+
+
   return (
     <div>
       <PageHeader title="Leaderboard" />
       
-      <div className="space-y-12">
-        {renderJuniorSenior('Senior')}
-        {renderJuniorSenior('Junior')}
-        {renderSubJunior()}
-      </div>
+      <Accordion type="multiple" className="w-full space-y-8">
+        {hasSeniorData && (
+          <AccordionItem value="senior">
+            <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+              Senior Category
+            </AccordionTrigger>
+            <AccordionContent className="pt-8">
+              {renderJuniorSenior('Senior')}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+        {hasJuniorData && (
+          <AccordionItem value="junior">
+            <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+              Junior Category
+            </AccordionTrigger>
+            <AccordionContent className="pt-8">
+              {renderJuniorSenior('Junior')}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+        {hasSubJuniorData && (
+          <AccordionItem value="sub-junior">
+            <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+              Sub-Junior Category Feedback
+            </AccordionTrigger>
+            <AccordionContent className="pt-8">
+              {renderSubJunior()}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+         {!hasSeniorData && !hasJuniorData && !hasSubJuniorData && (
+            <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">The leaderboard is currently empty.</p>
+                <p className="text-muted-foreground">Scores and feedback will appear here as judges submit them.</p>
+            </div>
+        )}
+      </Accordion>
     </div>
   );
 }
-
-    
