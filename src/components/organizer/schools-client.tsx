@@ -180,13 +180,15 @@ export default function SchoolsClient() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
+                                        <TableHead className="w-[80px]">Sl. No.</TableHead>
                                         <TableHead>School Name</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {categorizedSchools[category].map(school => (
+                                    {categorizedSchools[category].map((school, index) => (
                                         <TableRow key={school.id}>
+                                            <TableCell className="font-medium">{index + 1}</TableCell>
                                             <TableCell className="font-medium">{school.name}</TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
