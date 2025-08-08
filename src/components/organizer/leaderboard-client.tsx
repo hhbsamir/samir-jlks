@@ -359,7 +359,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
 
   return (
     <div>
-      <PageHeader title="Leaderboard" />
+      <PageHeader title="Leaderboard" centerTitle={true} />
       
       <Accordion type="multiple" className="w-full space-y-8">
         {hasSeniorData && (
