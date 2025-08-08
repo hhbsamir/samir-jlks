@@ -66,7 +66,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
     }
 
     const mobileNumber = judge.mobile.startsWith('91') ? judge.mobile : `91${judge.mobile}`;
-    const message = `Hello ${judge.name}, your password for the JLKS Paradip competition scoring app is: *${judge.password}*`;
+    const message = `Namaskar 🙏 ${judge.name}, your password for the JLKS Paradip competition scoring app is: *${judge.password}*`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${mobileNumber}?text=${encodedMessage}`;
     
