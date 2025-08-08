@@ -15,8 +15,26 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
+
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+  </svg>
+);
+
 
 export default function JudgesClient({ initialJudges }: { initialJudges: Judge[] }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,6 +53,24 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingJudge(null);
+  };
+
+  const handleSendWhatsApp = (judge: Judge) => {
+    if (!judge.mobile || !judge.password) {
+      toast({
+        title: "Missing Information",
+        description: "Judge's mobile number or password is not set.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const mobileNumber = judge.mobile.startsWith('91') ? judge.mobile : `91${judge.mobile}`;
+    const message = `Hello ${judge.name}, your password for the JLKS Paradip competition scoring app is: *${judge.password}*`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${mobileNumber}?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
   };
 
   const handleSave = async (judgeData: Omit<Judge, 'id' | 'createdAt'>) => {
@@ -94,9 +130,26 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
                     {judge.password || 'Not Set'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
-                      <Edit className="h-4 w-4 text-accent" />
-                    </Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" onClick={() => handleSendWhatsApp(judge)}>
+                           <WhatsAppIcon className="h-5 w-5 text-green-600" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Send Password via WhatsApp</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                           <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
+                             <Edit className="h-4 w-4 text-accent" />
+                           </Button>
+                        </TooltipTrigger>
+                         <TooltipContent>
+                           <p>Edit Judge</p>
+                         </TooltipContent>
+                    </Tooltip>
                      <AlertDialog>
                       <AlertDialogTrigger asChild>
                          <Button variant="ghost" size="icon">
