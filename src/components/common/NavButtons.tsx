@@ -10,19 +10,20 @@ export function NavButtons({ showBack = true }: { showBack?: boolean }) {
 
   return (
     <div className="absolute top-4 left-4 flex items-center gap-2 z-20">
-      <Button asChild variant="outline" size="icon" aria-label="Home">
+      <Button asChild variant="outline" size="lg" className="p-2" aria-label="Home">
         <Link href="/">
-          <Home className="h-5 w-5" />
+          <Home className="h-6 w-6" />
         </Link>
       </Button>
       {showBack && (
         <Button
           variant="outline"
-          size="icon"
+          size="lg"
+          className="p-2"
           onClick={() => router.back()}
           aria-label="Go back"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-6 w-6" />
         </Button>
       )}
     </div>
