@@ -57,7 +57,8 @@ type LeaderboardClientProps = {
 export default function LeaderboardClient({ schools, categories, scores, feedbacks, judges }: LeaderboardClientProps) {
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
-  const [selectedPrizeCategoryId, setSelectedPrizeCategoryId] = useState<string | undefined>(categories[0]?.id);
+  const themeCategory = useMemo(() => categories.find(c => c.name.toLowerCase() === 'theme'), [categories]);
+  const [selectedPrizeCategoryId, setSelectedPrizeCategoryId] = useState<string | undefined>(themeCategory?.id ?? categories[0]?.id);
 
 
   const categorizedLeaderboardData = useMemo(() => {
