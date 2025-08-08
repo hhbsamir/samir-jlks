@@ -213,6 +213,74 @@ export default function SettingsPage() {
             });
         });
         
+        // --- Theme Prize Section ---
+        const themeCategory = categories.find(c => c.name.toLowerCase() === 'theme');
+        if (themeCategory) {
+            doc.addPage();
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(primaryColor);
+            doc.text('Theme Category Prizes', pageMargin, 30);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            doc.text('Top 3 schools based on Theme score, excluding overall top 3 winners.', pageMargin, 36);
+            
+            let lastY = 45;
+
+            schoolCategories.forEach(schoolCategory => {
+                const schoolsInCategory = schools.filter(s => s.category === schoolCategory);
+                if (schoolsInCategory.length === 0) return;
+
+                const rankedSchools = schoolsInCategory.map(school => {
+                     const totalScore = categories.reduce((total, cat) => {
+                        return total + scores
+                            .filter(s => s.schoolId === school.id && s.categoryId === cat.id)
+                            .reduce((sum, s) => sum + s.score, 0);
+                    }, 0);
+                    return { school, totalScore };
+                }).sort((a, b) => b.totalScore - a.totalScore);
+                
+                const top3OverallIds = rankedSchools.slice(0, 3).map(entry => entry.school.id);
+
+                const contenders = schoolsInCategory
+                    .filter(school => !top3OverallIds.includes(school.id))
+                    .map(school => {
+                        const themeScore = scores
+                            .filter(s => s.schoolId === school.id && s.categoryId === themeCategory.id)
+                            .reduce((sum, s) => sum + s.score, 0);
+                        return { school, themeScore };
+                    })
+                    .sort((a, b) => b.themeScore - a.themeScore)
+                    .slice(0, 3);
+                
+                if (contenders.length > 0) {
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(accentColor);
+                    doc.text(`${schoolCategory} Winners`, pageMargin, lastY);
+
+                    const head = [['Rank', 'School', 'Theme Score']];
+                    const body = contenders.map((winner, index) => [
+                        index + 1,
+                        winner.school.name,
+                        winner.themeScore,
+                    ]);
+
+                    doc.autoTable({
+                        startY: lastY + 3,
+                        head,
+                        body,
+                        theme: 'striped',
+                        headStyles: { fillColor: '#8b5cf6', textColor: 255 },
+                        styles: { fontSize: 10, cellPadding: 2.5 },
+                        margin: { left: pageMargin, right: pageMargin }
+                    });
+                    lastY = (doc as any).lastAutoTable.finalY + 15;
+                }
+            });
+        }
+        
         // --- Sub-Junior Feedback Section ---
         const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
         if (subJuniorSchools.length > 0) {
@@ -391,5 +459,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-    
