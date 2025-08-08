@@ -1,12 +1,13 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/page-header';
 import type { School, CompetitionCategory, Score, SchoolCategory, Judge, Feedback } from '@/lib/data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Medal, Award, Star } from 'lucide-react';
 
 
@@ -170,7 +171,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
 
   const renderJuniorSenior = (category: 'Junior' | 'Senior') => {
     const leaderboardData = categorizedLeaderboardData[category];
-    if (!leaderboardData || leaderboardData.length === 0) return <p className="p-4 text-muted-foreground">No data available for this category yet.</p>;
+    if (!leaderboardData || leaderboardData.length === 0) return <p className="p-4 text-center text-muted-foreground">No data available for this category yet.</p>;
 
     return (
         <section key={category}>
@@ -242,7 +243,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
   }
 
   const renderSubJunior = () => {
-    if (subJuniorFeedbackData.length === 0) return <p className="p-4 text-muted-foreground">No feedback available for this category yet.</p>;
+    if (subJuniorFeedbackData.length === 0) return <p className="p-4 text-center text-muted-foreground">No feedback available for this category yet.</p>;
     return (
         <section>
             <div className="space-y-6">
@@ -276,14 +277,9 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
   const renderThemePrizes = () => {
     const hasSeniorWinners = themeWinners.Senior.length > 0;
     const hasJuniorWinners = themeWinners.Junior.length > 0;
-    if (!hasSeniorWinners && !hasJuniorWinners) return null;
+    if (!hasSeniorWinners && !hasJuniorWinners) return <p className="p-4 text-center text-muted-foreground">No theme prize winners to show yet.</p>;
 
     return (
-      <AccordionItem value="theme-prizes">
-        <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 rounded-lg" style={{fontSize: '20px'}}>
-          Theme Prize Winners
-        </AccordionTrigger>
-        <AccordionContent className="pt-8">
           <div className="space-y-8">
             {hasSeniorWinners && (
               <Card>
@@ -346,8 +342,6 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
               </Card>
             )}
           </div>
-        </AccordionContent>
-      </AccordionItem>
     );
   };
 
@@ -356,50 +350,43 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
   const hasSubJuniorData = subJuniorFeedbackData.length > 0;
   const hasThemeWinners = themeWinners.Senior.length > 0 || themeWinners.Junior.length > 0;
 
+  const TABS = [
+    { value: 'senior', label: 'Senior', hasData: hasSeniorData, content: () => renderJuniorSenior('Senior') },
+    { value: 'junior', label: 'Junior', hasData: hasJuniorData, content: () => renderJuniorSenior('Junior') },
+    { value: 'theme', label: 'Theme Prizes', hasData: hasThemeWinners, content: renderThemePrizes },
+    { value: 'sub-junior', label: 'Sub-Junior', hasData: hasSubJuniorData, content: renderSubJunior },
+  ];
+  
+  const availableTabs = TABS.filter(tab => tab.hasData);
+  const [activeTab, setActiveTab] = useState(availableTabs[0]?.value || '');
 
   return (
     <div>
       <PageHeader title="Leaderboard" centerTitle={true} />
       
-      <Accordion type="multiple" className="w-full space-y-8">
-        {hasSeniorData && (
-          <AccordionItem value="senior">
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-lg" style={{fontSize: '20px'}}>
-              Senior Category
-            </AccordionTrigger>
-            <AccordionContent className="pt-8">
-              {renderJuniorSenior('Senior')}
-            </AccordionContent>
-          </AccordionItem>
-        )}
-        {hasJuniorData && (
-          <AccordionItem value="junior">
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-lg" style={{fontSize: '20px'}}>
-              Junior Category
-            </AccordionTrigger>
-            <AccordionContent className="pt-8">
-              {renderJuniorSenior('Junior')}
-            </AccordionContent>
-          </AccordionItem>
-        )}
-        {hasThemeWinners && renderThemePrizes()}
-        {hasSubJuniorData && (
-          <AccordionItem value="sub-junior">
-            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-lg" style={{fontSize: '20px'}}>
-              Sub-Junior Category Feedback
-            </AccordionTrigger>
-            <AccordionContent className="pt-8">
-              {renderSubJunior()}
-            </AccordionContent>
-          </AccordionItem>
-        )}
-         {!hasSeniorData && !hasJuniorData && !hasSubJuniorData && !hasThemeWinners && (
-            <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">The leaderboard is currently empty.</p>
-                <p className="text-muted-foreground">Scores and feedback will appear here as judges submit them.</p>
-            </div>
-        )}
-      </Accordion>
+      {availableTabs.length > 0 ? (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-center">
+            <TabsList className="grid w-full max-w-2xl grid-cols-2 md:grid-cols-4 h-auto">
+              {availableTabs.map(tab => (
+                 <TabsTrigger key={tab.value} value={tab.value} className="py-3 text-base">
+                   {tab.label}
+                 </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          {availableTabs.map(tab => (
+            <TabsContent key={tab.value} value={tab.value} className="pt-8">
+              {tab.content()}
+            </TabsContent>
+          ))}
+        </Tabs>
+      ) : (
+        <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">The leaderboard is currently empty.</p>
+            <p className="text-muted-foreground">Scores and feedback will appear here as judges submit them.</p>
+        </div>
+      )}
     </div>
   );
 }
