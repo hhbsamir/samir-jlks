@@ -250,7 +250,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     <div>
       <PageHeader title="Leaderboard" />
       
-      <Accordion type="multiple" className="w-full space-y-8" defaultValue={['senior', 'junior', 'sub-junior']}>
+      <Accordion type="multiple" className="w-full space-y-8">
         {hasSeniorData && (
           <AccordionItem value="senior">
             <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
