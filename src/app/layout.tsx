@@ -2,17 +2,10 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { Belleza, Alegreya } from 'next/font/google';
+import { Inter } from 'next/font/google';
 
-const belleza = Belleza({
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-headline',
-});
-
-const alegreya = Alegreya({
-  subsets: ['latin'],
-  weight: ['400', '700'],
   variable: '--font-body',
 });
 
@@ -27,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${belleza.variable} ${alegreya.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable}`}>
       <body className="font-body antialiased flex flex-col min-h-screen">
         <div className="flex-grow">{children}</div>
         <footer className="text-center p-4 text-foreground/60">

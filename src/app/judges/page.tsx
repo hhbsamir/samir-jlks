@@ -428,7 +428,7 @@ export default function JudgesPage() {
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-8 pt-20">
+    <div className="min-h-screen bg-background p-4 sm:p-8 pt-20">
       <div className="absolute top-4 left-4">
         <NavButtons />
       </div>
