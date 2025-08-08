@@ -4,6 +4,7 @@ import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarTrigger
 import { Button } from '@/components/ui/button';
 import NavLinks from '@/components/organizer/nav-links';
 import { Crown } from 'lucide-react';
+import { NavButtons } from '@/components/common/NavButtons';
 
 export default function OrganizersLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,8 +27,13 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6">
-            <div className="md:hidden">
-                <SidebarTrigger />
+            <div className="flex items-center gap-2">
+              <div className="md:hidden">
+                  <SidebarTrigger />
+              </div>
+              <div className="hidden md:block">
+                  <NavButtons />
+              </div>
             </div>
             <div className="flex-1">
                 <h1 className="font-headline text-3xl hidden sm:block">Organizer's Dashboard</h1>

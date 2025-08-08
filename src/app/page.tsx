@@ -2,10 +2,13 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Gavel, Crown, MoveRight } from 'lucide-react';
+import { NavButtons } from '@/components/common/NavButtons';
+
 
 export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8 bg-background">
+      <NavButtons showBack={false} />
       <div className="text-center mb-12">
         <h1 className="font-headline text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
           Adjudicator's Arena

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
 import { ArrowLeft, BarChart, Check, Music, Palette, Theater } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,6 +14,8 @@ import {
   initialScores,
 } from "@/lib/data";
 import type { School, CompetitionCategory, Judge, Score } from "@/lib/data";
+import { NavButtons } from "@/components/common/NavButtons";
+
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
   Dance: <Music className="w-6 h-6 text-accent" />,
@@ -75,13 +76,9 @@ export default function JudgesPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-8">
+    <div className="min-h-screen p-4 sm:p-8 pt-20">
+      <NavButtons />
       <div className="max-w-7xl mx-auto">
-        <Button asChild variant="ghost" className="mb-8">
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
-          </Link>
-        </Button>
         <div className="text-center mb-10">
           <h1 className="font-headline text-5xl md:text-6xl text-primary">Judge's Portal</h1>
           <p className="text-lg md:text-xl text-foreground/80 mt-2">Assign your scores with precision and expertise.</p>
