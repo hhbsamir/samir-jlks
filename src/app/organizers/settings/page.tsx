@@ -20,25 +20,22 @@ export default function SettingsPage() {
     try {
       const batch = writeBatch(db);
 
-      // Delete all schools
-      const schoolsCollection = collection(db, 'schools');
-      const schoolsSnapshot = await getDocs(schoolsCollection);
-      schoolsSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
+      // An array of collection names to delete documents from
+      const collectionsToDelete = ['schools', 'scores', 'feedbacks'];
 
-      // Delete all scores
-      const scoresCollection = collection(db, 'scores');
-      const scoresSnapshot = await getDocs(scoresCollection);
-      scoresSnapshot.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-
+      for (const collectionName of collectionsToDelete) {
+        const collectionRef = collection(db, collectionName);
+        const snapshot = await getDocs(collectionRef);
+        snapshot.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+      }
+      
       await batch.commit();
 
       toast({
         title: "New Competition Started!",
-        description: "All schools and scores have been successfully deleted.",
+        description: "All schools, scores, and feedback have been successfully deleted.",
       });
 
     } catch (error) {
@@ -60,7 +57,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle>Reset Competition Data</CardTitle>
           <CardDescription>
-            Starting a new competition will permanently delete all existing schools and scores. 
+            Starting a new competition will permanently delete all existing schools, scores, and feedback. 
             Judges and Categories will not be affected. This action cannot be undone.
           </CardDescription>
         </CardHeader>
@@ -80,7 +77,7 @@ export default function SettingsPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action is irreversible. It will permanently delete all schools and all scores from the database. 
+                  This action is irreversible. It will permanently delete all schools, scores, and feedback from the database. 
                   Are you sure you want to start a new competition?
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -97,3 +94,5 @@ export default function SettingsPage() {
     </>
   );
 }
+
+    

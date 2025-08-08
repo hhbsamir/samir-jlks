@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert, School as SchoolIcon } from "lucide-react";
+import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert, School as SchoolIcon, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,10 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import type { School, CompetitionCategory, Judge, Score, SchoolCategory } from "@/lib/data";
+import type { School, CompetitionCategory, Judge, Score, SchoolCategory, Feedback } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, writeBatch, doc } from "firebase/firestore";
+import { Textarea } from "@/components/ui/textarea";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
@@ -30,6 +31,12 @@ type SchoolScores = {
   };
 };
 
+type SchoolFeedbacks = {
+    [schoolId: string]: {
+        [categoryId: string]: string;
+    };
+};
+
 const schoolCategoryOrder: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
 export default function JudgesPage() {
@@ -37,6 +44,7 @@ export default function JudgesPage() {
   const [categories, setCategories] = useState<CompetitionCategory[]>([]);
   const [judges, setJudges] = useState<Judge[]>([]);
   const [scores, setScores] = useState<SchoolScores>({});
+  const [feedbacks, setFeedbacks] = useState<SchoolFeedbacks>({});
   const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
   const [authenticatedJudge, setAuthenticatedJudge] = useState<Judge | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,15 +85,13 @@ export default function JudgesPage() {
   }, [toast]);
 
   useEffect(() => {
-    const fetchScores = async () => {
+    const fetchPreviousData = async () => {
       if (!authenticatedJudge) return;
 
+      // Fetch Scores for Junior/Senior
       const scoresCollection = collection(db, 'scores');
-      const q = query(
-        scoresCollection, 
-        where("judgeId", "==", authenticatedJudge.id)
-      );
-      const scoresSnapshot = await getDocs(q);
+      const scoresQuery = query(scoresCollection, where("judgeId", "==", authenticatedJudge.id));
+      const scoresSnapshot = await getDocs(scoresQuery);
       const judgeScores = scoresSnapshot.docs.reduce((acc: SchoolScores, doc) => {
         const score = doc.data() as Score;
         if (!acc[score.schoolId]) {
@@ -96,18 +102,39 @@ export default function JudgesPage() {
       }, {});
       
       const initialScoresForJudge: SchoolScores = {};
-      schools.forEach(school => {
+      schools.filter(s => s.category !== 'Sub-Junior').forEach(school => {
         initialScoresForJudge[school.id] = {};
         categories.forEach(category => {
           initialScoresForJudge[school.id][category.id] = judgeScores[school.id]?.[category.id] ?? 0;
         });
       });
-
       setScores(initialScoresForJudge);
+
+      // Fetch Feedbacks for Sub-Junior
+      const feedbacksCollection = collection(db, 'feedbacks');
+      const feedbacksQuery = query(feedbacksCollection, where("judgeId", "==", authenticatedJudge.id));
+      const feedbacksSnapshot = await getDocs(feedbacksQuery);
+      const judgeFeedbacks = feedbacksSnapshot.docs.reduce((acc: SchoolFeedbacks, doc) => {
+          const feedback = doc.data() as Feedback;
+          if (!acc[feedback.schoolId]) {
+              acc[feedback.schoolId] = {};
+          }
+          acc[feedback.schoolId][feedback.categoryId] = feedback.feedback;
+          return acc;
+      }, {});
+
+      const initialFeedbacksForJudge: SchoolFeedbacks = {};
+      schools.filter(s => s.category === 'Sub-Junior').forEach(school => {
+          initialFeedbacksForJudge[school.id] = {};
+          categories.forEach(category => {
+              initialFeedbacksForJudge[school.id][category.id] = judgeFeedbacks[school.id]?.[category.id] ?? '';
+          });
+      });
+      setFeedbacks(initialFeedbacksForJudge);
     };
 
     if (authenticatedJudge) {
-        fetchScores();
+        fetchPreviousData();
     }
   }, [authenticatedJudge, schools, categories]);
 
@@ -166,42 +193,68 @@ export default function JudgesPage() {
       },
     }));
   };
+
+  const handleFeedbackChange = (schoolId: string, categoryId: string, value: string) => {
+    setFeedbacks(prev => ({
+        ...prev,
+        [schoolId]: {
+            ...(prev?.[schoolId] || {}),
+            [categoryId]: value,
+        },
+    }));
+  };
   
-  const handleSubmit = async (schoolId: string) => {
+  const handleSubmit = async (schoolId: string, schoolCategory: SchoolCategory) => {
     if (!authenticatedJudge) return;
     setSubmitting(schoolId);
     
     try {
         const batch = writeBatch(db);
-        const schoolScores = scores[schoolId];
 
-        for (const categoryId in schoolScores) {
-            const scoreValue = schoolScores[categoryId];
-            const scoreData: Score = {
-                judgeId: authenticatedJudge.id,
-                schoolId: schoolId,
-                categoryId: categoryId,
-                score: scoreValue,
-            };
-            
-            const scoreDocId = `${authenticatedJudge.id}_${schoolId}_${categoryId}`;
-            const scoreRef = doc(db, "scores", scoreDocId);
-            batch.set(scoreRef, scoreData, { merge: true });
+        if (schoolCategory === 'Sub-Junior') {
+            const schoolFeedbacks = feedbacks[schoolId];
+            for (const categoryId in schoolFeedbacks) {
+                const feedbackValue = schoolFeedbacks[categoryId];
+                const feedbackData: Feedback = {
+                    judgeId: authenticatedJudge.id,
+                    schoolId: schoolId,
+                    categoryId: categoryId,
+                    feedback: feedbackValue,
+                };
+                const feedbackDocId = `${authenticatedJudge.id}_${schoolId}_${categoryId}`;
+                const feedbackRef = doc(db, "feedbacks", feedbackDocId);
+                batch.set(feedbackRef, feedbackData, { merge: true });
+            }
+        } else {
+            const schoolScores = scores[schoolId];
+            for (const categoryId in schoolScores) {
+                const scoreValue = schoolScores[categoryId];
+                const scoreData: Score = {
+                    judgeId: authenticatedJudge.id,
+                    schoolId: schoolId,
+                    categoryId: categoryId,
+                    score: scoreValue,
+                };
+                
+                const scoreDocId = `${authenticatedJudge.id}_${schoolId}_${categoryId}`;
+                const scoreRef = doc(db, "scores", scoreDocId);
+                batch.set(scoreRef, scoreData, { merge: true });
+            }
         }
 
         await batch.commit();
 
         toast({
-          title: "Scores Submitted!",
-          description: `Your scores for ${schools.find(s => s.id === schoolId)?.name} have been recorded.`,
+          title: "Submission Successful!",
+          description: `Your entries for ${schools.find(s => s.id === schoolId)?.name} have been recorded.`,
           action: <div className="p-2 bg-green-500 text-white rounded-full"><Check /></div>
         });
 
     } catch(error) {
-        console.error("Error submitting scores:", error);
+        console.error("Error submitting:", error);
         toast({
             title: "Submission Failed",
-            description: "There was a problem submitting your scores. Please try again.",
+            description: "There was a problem submitting. Please try again.",
             variant: "destructive"
         });
     } finally {
@@ -297,6 +350,7 @@ export default function JudgesPage() {
                 <Button onClick={() => {
                   setAuthenticatedJudge(null);
                   setScores({});
+                  setFeedbacks({});
                 }} variant="outline">
                     <ArrowLeft className="mr-2 h-5 w-5" />
                     Back to Judge Selection
@@ -333,10 +387,20 @@ export default function JudgesPage() {
                                             <div key={category.id} className="space-y-3">
                                               <div className="flex items-center justify-between">
                                                   <div className="flex items-center gap-3">
-                                                    {categoryIcons[category.name] || categoryIcons.default}
+                                                    {schoolCategory === 'Sub-Junior' ? <MessageSquare className="w-6 h-6 text-accent" /> : categoryIcons[category.name] || categoryIcons.default}
                                                     <label className="text-base md:text-lg font-medium">{category.name}</label>
                                                   </div>
-                                                  <div className="w-24">
+                                              </div>
+                                                {schoolCategory === 'Sub-Junior' ? (
+                                                    <Textarea
+                                                        placeholder={`Enter feedback for ${category.name}...`}
+                                                        value={feedbacks[school.id]?.[category.id] ?? ''}
+                                                        onChange={(e) => handleFeedbackChange(school.id, category.id, e.target.value)}
+                                                        disabled={submitting === school.id}
+                                                        rows={3}
+                                                    />
+                                                ) : (
+                                                  <div className="w-24 ml-auto">
                                                     <Select
                                                       value={(scores[school.id]?.[category.id] ?? 0).toString()}
                                                       onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
@@ -352,13 +416,13 @@ export default function JudgesPage() {
                                                       </SelectContent>
                                                     </Select>
                                                   </div>
-                                              </div>
+                                                )}
                                             </div>
                                         ))}
                                       </div>
-                                      <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
+                                      <Button className="w-full mt-auto font-bold" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
                                           {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
-                                          {submitting === school.id ? "Submitting..." : `Submit Scores`}
+                                          {submitting === school.id ? "Submitting..." : `Submit for ${school.name}`}
                                       </Button>
                                     </CardContent>
                                 </Card>
@@ -383,7 +447,7 @@ export default function JudgesPage() {
             {authenticatedJudge ? `Scoring for ${authenticatedJudge.name}` : "Judge's Portal"}
           </h1>
           <p className="text-lg md:text-xl text-foreground/80 mt-2">
-            {authenticatedJudge ? "Assign your scores with precision and expertise." : "Select your name to begin scoring."}
+            {authenticatedJudge ? "Assign your scores and feedback with precision and expertise." : "Select your name to begin scoring."}
           </p>
         </div>
         

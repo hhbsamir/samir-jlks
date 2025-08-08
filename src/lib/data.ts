@@ -1,4 +1,5 @@
 
+
 export type SchoolCategory = "Sub-Junior" | "Junior" | "Senior";
 
 export type School = {
@@ -26,6 +27,13 @@ export type Score = {
   score: number;
 };
 
+export type Feedback = {
+  schoolId: string;
+  judgeId: string;
+  categoryId: string;
+  feedback: string;
+}
+
 export const initialCategories: CompetitionCategory[] = [
 ];
 
@@ -37,3 +45,5 @@ export const initialJudges: Judge[] = [
 
 export const initialScores: Score[] = [
 ];
+
+    
