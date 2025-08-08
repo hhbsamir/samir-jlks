@@ -13,7 +13,7 @@ import type { Judge } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -46,26 +46,24 @@ export default function JudgesClient() {
     setLoading(true);
     try {
         const judgesCollection = collection(db, 'judges');
-        const q = query(judgesCollection, orderBy("createdAt", "asc"));
-        const judgesSnapshot = await getDocs(q);
-        const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-        setJudges(judgesList);
-    } catch (e) {
-        console.error("Error fetching judges with sorting, falling back to unsorted:", e);
-        // Fallback for when createdAt is not available on all documents
-        const judgesCollection = collection(db, 'judges');
         const judgesSnapshot = await getDocs(judgesCollection);
         const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-        // Manually sort client-side if possible, new items without timestamp go first
+        
+        // Sort client-side to handle documents with and without createdAt
         judgesList.sort((a, b) => {
-            if (a.createdAt && b.createdAt) {
-                return a.createdAt.toMillis() - b.createdAt.toMillis();
+            const aTime = a.createdAt?.toMillis() ?? 0;
+            const bTime = b.createdAt?.toMillis() ?? 0;
+            if (aTime !== bTime) {
+                return aTime - bTime;
             }
-            if (a.createdAt) return 1; // a is new, b is old, so b comes first
-            if (b.createdAt) return -1; // b is new, a is old, so a comes first
-            return a.name.localeCompare(b.name); // fallback to name sort if no timestamps
+            // Fallback for items with no timestamp or same timestamp
+            return a.name.localeCompare(b.name);
         });
+
         setJudges(judgesList);
+    } catch (e) {
+        console.error("Error fetching judges:", e);
+        toast({ title: "Error", description: "Could not fetch judges.", variant: "destructive" });
     } finally {
         setLoading(false);
     }
@@ -291,3 +289,5 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         </Dialog>
     )
 }
+
+    
