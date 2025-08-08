@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert, School as SchoolIcon, MessageSquare } from "lucide-react";
+import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2, User, ShieldAlert, School as SchoolIcon, MessageSquare, Mic, Drama, Brush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,10 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
-  Dance: <Music className="w-6 h-6 text-accent" />,
-  Costume: <Palette className="w-6 h-6 text-accent" />,
-  Theme: <Theater className="w-6 h-6 text-accent" />,
-  default: <BarChart className="w-6 h-6 text-accent" />,
+  Dance: <Drama className="w-6 h-6 text-purple-500" />,
+  Costume: <Palette className="w-6 h-6 text-pink-500" />,
+  Theme: <Theater className="w-6 h-6 text-orange-500" />,
+  Music: <Music className="w-6 h-6 text-blue-500" />,
+  "Make-up": <Brush className="w-6 h-6 text-red-500" />,
+  default: <BarChart className="w-6 h-6 text-gray-500" />,
 };
 
 type SchoolScores = {
@@ -303,24 +305,24 @@ export default function JudgesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i}>
-                        <CardHeader className="items-center text-center p-8">
-                           <div className="p-4 bg-accent/10 rounded-full mb-4">
-                               <Loader2 className="w-16 h-16 text-accent animate-spin" />
+                    <Card key={i} className="py-8">
+                        <CardContent className="flex flex-col items-center text-center gap-4">
+                           <div className="p-4 bg-muted rounded-full">
+                               <Loader2 className="w-16 h-16 text-muted-foreground animate-spin" />
                            </div>
-                           <CardTitle className="font-headline text-3xl">Loading...</CardTitle>
-                        </CardHeader>
+                           <div className="h-8 w-3/4 bg-muted rounded-md" />
+                        </CardContent>
                     </Card>
                 ))
             ) : (
                 judges.map(judge => (
                     <Card key={judge.id} className="group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden cursor-pointer" onClick={() => handleJudgeSelection(judge)}>
-                        <CardHeader className="items-center text-center p-8">
-                            <div className="p-4 bg-accent/10 rounded-full mb-4 group-hover:animate-pulse">
-                                <User className="w-16 h-16 text-accent" />
+                        <CardContent className="pt-8 items-center text-center flex flex-col gap-4">
+                            <div className="p-5 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full group-hover:from-primary/30 group-hover:to-accent/30 transition-colors">
+                                <User className="w-16 h-16 text-primary" />
                             </div>
-                            <CardTitle className="font-headline text-3xl">{judge.name}</CardTitle>
-                        </CardHeader>
+                            <h2 className="font-headline text-3xl">{judge.name}</h2>
+                        </CardContent>
                     </Card>
                 ))
             )}
@@ -352,13 +354,13 @@ export default function JudgesPage() {
                         <AccordionContent>
                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 pt-8">
                                 {categorizedSchools[schoolCategory].map((school, index) => (
-                                <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 flex flex-col">
+                                <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 flex flex-col bg-card/50">
                                     <CardHeader className="flex-row items-center gap-4">
-                                      <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                                        <SchoolIcon className="w-6 h-6 text-primary" />
+                                      <div className="flex-shrink-0 w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/20">
+                                        <SchoolIcon className="w-8 h-8 text-primary" />
                                       </div>
                                       <div className="flex-1">
-                                        <CardTitle className="font-headline text-2xl md:text-3xl">
+                                        <CardTitle className="font-headline text-2xl md:text-3xl leading-tight">
                                           {school.name}
                                         </CardTitle>
                                         <CardDescription>
@@ -369,7 +371,7 @@ export default function JudgesPage() {
                                     <CardContent className="space-y-6 flex-grow flex flex-col">
                                       <div className="space-y-4 flex-grow">
                                         {schoolCategory === 'Sub-Junior' ? (
-                                             <div className="space-y-3">
+                                             <div className="space-y-3 pt-4">
                                                 <div className="flex items-center gap-3">
                                                     <MessageSquare className="w-6 h-6 text-accent" />
                                                     <label className="text-base md:text-lg font-medium">Notes</label>
@@ -383,10 +385,10 @@ export default function JudgesPage() {
                                                 />
                                              </div>
                                         ) : (
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-2 gap-4">
                                               {categories.map(category => (
-                                                  <div key={category.id} className="flex flex-col items-center gap-2">
-                                                    <div className="flex items-center gap-2 text-center">
+                                                  <div key={category.id} className="space-y-2">
+                                                    <div className="flex items-center gap-2">
                                                       {categoryIcons[category.name] || categoryIcons.default}
                                                       <label className="text-sm font-medium">{category.name}</label>
                                                     </div>
