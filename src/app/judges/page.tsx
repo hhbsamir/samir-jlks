@@ -5,7 +5,6 @@ import { ArrowLeft, BarChart, Check, Music, Palette, Theater, Loader2 } from "lu
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import type { School, CompetitionCategory, Judge, Score } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
@@ -70,7 +69,6 @@ export default function JudgesPage() {
       if (!selectedJudge) return;
 
       const scoresCollection = collection(db, 'scores');
-      // A more specific query. This may require a composite index if you add more 'where' clauses or an 'orderBy'.
       const q = query(scoresCollection, where("judgeId", "==", selectedJudge.id));
       const scoresSnapshot = await getDocs(q);
       const judgeScores = scoresSnapshot.docs.reduce((acc: SchoolScores, doc) => {
@@ -99,12 +97,12 @@ export default function JudgesPage() {
   }, [selectedJudge, schools, categories]);
 
 
-  const handleScoreChange = (schoolId: string, categoryId: string, value: number[]) => {
+  const handleScoreChange = (schoolId: string, categoryId: string, value: string) => {
     setScores(prev => ({
       ...prev,
       [schoolId]: {
         ...(prev?.[schoolId] || {}),
-        [categoryId]: value[0],
+        [categoryId]: parseInt(value, 10),
       },
     }));
   };
@@ -126,7 +124,6 @@ export default function JudgesPage() {
                 score: scoreValue,
             };
             
-            // Unique ID for each score to avoid overwrites
             const scoreDocId = `${selectedJudge.id}_${schoolId}_${categoryId}`;
             const scoreRef = doc(db, "scores", scoreDocId);
             batch.set(scoreRef, scoreData, { merge: true });
@@ -190,18 +187,23 @@ export default function JudgesPage() {
                            {categoryIcons[category.name] || categoryIcons.default}
                            <label className="text-base md:text-lg font-medium">{category.name}</label>
                         </div>
-                        <span className="text-lg md:text-xl font-bold text-primary w-10 text-center">
-                          {scores[school.id]?.[category.id] ?? 0}
-                        </span>
+                        <div className="w-24">
+                          <Select
+                            value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                            onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
+                            disabled={submitting === school.id}
+                          >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Score" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Array.from({ length: 11 }, (_, i) => (
+                                    <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <Slider
-                        value={[scores[school.id]?.[category.id] ?? 0]}
-                        onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                        max={10}
-                        step={1}
-                        className="[&>span]:bg-accent"
-                        disabled={submitting === school.id}
-                      />
                     </div>
                   ))}
                   <Button className="w-full mt-4 font-bold" onClick={() => handleSubmit(school.id)} disabled={submitting === school.id}>
