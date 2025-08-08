@@ -34,7 +34,11 @@ export default function Home() {
         </h1>
         <div className="font-body text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
             {currentDate && <p>({currentDate})</p>}
-            {currentTime && <p>{currentTime}</p>}
+            {currentTime && (
+              <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg shadow-[0_0_15px] shadow-primary/30">
+                <p className="text-2xl md:text-4xl font-bold text-primary">{currentTime}</p>
+              </div>
+            )}
         </div>
       </div>
 
