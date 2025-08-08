@@ -10,8 +10,8 @@ import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
 
 export default function Home() {
-  const [currentDate, setCurrentDate] = useState('');
-  const [currentTime, setCurrentTime] = useState('');
+  const [currentDate, setCurrentDate] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState<string | null>(null);
 
   // This effect runs only once on the client after the initial render
   useEffect(() => {
