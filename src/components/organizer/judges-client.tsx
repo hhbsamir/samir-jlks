@@ -95,7 +95,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
         });
         return;
     }
-    const message = `Hello ${judge.name}, your password for the JLKS Paradip competition is: *${judge.password}*`;
+    const message = `Namaste ${judge.name}, your password for the JLKS Paradip competition is: *${judge.password}*`;
     // The '91' is the country code for India.
     const whatsappUrl = `https://wa.me/91${judge.mobile}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
