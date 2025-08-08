@@ -1,5 +1,7 @@
 
 
+import type { Timestamp } from "firebase/firestore";
+
 export type SchoolCategory = "Sub-Junior" | "Junior" | "Senior";
 
 export type School = {
@@ -13,6 +15,7 @@ export type Judge = {
   name: string;
   mobile: string;
   password?: string;
+  createdAt: Timestamp;
 };
 
 export type CompetitionCategory = {

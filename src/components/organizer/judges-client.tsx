@@ -13,7 +13,7 @@ import type { Judge } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -45,7 +45,8 @@ export default function JudgesClient() {
   const fetchJudges = useCallback(async () => {
     setLoading(true);
     const judgesCollection = collection(db, 'judges');
-    const judgesSnapshot = await getDocs(judgesCollection);
+    const q = query(judgesCollection, orderBy("createdAt", "asc"));
+    const judgesSnapshot = await getDocs(q);
     const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
     setJudges(judgesList);
     setLoading(false);
@@ -65,14 +66,14 @@ export default function JudgesClient() {
     setEditingJudge(null);
   };
 
-  const handleSave = async (judgeData: Omit<Judge, 'id'>) => {
+  const handleSave = async (judgeData: Omit<Judge, 'id' | 'createdAt'>) => {
     try {
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
         await updateDoc(judgeDoc, judgeData);
         toast({ title: "Success", description: "Judge updated successfully." });
       } else {
-        await addDoc(collection(db, "judges"), judgeData);
+        await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
         toast({ title: "Success", description: "Judge added successfully." });
       }
       fetchJudges();
@@ -196,7 +197,7 @@ export default function JudgesClient() {
 type JudgeFormDialogProps = {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<Judge, 'id'>) => void;
+    onSave: (data: Omit<Judge, 'id' | 'createdAt'>) => void;
     judge: Judge | null;
 }
 
