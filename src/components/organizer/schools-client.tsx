@@ -37,7 +37,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
     return validCategories.reduce((acc, category) => {
         const sortedSchools = schools
             .filter(school => school.category === category)
-            .sort((a,b) => a.name.localeCompare(b.name));
+            .sort((a, b) => (a.serialNumber ?? Infinity) - (b.serialNumber ?? Infinity) || a.name.localeCompare(b.name));
         acc[category] = sortedSchools;
         return acc;
     }, {} as Record<SchoolCategory, School[]>);
@@ -96,11 +96,12 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json<{ "School Name": string; "Category": SchoolCategory }>(worksheet);
+        const json = XLSX.utils.sheet_to_json<{ "School Name": string; "Category": SchoolCategory; "Serial Number": number }>(worksheet);
         
         const newSchools = json.map(row => ({
           name: row["School Name"],
-          category: row["Category"]
+          category: row["Category"],
+          serialNumber: row["Serial Number"] ? Number(row["Serial Number"]) : undefined,
         }));
 
         const invalidSchools = newSchools.filter(school => !school.name || !school.category || !validCategories.includes(school.category));
@@ -185,7 +186,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
                             <TableBody>
                                 {categorizedSchools[category].map((school, index) => (
                                     <TableRow key={school.id}>
-                                        <TableCell className="font-medium">{index + 1}</TableCell>
+                                        <TableCell className="font-medium">{school.serialNumber ?? index + 1}</TableCell>
                                         <TableCell className="font-medium">{school.name}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
@@ -242,12 +243,14 @@ type SchoolFormDialogProps = {
 function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogProps) {
     const [name, setName] = useState('');
     const [category, setCategory] = useState<SchoolCategory | undefined>();
+    const [serialNumber, setSerialNumber] = useState<string>('');
     const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
             setName(school?.name || '');
             setCategory(school?.category);
+            setSerialNumber(school?.serialNumber?.toString() || '');
         }
     }, [isOpen, school]);
 
@@ -255,7 +258,7 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         e.preventDefault();
         if (name && category) {
             setIsSaving(true);
-            await onSave({ name, category });
+            await onSave({ name, category, serialNumber: serialNumber ? parseInt(serialNumber, 10) : undefined });
             setIsSaving(false);
         }
     };
@@ -270,6 +273,10 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">School Name</Label>
                         <Input id="name" value={name} onChange={e => setName(e.target.value)} required className="text-base" />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="serialNumber" className="text-lg">Serial Number</Label>
+                        <Input id="serialNumber" type="number" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} className="text-base" placeholder="Optional, for custom ordering" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category" className="text-lg">Category</Label>

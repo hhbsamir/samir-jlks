@@ -134,7 +134,7 @@ export default function JudgesPage() {
     return schoolCategoryOrder.reduce((acc, category) => {
         const sortedSchools = schools
           .filter(school => school.category === category)
-          .sort((a, b) => a.name.localeCompare(b.name));
+          .sort((a, b) => (a.serialNumber ?? Infinity) - (b.serialNumber ?? Infinity) || a.name.localeCompare(b.name));
         acc[category] = sortedSchools;
         return acc;
     }, {} as Record<SchoolCategory, School[]>);
@@ -362,7 +362,7 @@ export default function JudgesPage() {
                                           {school.name}
                                         </CardTitle>
                                         <CardDescription>
-                                           Sl. No: {index + 1}
+                                           Sl. No: {school.serialNumber ?? index + 1}
                                         </CardDescription>
                                       </div>
                                     </CardHeader>

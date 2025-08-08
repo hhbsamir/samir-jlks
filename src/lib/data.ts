@@ -6,6 +6,7 @@ export type School = {
   id: string;
   name: string;
   category: SchoolCategory;
+  serialNumber?: number;
 };
 
 export type Judge = {
