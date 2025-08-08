@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,25 @@ interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: any) => jsPDFWithAutoTable;
 }
 
+const REMARKS_STORAGE_KEY = 'competition-report-remarks';
+
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [remarks, setRemarks] = useState('');
   const { toast } = useToast();
+  
+  useEffect(() => {
+    const savedRemarks = localStorage.getItem(REMARKS_STORAGE_KEY);
+    if (savedRemarks) {
+        setRemarks(savedRemarks);
+    }
+  }, []);
+
+  const handleRemarksChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRemarks(e.target.value);
+    localStorage.setItem(REMARKS_STORAGE_KEY, e.target.value);
+  }
 
   const generatePdf = async () => {
     setIsGenerating(true);
@@ -277,7 +291,8 @@ export default function SettingsPage() {
         title: "New Competition Started!",
         description: "All schools, scores, and feedback have been successfully deleted.",
       });
-      setRemarks('');
+      // Do not clear remarks
+      // setRemarks('');
 
     } catch (error) {
       console.error("Error starting new competition:", error);
@@ -310,7 +325,7 @@ export default function SettingsPage() {
                         id="remarks"
                         placeholder="e.g., Final results for the annual 2024 competition."
                         value={remarks}
-                        onChange={(e) => setRemarks(e.target.value)}
+                        onChange={handleRemarksChange}
                     />
                 </div>
                 <Button onClick={generatePdf} disabled={isGenerating}>
