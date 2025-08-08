@@ -24,11 +24,12 @@ interface jsPDFWithAutoTable extends jsPDF {
 
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [remarks, setRemarks] = useState('');
   const { toast } = useToast();
 
   const generatePdf = async () => {
-    setIsDeleting(true);
+    setIsGenerating(true);
     toast({ title: "Generating Report", description: "Please wait while the PDF is being created..." });
 
     try {
@@ -52,30 +53,53 @@ export default function SettingsPage() {
         const judgesCollection = collection(db, 'judges');
         const judgesSnapshot = await getDocs(judgesCollection);
         const judges = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-
+        
         // 2. Initialize PDF
-        const doc = new jsPDF({ orientation: 'landscape' }) as jsPDFWithAutoTable;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }) as jsPDFWithAutoTable;
+        
+        const primaryColor = '#2563eb'; // Rich Blue from your theme
+        const accentColor = '#f97316'; // Golden Amber from your theme
+        const date = format(new Date(), 'yyyy-MM-dd');
+        const reportDate = format(new Date(), 'do MMMM yyyy');
+
+        // --- Helper Functions ---
         const addHeaderFooter = () => {
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
-                // Header
-                doc.setFontSize(16);
+                doc.setFontSize(14);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Competition Score Report', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                if (remarks) {
-                    doc.text(`Remarks: ${remarks}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
-                }
+                doc.setTextColor(primaryColor);
+                doc.text('JLKS Paradip - Competition Report', 105, 15, { align: 'center' });
 
-                // Footer
                 doc.setFontSize(8);
-                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
-                doc.text(`Generated on: ${format(new Date(), 'yyyy-MM-dd HH:mm:ss')}`, doc.internal.pageSize.getWidth() - 15, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+                doc.setTextColor(100);
+                doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
+                doc.text(`Generated on: ${reportDate}`, 200, 287, { align: 'right' });
             }
         };
 
+        // --- Title Page ---
+        doc.rect(0, 0, 210, 297, 'F'); // Full page background - can be white or a light color
+        doc.setFillColor(255, 255, 255);
+        doc.setFontSize(32);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor);
+        doc.text('Competition Score Report', 105, 80, { align: 'center' });
+
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(accentColor);
+        doc.text(`Date: ${reportDate}`, 105, 100, { align: 'center' });
+
+        if (remarks) {
+            doc.setFontSize(14);
+            doc.setTextColor(80,80,80);
+            const remarksLines = doc.splitTextToSize(remarks, 160);
+            doc.text(remarksLines, 105, 140, { align: 'center' });
+        }
+        
+        // --- Score Sections ---
         const schoolCategories: SchoolCategory[] = ["Senior", "Junior"];
         
         schoolCategories.forEach(schoolCategory => {
@@ -83,10 +107,16 @@ export default function SettingsPage() {
             if(schoolsInCategory.length === 0) return;
 
             doc.addPage();
-            doc.setFontSize(14);
+            doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${schoolCategory} Category Scores`, 14, 30);
+            doc.setTextColor(primaryColor);
+            doc.text(`${schoolCategory} Category Results`, 14, 20);
 
+            // --- Summary Table ---
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(accentColor);
+            doc.text('Final Rankings', 14, 35);
             const head = [['Rank', 'School', ...categories.map(c => c.name), 'Total Score']];
             const body = schoolsInCategory
               .map(school => {
@@ -101,24 +131,28 @@ export default function SettingsPage() {
               .map((data, index) => [
                 index + 1,
                 data.school.name,
-                ...data.totalScores,
+                ...data.totalScores.map(String),
                 data.totalScore
               ]);
 
             doc.autoTable({
-                startY: 35,
+                startY: 40,
                 head,
                 body,
                 theme: 'striped',
-                headStyles: { fillColor: [35, 92, 55] },
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10 },
             });
 
+            // --- Judge Breakdown Section ---
+            doc.addPage();
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(accentColor);
+            doc.text(`Judge Score Breakdown (${schoolCategory})`, 14, 20);
+
+            let lastY = 25;
             schoolsInCategory.forEach(school => {
-                doc.addPage();
-                doc.setFontSize(12);
-                doc.setFont('helvetica', 'bold');
-                doc.text(`Score Breakdown for: ${school.name}`, 14, 30);
-                
                 const judgeHead = [['Judge', ...categories.map(c => c.name), 'Total']];
                 const judgeBody = judges.map(judge => {
                     const judgeCategoryScores = categories.map(cat => {
@@ -127,50 +161,73 @@ export default function SettingsPage() {
                     const judgeTotal = judgeCategoryScores.reduce((sum, score) => sum + score, 0);
                     return [
                         judge.name,
-                        ...judgeCategoryScores,
+                        ...judgeCategoryScores.map(String),
                         judgeTotal
                     ]
                 });
-
+                
                 doc.autoTable({
-                    startY: 35,
+                    startY: lastY + 5,
                     head: judgeHead,
                     body: judgeBody,
-                    theme: 'grid'
+                    theme: 'grid',
+                    tableWidth: 'auto',
+                    margin: { left: 14 },
+                    headStyles: { fillColor: '#334155', textColor: 255 },
+                    didParseCell: (data) => {
+                        if (data.section === 'head') {
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    },
+                    didDrawPage: (data) => {
+                        doc.setFontSize(14);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(school.name, 14, data.cursor.y - judgeBody.length * 8 - 10);
+                    }
                 });
+                lastY = (doc as any).lastAutoTable.finalY;
             });
         });
         
-        // Handle Sub-Junior Feedback
+        // --- Sub-Junior Feedback Section ---
         const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
         if (subJuniorSchools.length > 0) {
             doc.addPage();
-            doc.setFontSize(14);
-            doc.text('Sub-Junior Category Feedback', 14, 30);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(primaryColor);
+            doc.text('Sub-Junior Category Feedback', 14, 20);
             
-            const feedbackHead = [['School', 'Judge', 'Feedback']];
-            const feedbackBody = [];
-            for(const school of subJuniorSchools) {
-                for(const judge of judges) {
-                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
-                    feedbackBody.push([school.name, judge.name, feedback]);
-                }
-            }
+            let lastY = 25;
+            subJuniorSchools.forEach(school => {
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(accentColor);
+                doc.text(school.name, 14, lastY + 5);
 
-            doc.autoTable({
-                startY: 35,
-                head: feedbackHead,
-                body: feedbackBody,
-                theme: 'striped',
-                headStyles: { fillColor: [35, 92, 55] },
-            });
+                const feedbackBody = judges.map(judge => {
+                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
+                    return [judge.name, feedback];
+                });
+
+                doc.autoTable({
+                    startY: lastY + 10,
+                    head: [['Judge', 'Feedback']],
+                    body: feedbackBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: primaryColor, textColor: 255 },
+                    columnStyles: { 1: { cellWidth: 'auto' } }
+                });
+                lastY = (doc as any).lastAutoTable.finalY;
+            })
         }
         
-        // Remove the default blank page
-        doc.deletePage(1);
+        // Remove the default blank page if it exists
+        if (doc.internal.getNumberOfPages() > 1) {
+            doc.deletePage(1);
+        }
 
         addHeaderFooter();
-        const date = format(new Date(), 'yyyy-MM-dd');
         doc.save(`Competition-Report-${date}.pdf`);
 
         toast({
@@ -188,7 +245,7 @@ export default function SettingsPage() {
         });
         return false; // PDF generation failed
     } finally {
-        setIsDeleting(false);
+        setIsGenerating(false);
     }
   };
 
@@ -256,13 +313,13 @@ export default function SettingsPage() {
                         onChange={(e) => setRemarks(e.target.value)}
                     />
                 </div>
-                <Button onClick={generatePdf} disabled={isDeleting}>
-                    {isDeleting ? (
+                <Button onClick={generatePdf} disabled={isGenerating}>
+                    {isGenerating ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                         <Download className="mr-2 h-4 w-4" />
                     )}
-                    {isDeleting ? "Generating..." : "Download Report PDF"}
+                    {isGenerating ? "Generating..." : "Download Report PDF"}
                 </Button>
             </CardContent>
         </Card>
@@ -278,24 +335,23 @@ export default function SettingsPage() {
             <CardContent>
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                <Button variant="destructive">
+                <Button variant="destructive" disabled={isDeleting}>
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Start New Competition
+                    {isDeleting ? "Processing..." : "Start New Competition"}
                 </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                    This action is irreversible. It will permanently delete all schools, scores, and feedback.
-                    Have you saved the final PDF report?
+                    This action is irreversible. It will first generate and download the final PDF report, then permanently delete all schools, scores, and feedback.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleStartNewCompetition} className="bg-destructive hover:bg-destructive/90">
+                    <AlertDialogAction onClick={handleStartNewCompetition} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
                         {isDeleting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin"/>) : null}
-                        {isDeleting ? "Processing..." : "Yes, Delete Everything"}
+                        {isDeleting ? "Processing..." : "Yes, Save Report and Delete"}
                     </AlertDialogAction>
                 </AlertDialogFooter>
                 </AlertDialogContent>
