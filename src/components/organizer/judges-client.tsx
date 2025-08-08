@@ -104,7 +104,7 @@ export default function JudgesClient() {
                   <TableCell className="font-medium">{judge.name}</TableCell>
                   <TableCell>{judge.mobile}</TableCell>
                   <TableCell>
-                    {judge.password ? '****' : 'Not Set'}
+                    {judge.password || 'Not Set'}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
