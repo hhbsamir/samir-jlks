@@ -8,8 +8,8 @@ import { NavButtons } from '@/components/common/NavButtons';
 
 export default function OrganizersLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <Sidebar>
+    <SidebarProvider defaultOpen={false}>
+      <Sidebar collapsible="icon">
         <SidebarHeader>
           <Button variant="ghost" className="h-auto p-2 justify-start" asChild>
             <Link href="/">
@@ -28,13 +28,16 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6">
             <div className="flex items-center gap-2">
+              <SidebarTrigger />
               <div className="md:hidden">
-                  <SidebarTrigger />
+                  <NavButtons />
               </div>
-              <NavButtons />
             </div>
             <div className="flex-1 text-center">
                 <h1 className="font-headline text-3xl hidden sm:block">Organizer's Dashboard</h1>
+            </div>
+             <div className="hidden md:flex">
+                <NavButtons />
             </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">
