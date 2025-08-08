@@ -2,13 +2,14 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/page-header';
 import type { School, CompetitionCategory, Score, SchoolCategory, Judge, Feedback } from '@/lib/data';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Trophy, Medal, Award } from 'lucide-react';
 
 
 type SchoolScore = {
@@ -28,7 +29,10 @@ type SchoolScore = {
 type SchoolFeedback = {
     school: School;
     feedbacks: {
-        [judgeId: string]: string;
+        [judgeId: string]: {
+          judgeName: string;
+          feedback: string;
+        }
     };
 };
 
@@ -145,12 +149,22 @@ export default function LeaderboardClient() {
                 f.schoolId === school.id && 
                 f.judgeId === judge.id
             );
-            schoolData.feedbacks[judge.id] = feedbackEntry?.feedback || 'No feedback yet.';
+            schoolData.feedbacks[judge.id] = {
+              judgeName: judge.name,
+              feedback: feedbackEntry?.feedback || 'No feedback yet.'
+            }
         });
 
         return schoolData;
     });
   }, [schools, feedbacks, judges]);
+  
+  const getRankIcon = (rank: number) => {
+    if(rank === 1) return <Trophy className="w-8 h-8 text-yellow-500" />;
+    if(rank === 2) return <Medal className="w-8 h-8 text-slate-400" />;
+    if(rank === 3) return <Award className="w-8 h-8 text-orange-400" />;
+    return <span className="font-bold text-lg text-muted-foreground w-8 text-center">{rank}</span>
+  }
 
   const renderJuniorSenior = (category: 'Junior' | 'Senior') => {
     const leaderboardData = categorizedLeaderboardData[category];
@@ -159,43 +173,40 @@ export default function LeaderboardClient() {
     return (
         <section key={category}>
             <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Category</h2>
-            <Card>
-                 <Accordion type="multiple" className="w-full">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[50px]">Rank</TableHead>
-                                <TableHead>School</TableHead>
-                                {categories.map(cat => (
-                                <TableHead key={cat.id} className="text-center hidden sm:table-cell">{cat.name}</TableHead>
-                                ))}
-                                <TableHead className="text-right font-bold">Total</TableHead>
-                                <TableHead className="w-[50px]"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                    </Table>
-                    {leaderboardData.map((entry, index) => (
-                        <AccordionItem value={entry.school.id} key={entry.school.id} className="border-b">
-                           <Table>
-                             <TableBody>
-                               <TableRow>
-                                   <TableCell className="w-[50px] font-bold text-lg">{index + 1}</TableCell>
-                                   <TableCell>
-                                       <div className="font-medium">{entry.school.name}</div>
-                                   </TableCell>
-                                   {categories.map(cat => (
-                                       <TableCell key={cat.id} className="text-center text-lg hidden sm:table-cell">{entry.averageScores[cat.id]}</TableCell>
-                                   ))}
-                                   <TableCell className="text-right font-bold text-primary text-xl">{entry.totalAverage}</TableCell>
-                                   <TableCell className="w-[50px]">
-                                       <AccordionTrigger className="hover:no-underline [&_svg]:mx-4 p-0"></AccordionTrigger>
-                                   </TableCell>
-                               </TableRow>
-                             </TableBody>
-                           </Table>
+             <Accordion type="multiple" className="w-full space-y-4">
+                {leaderboardData.map((entry, index) => {
+                    const rank = index + 1;
+                    return (
+                        <AccordionItem value={entry.school.id} key={entry.school.id} className="border-b-0">
+                           <Card className="overflow-hidden">
+                            <AccordionTrigger className="hover:no-underline text-left p-0">
+                                <div className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        {getRankIcon(rank)}
+                                        <span className="font-headline text-2xl">{entry.school.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right hidden sm:block">
+                                            <div className="flex gap-4">
+                                                {categories.map(cat => (
+                                                    <div key={cat.id} className="text-center">
+                                                        <div className="text-xs text-muted-foreground">{cat.name}</div>
+                                                        <div className="font-semibold text-lg">{entry.averageScores[cat.id]}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="text-right pl-4 border-l">
+                                            <div className="text-sm text-muted-foreground">Total</div>
+                                            <div className="font-bold text-primary text-2xl">{entry.totalAverage}</div>
+                                        </div>
+                                        <div className="pl-2 [&_svg]:mx-2"></div>
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
                             <AccordionContent>
-                                <div className="px-4 pb-4">
-                                  <Card className="bg-primary/5">
+                                <div className="px-4 pb-4 bg-muted/30">
+                                    <h4 className="font-headline text-lg text-primary pt-4 pb-2">Judge Score Breakdown</h4>
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
@@ -211,20 +222,20 @@ export default function LeaderboardClient() {
                                             <TableRow key={judge.id}>
                                               <TableCell className="font-medium">{judge.name}</TableCell>
                                               {categories.map(cat => (
-                                                <TableCell key={cat.id} className="text-center">{entry.scoresByJudge[judge.id]?.categoryScores[cat.id] || 0}</TableCell>
+                                                <TableCell key={cat.id} className="text-center">{entry.scoresByJudge[judge.id]?.categoryScores[cat.id] ?? 0}</TableCell>
                                               ))}
-                                              <TableCell className="text-right font-bold">{entry.scoresByJudge[judge.id]?.total || 0}</TableCell>
+                                              <TableCell className="text-right font-bold">{entry.scoresByJudge[judge.id]?.total ?? 0}</TableCell>
                                             </TableRow>
                                           ))}
                                         </TableBody>
                                     </Table>
-                                  </Card>
                                 </div>
                             </AccordionContent>
+                           </Card>
                         </AccordionItem>
-                    ))}
-                </Accordion>
-            </Card>
+                    )
+                })}
+            </Accordion>
         </section>
     );
   }
@@ -234,29 +245,30 @@ export default function LeaderboardClient() {
     return (
         <section>
             <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">Sub-Junior Category Feedback</h2>
-            <Accordion type="multiple" className="w-full space-y-4">
+            <div className="space-y-6">
                 {subJuniorFeedbackData.map(entry => (
-                    <AccordionItem value={entry.school.id} key={entry.school.id}>
-                        <AccordionTrigger className="text-xl text-foreground/90 font-headline hover:no-underline bg-muted/50 px-4 rounded-md">
-                            {entry.school.name}
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {judges.map(judge => (
-                                    <Card key={judge.id}>
+                     <Card key={entry.school.id}>
+                        <CardHeader>
+                            <CardTitle className="font-headline text-2xl">{entry.school.name}</CardTitle>
+                            <CardDescription>Feedback provided by the judges.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {Object.values(entry.feedbacks).map((feedbackData, index) => (
+                                    <Card key={index} className="bg-muted/30">
                                         <CardHeader>
-                                            <CardTitle>{judge.name}</CardTitle>
+                                            <CardTitle className="text-lg">{feedbackData.judgeName}</CardTitle>
                                         </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <p className="text-sm text-muted-foreground">{entry.feedbacks[judge.id]}</p>
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground italic">"{feedbackData.feedback}"</p>
                                         </CardContent>
                                     </Card>
                                 ))}
                             </div>
-                        </AccordionContent>
-                    </AccordionItem>
+                        </CardContent>
+                    </Card>
                 ))}
-            </Accordion>
+            </div>
         </section>
     )
   }
@@ -273,3 +285,5 @@ export default function LeaderboardClient() {
     </div>
   );
 }
+
+    
