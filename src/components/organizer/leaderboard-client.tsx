@@ -9,6 +9,8 @@ import type { School, CompetitionCategory, Score, SchoolCategory, Judge, Feedbac
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Medal, Award, Star } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 
 type SchoolScore = {
@@ -39,9 +41,9 @@ type CategorizedLeaderboard = {
   [key in SchoolCategory]?: SchoolScore[];
 };
 
-type ThemeWinner = {
+type CategoryWinner = {
     school: School;
-    themeScore: number;
+    score: number;
 }
 
 type LeaderboardClientProps = {
@@ -55,6 +57,8 @@ type LeaderboardClientProps = {
 export default function LeaderboardClient({ schools, categories, scores, feedbacks, judges }: LeaderboardClientProps) {
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
+  const [selectedPrizeCategoryId, setSelectedPrizeCategoryId] = useState<string | undefined>(categories[0]?.id);
+
 
   const categorizedLeaderboardData = useMemo(() => {
     if (schools.length === 0 || categories.length === 0 || judges.length === 0) return {};
@@ -135,32 +139,31 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     });
   }, [schools, feedbacks, judges]);
 
-  const themeWinners = useMemo(() => {
-    const themeCategory = categories.find(c => c.name.toLowerCase() === 'theme');
-    if (!themeCategory) return { Senior: [], Junior: [] };
+  const categoryPrizeWinners = useMemo(() => {
+    if (!selectedPrizeCategoryId) return { Senior: [], Junior: [] };
 
-    const getWinners = (category: 'Senior' | 'Junior'): ThemeWinner[] => {
+    const getWinners = (category: 'Senior' | 'Junior'): CategoryWinner[] => {
         const categoryLeaderboard = categorizedLeaderboardData[category];
         if (!categoryLeaderboard) return [];
 
         const top3OverallIds = categoryLeaderboard.slice(0, 3).map(entry => entry.school.id);
 
-        const themeContenders = categoryLeaderboard
+        const contenders = categoryLeaderboard
             .filter(entry => !top3OverallIds.includes(entry.school.id))
             .map(entry => ({
                 school: entry.school,
-                themeScore: entry.totalScores[themeCategory.id] ?? 0
+                score: entry.totalScores[selectedPrizeCategoryId] ?? 0
             }))
-            .sort((a, b) => b.themeScore - a.themeScore);
+            .sort((a, b) => b.score - a.score);
         
-        return themeContenders.slice(0, 3);
+        return contenders.slice(0, 3);
     };
 
     return {
         Senior: getWinners('Senior'),
         Junior: getWinners('Junior'),
     };
-  }, [categorizedLeaderboardData, categories]);
+  }, [categorizedLeaderboardData, selectedPrizeCategoryId]);
   
   const getRankIcon = (rank: number) => {
     if(rank === 1) return <Trophy className="w-8 h-8 text-yellow-500" />;
@@ -274,91 +277,126 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     )
   }
 
-  const renderThemePrizes = () => {
-    const hasSeniorWinners = themeWinners.Senior.length > 0;
-    const hasJuniorWinners = themeWinners.Junior.length > 0;
-    if (!hasSeniorWinners && !hasJuniorWinners) return <p className="p-4 text-center text-muted-foreground">No theme prize winners to show yet.</p>;
+  const renderCategoryPrizes = () => {
+    const hasSeniorWinners = categoryPrizeWinners.Senior.length > 0;
+    const hasJuniorWinners = categoryPrizeWinners.Junior.length > 0;
+    const selectedCategoryName = categories.find(c => c.id === selectedPrizeCategoryId)?.name || '';
 
+    if (!categories || categories.length === 0) {
+        return <p className="p-4 text-center text-muted-foreground">No scoring categories have been configured.</p>;
+    }
+    
     return (
-          <div className="space-y-8">
-            {hasSeniorWinners && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-headline text-2xl text-purple-700">Senior Category - Theme Winners</CardTitle>
-                  <CardDescription>Top 3 schools based on Theme score, excluding overall top 3 winners.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Rank</TableHead>
-                        <TableHead>School</TableHead>
-                        <TableHead className="text-right">Theme Score</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {themeWinners.Senior.map((winner, index) => (
-                        <TableRow key={winner.school.id}>
-                          <TableCell className="font-bold flex items-center gap-2">
-                             <Star className="w-6 h-6 text-purple-500" /> {index + 1}
-                          </TableCell>
-                          <TableCell>{winner.school.name}</TableCell>
-                          <TableCell className="text-right font-bold">{winner.themeScore}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+        <div className="space-y-8">
+            <Card className="max-w-sm mx-auto">
+                <CardContent className="pt-6">
+                    <Label htmlFor="category-prize-select" className="text-base">Select Prize Category</Label>
+                    <Select value={selectedPrizeCategoryId} onValueChange={setSelectedPrizeCategoryId}>
+                        <SelectTrigger id="category-prize-select">
+                            <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {categories.map(cat => (
+                                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </CardContent>
-              </Card>
-            )}
-            {hasJuniorWinners && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-headline text-2xl text-purple-700">Junior Category - Theme Winners</CardTitle>
-                   <CardDescription>Top 3 schools based on Theme score, excluding overall top 3 winners.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[100px]">Rank</TableHead>
-                        <TableHead>School</TableHead>
-                        <TableHead className="text-right">Theme Score</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {themeWinners.Junior.map((winner, index) => (
-                        <TableRow key={winner.school.id}>
-                          <TableCell className="font-bold flex items-center gap-2">
-                            <Star className="w-6 h-6 text-purple-500" /> {index + 1}
-                          </TableCell>
-                          <TableCell>{winner.school.name}</TableCell>
-                          <TableCell className="text-right font-bold">{winner.themeScore}</TableCell>
+            </Card>
+
+            {!selectedPrizeCategoryId ? (
+                <p className="p-4 text-center text-muted-foreground">Please select a category to view winners.</p>
+            ) : (
+            <>
+                {hasSeniorWinners && (
+                <Card>
+                    <CardHeader>
+                    <CardTitle className="font-headline text-2xl text-purple-700">Senior - {selectedCategoryName} Winners</CardTitle>
+                    <CardDescription>Top 3 schools based on {selectedCategoryName} score, excluding overall top 3 winners.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[100px]">Rank</TableHead>
+                            <TableHead>School</TableHead>
+                            <TableHead className="text-right">{selectedCategoryName} Score</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                        </TableHeader>
+                        <TableBody>
+                        {categoryPrizeWinners.Senior.map((winner, index) => (
+                            <TableRow key={winner.school.id}>
+                            <TableCell className="font-bold flex items-center gap-2">
+                                <Star className="w-6 h-6 text-purple-500" /> {index + 1}
+                            </TableCell>
+                            <TableCell>{winner.school.name}</TableCell>
+                            <TableCell className="text-right font-bold">{winner.score}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    </CardContent>
+                </Card>
+                )}
+                {hasJuniorWinners && (
+                <Card>
+                    <CardHeader>
+                    <CardTitle className="font-headline text-2xl text-purple-700">Junior - {selectedCategoryName} Winners</CardTitle>
+                    <CardDescription>Top 3 schools based on {selectedCategoryName} score, excluding overall top 3 winners.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[100px]">Rank</TableHead>
+                            <TableHead>School</TableHead>
+                            <TableHead className="text-right">{selectedCategoryName} Score</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {categoryPrizeWinners.Junior.map((winner, index) => (
+                            <TableRow key={winner.school.id}>
+                            <TableCell className="font-bold flex items-center gap-2">
+                                <Star className="w-6 h-6 text-purple-500" /> {index + 1}
+                            </TableCell>
+                            <TableCell>{winner.school.name}</TableCell>
+                            <TableCell className="text-right font-bold">{winner.score}</TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    </CardContent>
+                </Card>
+                )}
+                {!hasJuniorWinners && !hasSeniorWinners && (
+                     <p className="p-4 text-center text-muted-foreground">No prize winners to show for {selectedCategoryName}.</p>
+                )}
+            </>
             )}
-          </div>
+        </div>
     );
   };
 
   const hasSeniorData = categorizedLeaderboardData.Senior && categorizedLeaderboardData.Senior.length > 0;
   const hasJuniorData = categorizedLeaderboardData.Junior && categorizedLeaderboardData.Junior.length > 0;
   const hasSubJuniorData = subJuniorFeedbackData.length > 0;
-  const hasThemeWinners = themeWinners.Senior.length > 0 || themeWinners.Junior.length > 0;
+  const hasCategoryPrizes = categories.length > 0;
 
   const TABS = [
     { value: 'senior', label: 'Senior', hasData: hasSeniorData, content: () => renderJuniorSenior('Senior') },
     { value: 'junior', label: 'Junior', hasData: hasJuniorData, content: () => renderJuniorSenior('Junior') },
-    { value: 'theme', label: 'Theme Prizes', hasData: hasThemeWinners, content: renderThemePrizes },
+    { value: 'category-prizes', label: 'Category', hasData: hasCategoryPrizes, content: renderCategoryPrizes },
     { value: 'sub-junior', label: 'Sub-Junior', hasData: hasSubJuniorData, content: renderSubJunior },
   ];
   
   const availableTabs = TABS.filter(tab => tab.hasData);
   const [activeTab, setActiveTab] = useState(availableTabs[0]?.value || '');
+
+  React.useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.value === activeTab)) {
+      setActiveTab(availableTabs[0].value);
+    }
+  }, [availableTabs, activeTab]);
 
   return (
     <div>
