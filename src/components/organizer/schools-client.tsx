@@ -32,7 +32,7 @@ export default function SchoolsClient() {
     setLoading(true);
     const schoolsCollection = collection(db, 'schools');
     const schoolsSnapshot = await getDocs(schoolsCollection);
-    const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School)).sort((a,b) => a.name.localeCompare(b.name));
+    const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
     setSchools(schoolsList);
     setLoading(false);
   }, []);
@@ -299,3 +299,5 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
+
+    
