@@ -44,11 +44,20 @@ export default function JudgesClient() {
 
   const fetchJudges = useCallback(async () => {
     setLoading(true);
-    const judgesCollection = collection(db, 'judges');
-    const q = query(judgesCollection, orderBy("createdAt", "asc"));
-    const judgesSnapshot = await getDocs(q);
-    const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-    setJudges(judgesList);
+    try {
+        const judgesCollection = collection(db, 'judges');
+        const q = query(judgesCollection, orderBy("createdAt", "asc"));
+        const judgesSnapshot = await getDocs(q);
+        const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+        setJudges(judgesList);
+    } catch (e) {
+        console.error("Error fetching judges: ", e);
+        // Fallback for when createdAt is not available on all documents
+        const judgesCollection = collection(db, 'judges');
+        const judgesSnapshot = await getDocs(judgesCollection);
+        const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+        setJudges(judgesList);
+    }
     setLoading(false);
   }, []);
 
