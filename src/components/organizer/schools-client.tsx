@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,23 +11,28 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/page-header';
 import type { School, SchoolCategory } from '@/lib/data';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, writeBatch } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
+
+const validCategories: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
 export default function SchoolsClient() {
   const [schools, setSchools] = useState<School[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSchools = useCallback(async () => {
     setLoading(true);
     const schoolsCollection = collection(db, 'schools');
     const schoolsSnapshot = await getDocs(schoolsCollection);
-    const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+    const schoolsList = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School)).sort((a,b) => a.name.localeCompare(b.name));
     setSchools(schoolsList);
     setLoading(false);
   }, []);
@@ -74,12 +80,84 @@ export default function SchoolsClient() {
     }
   }
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json<{ "School Name": string; "Category": SchoolCategory }>(worksheet);
+        
+        const newSchools = json.map(row => ({
+          name: row["School Name"],
+          category: row["Category"]
+        }));
+
+        const invalidSchools = newSchools.filter(school => !school.name || !school.category || !validCategories.includes(school.category));
+        
+        if (invalidSchools.length > 0) {
+            toast({
+                title: "Invalid Data",
+                description: `Found ${invalidSchools.length} invalid rows. Please ensure 'School Name' is filled and 'Category' is one of: ${validCategories.join(', ')}.`,
+                variant: "destructive",
+                duration: 9000,
+            });
+            return;
+        }
+
+        const batch = writeBatch(db);
+        newSchools.forEach(school => {
+            const newSchoolRef = doc(collection(db, "schools"));
+            batch.set(newSchoolRef, school);
+        });
+
+        await batch.commit();
+
+        toast({
+            title: "Upload Successful",
+            description: `${newSchools.length} schools have been added.`
+        });
+
+        fetchSchools();
+      } catch (error) {
+        console.error("Error processing Excel file: ", error);
+        toast({ title: "Upload Failed", description: "There was an error processing your file.", variant: "destructive" });
+      } finally {
+        setIsUploading(false);
+        // Reset file input
+        if(fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
   return (
     <>
       <PageHeader title="Manage Schools">
-        <Button onClick={() => openDialog()}>
-          <PlusCircle className="mr-2 h-4 w-4" /> Add School
-        </Button>
+        <div className="flex gap-2">
+            <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden" 
+                accept=".xlsx, .xls"
+            />
+            <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                <Upload className="mr-2 h-4 w-4" />
+                {isUploading ? "Uploading..." : "Upload from Excel"}
+            </Button>
+            <Button onClick={() => openDialog()}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add School
+            </Button>
+        </div>
       </PageHeader>
       
       <Card>
