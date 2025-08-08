@@ -19,10 +19,16 @@ type CategorizedLeaderboard = {
 };
 
 const winnerColors = [
+  'border-yellow-400', // Gold
+  'border-slate-400', // Silver
+  'border-amber-600'  // Bronze
+];
+
+const winnerTextColors = [
   'text-yellow-400', // Gold
   'text-slate-400', // Silver
   'text-amber-600'  // Bronze
-];
+]
 
 export default function LeaderboardClient() {
   const [schools] = useState(initialSchools);
@@ -60,7 +66,7 @@ export default function LeaderboardClient() {
       }
       return acc;
     }, {});
-  }, [schools, categories, scores, judges, schoolCategories]);
+  }, [schools, categories, scores, judges]);
 
   return (
     <div>
@@ -79,9 +85,9 @@ export default function LeaderboardClient() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
                 {topThree.map((entry, index) => (
-                  <Card key={entry.school.id} className="relative text-center border-2 border-transparent transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20" style={{borderColor: winnerColors[index]?.replace('text-','').replace('-400','').replace('-600','')}}>
+                  <Card key={entry.school.id} className={`relative text-center border-2 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 ${winnerColors[index]}`}>
                     <CardHeader className="items-center p-4 md:p-6">
-                      <Trophy className={`w-12 h-12 md:w-16 md:h-16 mb-2 ${winnerColors[index] || 'text-primary'}`} />
+                      <Trophy className={`w-12 h-12 md:w-16 md:h-16 mb-2 ${winnerTextColors[index] || 'text-primary'}`} />
                       <CardTitle className="font-headline text-2xl md:text-3xl">{entry.school.name}</CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 md:p-6 pt-0">
