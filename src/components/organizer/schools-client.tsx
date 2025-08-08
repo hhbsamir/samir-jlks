@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -40,6 +40,13 @@ export default function SchoolsClient() {
   useEffect(() => {
     fetchSchools();
   }, [fetchSchools]);
+
+  const categorizedSchools = useMemo(() => {
+    return validCategories.reduce((acc, category) => {
+        acc[category] = schools.filter(school => school.category === category);
+        return acc;
+    }, {} as Record<SchoolCategory, School[]>);
+  }, [schools]);
 
   const openDialog = (school: School | null = null) => {
     setEditingSchool(school);
@@ -160,55 +167,62 @@ export default function SchoolsClient() {
         </div>
       </PageHeader>
       
-      <Card>
-        <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>School Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center">Loading schools...</TableCell>
-                </TableRow>
-              ) : schools.map(school => (
-                <TableRow key={school.id}>
-                  <TableCell className="font-medium">{school.name}</TableCell>
-                  <TableCell>{school.category}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
-                      <Edit className="h-4 w-4 text-accent" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                         <Button variant="ghost" size="icon">
-                           <Trash2 className="h-4 w-4 text-destructive" />
-                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the school and all associated scores.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="space-y-12">
+        {loading ? (
+            <p>Loading schools...</p>
+        ) : (
+            validCategories.map(category => (
+                categorizedSchools[category].length > 0 && (
+                <section key={category}>
+                    <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Schools</h2>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>School Name</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {categorizedSchools[category].map(school => (
+                                        <TableRow key={school.id}>
+                                            <TableCell className="font-medium">{school.name}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
+                                                <Edit className="h-4 w-4 text-accent" />
+                                                </Button>
+                                                <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete the school and all associated scores.
+                                                    </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                                </AlertDialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </section>
+                )
+            ))
+        )}
+      </div>
 
       <SchoolFormDialog 
         isOpen={isDialogOpen} 
