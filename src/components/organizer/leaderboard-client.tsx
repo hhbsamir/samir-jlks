@@ -250,10 +250,10 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     <div>
       <PageHeader title="Leaderboard" />
       
-      <Accordion type="multiple" className="w-full space-y-8">
+      <Accordion type="multiple" className="w-full space-y-8" defaultValue={["senior", "junior", "sub-junior"]}>
         {hasSeniorData && (
           <AccordionItem value="senior">
-            <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-lg">
               Senior Category
             </AccordionTrigger>
             <AccordionContent className="pt-8">
@@ -263,7 +263,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
         )}
         {hasJuniorData && (
           <AccordionItem value="junior">
-            <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 rounded-lg">
               Junior Category
             </AccordionTrigger>
             <AccordionContent className="pt-8">
@@ -273,7 +273,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
         )}
         {hasSubJuniorData && (
           <AccordionItem value="sub-junior">
-            <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
+            <AccordionTrigger className="text-xl font-bold hover:no-underline p-4 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-lg">
               Sub-Junior Category Feedback
             </AccordionTrigger>
             <AccordionContent className="pt-8">
