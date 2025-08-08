@@ -9,23 +9,23 @@ export function NavButtons({ showBack = true, showHome = true }: { showBack?: bo
   const router = useRouter();
 
   return (
-    <div className="flex items-center gap-2 z-20">
+    <div className="flex items-center gap-2">
       {showHome && (
-          <Button asChild variant="outline" size="lg" className="p-2" aria-label="Home">
+          <Button asChild variant="outline" size="icon" className="p-2" aria-label="Home">
             <Link href="/">
-              <Home className="h-6 w-6" />
+              <Home className="h-5 w-5" />
             </Link>
           </Button>
       )}
       {showBack && (
         <Button
           variant="outline"
-          size="lg"
+          size="icon"
           className="p-2"
           onClick={() => router.back()}
           aria-label="Go back"
         >
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="h-5 w-5" />
         </Button>
       )}
     </div>
