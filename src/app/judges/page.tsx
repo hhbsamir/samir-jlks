@@ -432,7 +432,7 @@ export default function JudgesPage() {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8 pt-20">
       <div className="fixed top-4 left-4 z-50">
-        <NavButtons />
+        <NavButtons showBack={false} />
       </div>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10">
@@ -450,3 +450,5 @@ export default function JudgesPage() {
     </div>
   );
 }
+
+    
