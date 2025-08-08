@@ -21,8 +21,8 @@ type SchoolScore = {
       total: number;
     }
   };
-  averageScores: { [categoryId: string]: number };
-  totalAverage: number;
+  totalScores: { [categoryId: string]: number };
+  totalScore: number;
 };
 
 
@@ -93,8 +93,8 @@ export default function LeaderboardClient() {
           const schoolData: SchoolScore = {
             school,
             scoresByJudge: {},
-            averageScores: {},
-            totalAverage: 0,
+            totalScores: {},
+            totalScore: 0,
           };
 
           judges.forEach(judge => {
@@ -120,15 +120,15 @@ export default function LeaderboardClient() {
             const categoryScores = scores.filter(
               s => s.schoolId === school.id && s.categoryId === category.id
             );
-            const avgScore = categoryScores.reduce((sum, s) => sum + s.score, 0) / (judges.length || 1);
-            schoolData.averageScores[category.id] = parseFloat(avgScore.toFixed(2));
-            schoolData.totalAverage += avgScore;
+            const totalScore = categoryScores.reduce((sum, s) => sum + s.score, 0);
+            schoolData.totalScores[category.id] = totalScore;
+            schoolData.totalScore += totalScore;
           });
-          schoolData.totalAverage = parseFloat(schoolData.totalAverage.toFixed(2));
+          
           return schoolData;
         });
 
-        acc[category] = schoolScores.sort((a, b) => b.totalAverage - a.totalAverage);
+        acc[category] = schoolScores.sort((a, b) => b.totalScore - a.totalScore);
       }
       return acc;
     }, {});
@@ -190,14 +190,14 @@ export default function LeaderboardClient() {
                                                 {categories.map(cat => (
                                                     <div key={cat.id} className="text-center">
                                                         <div className="text-xs text-muted-foreground">{cat.name}</div>
-                                                        <div className="font-semibold text-lg">{entry.averageScores[cat.id]}</div>
+                                                        <div className="font-semibold text-lg">{entry.totalScores[cat.id]}</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                         <div className="text-right pl-4 border-l">
                                             <div className="text-sm text-muted-foreground">Total</div>
-                                            <div className="font-bold text-primary text-2xl">{entry.totalAverage}</div>
+                                            <div className="font-bold text-primary text-2xl">{entry.totalScore}</div>
                                         </div>
                                         <div className="pl-2 [&_svg]:mx-2"></div>
                                     </div>
@@ -280,7 +280,7 @@ export default function LeaderboardClient() {
     <div>
       <PageHeader title="Leaderboard" />
       
-      <Accordion type="multiple" className="w-full space-y-8">
+      <Accordion type="multiple" defaultValue={['senior', 'junior', 'sub-junior']} className="w-full space-y-8">
         {hasSeniorData && (
           <AccordionItem value="senior">
             <AccordionTrigger className="text-3xl md:text-4xl text-foreground/90 font-headline hover:no-underline -mb-2">
