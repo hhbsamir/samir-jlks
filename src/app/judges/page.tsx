@@ -342,7 +342,7 @@ export default function JudgesPage() {
                 </Button>
             </div>
         )}
-        <Accordion type="multiple" className="w-full space-y-6" defaultValue={schoolCategoryOrder}>
+        <Accordion type="multiple" className="w-full space-y-6">
             {schoolCategoryOrder.map(schoolCategory => (
                 categorizedSchools[schoolCategory]?.length > 0 && (
                      <AccordionItem value={schoolCategory} key={schoolCategory}>
