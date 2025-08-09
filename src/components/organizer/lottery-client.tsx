@@ -103,33 +103,28 @@ export default function LotteryClient({ initialSchools }: { initialSchools: Scho
             const primaryColor = '#16a34a'; // Green
             const accentColor = '#6366f1'; // Indigo
 
-            // Title
-            doc.setFontSize(24);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(primaryColor);
-            doc.text('Performance Order Lottery', 105, 20, { align: 'center' });
-
-            // Date
-            const reportDate = format(new Date(), 'do MMMM yyyy');
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(100);
-            doc.text(`Generated on: ${reportDate}`, 105, 28, { align: 'center' });
-
-            let lastY = 40;
-
-            schoolCategoryOrder.forEach(category => {
+            schoolCategoryOrder.forEach((category, index) => {
                 const schoolsInCategory = categorizedSchools[category];
                 if (schoolsInCategory && schoolsInCategory.length > 0) {
                     
-                    if (lastY > 40) { // Add space between categories
-                        lastY += 15;
+                    if (index > 0) {
+                        doc.addPage();
                     }
 
-                    if (lastY > 250) { // Add new page if not enough space
-                        doc.addPage();
-                        lastY = 20;
-                    }
+                    // Title
+                    doc.setFontSize(24);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(primaryColor);
+                    doc.text('Performance Order Lottery', 105, 20, { align: 'center' });
+
+                    // Date
+                    const reportDate = format(new Date(), 'do MMMM yyyy');
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(100);
+                    doc.text(`Generated on: ${reportDate}`, 105, 28, { align: 'center' });
+
+                    let lastY = 40;
 
                     // Category Title
                     doc.setFontSize(18);
