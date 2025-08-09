@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Gavel, Crown, MoveRight } from 'lucide-react';
@@ -31,6 +32,20 @@ export default function Home() {
       <div className="absolute top-4 left-4">
         <NavButtons showBack={false} showHome={false} />
       </div>
+
+       <div className="mb-8">
+        <div className="mx-auto w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden shadow-2xl shadow-primary/30 border-4 border-primary/20 p-1 bg-primary/10">
+            <Image
+                src="https://i.pinimg.com/564x/e7/0a/68/e70a68f3a3e6c0f8625556276856c91a.jpg"
+                alt="Lord Jagannath"
+                width={224}
+                height={224}
+                className="w-full h-full object-cover rounded-full"
+                priority
+            />
+        </div>
+      </div>
+
       <div className="text-center mb-12">
         <h1 className="text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
           JLKS Paradip
