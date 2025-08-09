@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Gavel, Crown, MoveRight } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
@@ -47,15 +48,15 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         <PortalCard
           href="/judges"
-          icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16 text-card-foreground" />}
+          icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16" />}
           title="Judge's Portal"
-          className="bg-card-2"
+          className="from-yellow-400 to-orange-500 text-white"
         />
         <PortalCard
           href="/organizers"
-          icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16 text-card-foreground" />}
+          icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16" />}
           title="Organizer's Dashboard"
-          className="bg-card-3"
+          className="from-purple-500 to-indigo-600 text-white"
         />
       </div>
     </div>
@@ -64,15 +65,15 @@ export default function Home() {
 
 function PortalCard({ href, icon, title, className }: { href: string; icon: React.ReactNode; title: string; className?: string }) {
   return (
-    <Card className={`group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden backdrop-blur-sm ${className}`}>
+    <Card className={cn(`group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-0 overflow-hidden bg-gradient-to-br`, className)}>
       <CardHeader className="items-center text-center p-6 sm:p-8">
-        <div className="p-4 bg-black/10 rounded-full mb-4 group-hover:animate-pulse">
+        <div className="p-4 bg-white/20 rounded-full mb-4 ring-8 ring-white/10 group-hover:animate-pulse transition-all duration-300">
           {icon}
         </div>
-        <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-card-foreground">{title}</CardTitle>
+        <CardTitle className="text-2xl sm:text-3xl md:text-4xl">{title}</CardTitle>
       </CardHeader>
       <CardContent className="text-center flex flex-col items-center gap-6 p-6 sm:p-8 pt-0">
-        <Button asChild className="rounded-full font-bold bg-background/80 text-foreground hover:bg-background" size="lg">
+        <Button asChild className="rounded-full font-bold bg-background/90 text-foreground hover:bg-background" size="lg">
           <Link href={href}>
             Enter <MoveRight className="ml-2 transition-transform group-hover:translate-x-1" />
           </Link>
