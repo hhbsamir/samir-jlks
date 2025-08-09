@@ -19,12 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
-  Dance: <Drama className="w-6 h-6 text-accent" />,
-  Costume: <Palette className="w-6 h-6 text-accent" />,
-  Theme: <Theater className="w-6 h-6 text-accent" />,
-  Music: <Music className="w-6 h-6 text-accent" />,
-  "Make-up": <Brush className="w-6 h-6 text-accent" />,
-  default: <BarChart className="w-6 h-6 text-accent" />,
+  Dance: <Drama className="w-5 h-5" />,
+  Costume: <Palette className="w-5 h-5" />,
+  Theme: <Theater className="w-5 h-5" />,
+  Music: <Music className="w-5 h-5" />,
+  "Make-up": <Brush className="w-5 h-5" />,
+  default: <BarChart className="w-5 h-5" />,
 };
 
 type SchoolScores = {
@@ -234,7 +234,7 @@ export default function JudgesPage() {
         toast({
           title: "Submission Successful!",
           description: `Your entries for ${schools.find(s => s.id === schoolId)?.name} have been recorded.`,
-          action: <div className="p-2 bg-green-500 text-white rounded-full"><Check /></div>
+          action: <div className="p-1 bg-green-500 text-white rounded-full"><Check className="w-4 h-4" /></div>
         });
 
     } catch(error) {
@@ -265,8 +265,8 @@ export default function JudgesPage() {
             }}
         >
             <DialogHeader>
-                <DialogTitle className="font-headline text-3xl text-primary flex items-center gap-2">
-                    <ShieldAlert className="w-8 h-8"/>
+                <DialogTitle className="flex items-center gap-2">
+                    <ShieldAlert className="w-6 h-6"/>
                     Authentication for {selectedJudge?.name}
                 </DialogTitle>
                 <DialogDescription>
@@ -276,13 +276,13 @@ export default function JudgesPage() {
             <form onSubmit={handlePasswordSubmit}>
                 <div className="grid flex-1 gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="password" className="text-right text-base">
+                        <Label htmlFor="password" className="text-right">
                             Password
                         </Label>
                         <Input 
                             id="password"
                             type="password" 
-                            className="col-span-3 text-base"
+                            className="col-span-3"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             ref={inputRef}
@@ -302,26 +302,24 @@ export default function JudgesPage() {
 
   const renderJudgeSelection = () => (
     <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i} className="py-8">
-                        <CardContent className="flex flex-col items-center text-center gap-4">
-                           <div className="p-4 bg-muted rounded-full">
-                               <Loader2 className="w-16 h-16 text-muted-foreground animate-spin" />
+                    <Card key={i}>
+                        <CardContent className="flex flex-col items-center text-center gap-4 p-6">
+                           <div className="p-3 bg-muted rounded-full">
+                               <Loader2 className="w-12 h-12 text-muted-foreground animate-spin" />
                            </div>
-                           <div className="h-8 w-3/4 bg-muted rounded-md" />
+                           <div className="h-6 w-3/4 bg-muted rounded-md" />
                         </CardContent>
                     </Card>
                 ))
             ) : (
                 judges.map(judge => (
-                    <Card key={judge.id} className="group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-2 border-transparent hover:border-primary/50 overflow-hidden cursor-pointer" onClick={() => handleJudgeSelection(judge)}>
-                        <CardContent className="pt-8 items-center text-center flex flex-col gap-4">
-                            <div className="p-5 bg-gradient-to-br from-primary/10 to-accent/10 rounded-full group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
-                                <User className="w-16 h-16 text-primary" />
-                            </div>
-                            <h2 className="font-headline text-3xl">{judge.name}</h2>
+                    <Card key={judge.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleJudgeSelection(judge)}>
+                        <CardContent className="pt-6 items-center text-center flex flex-col gap-2">
+                            <User className="w-12 h-12 text-primary" />
+                            <h2 className="text-xl font-semibold">{judge.name}</h2>
                         </CardContent>
                     </Card>
                 ))
@@ -333,90 +331,81 @@ export default function JudgesPage() {
   const renderScoringSheet = () => (
     <>
         {authenticatedJudge && (
-            <div className="flex justify-center mb-10">
+            <div className="flex justify-center mb-6">
                 <Button onClick={() => {
                   setAuthenticatedJudge(null);
                   setScores({});
                   setFeedbacks({});
                 }} variant="outline">
-                    <ArrowLeft className="mr-2 h-5 w-5" />
+                    <ArrowLeft className="mr-2 h-4 w-4" />
                     Back to Judge Selection
                 </Button>
             </div>
         )}
-        <Accordion type="multiple" className="w-full space-y-8" defaultValue={schoolCategoryOrder}>
+        <Accordion type="multiple" className="w-full space-y-6" defaultValue={schoolCategoryOrder}>
             {schoolCategoryOrder.map(schoolCategory => (
                 categorizedSchools[schoolCategory]?.length > 0 && (
-                     <AccordionItem value={schoolCategory} key={schoolCategory} className="border-none">
-                        <AccordionTrigger className="text-3xl md:text-4xl text-primary/80 font-headline hover:no-underline hover:text-primary -mb-2">
+                     <AccordionItem value={schoolCategory} key={schoolCategory}>
+                        <AccordionTrigger className="text-2xl font-bold text-primary">
                           {schoolCategory} Schools
                         </AccordionTrigger>
                         <AccordionContent>
-                           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 pt-8">
+                           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pt-4">
                                 {categorizedSchools[schoolCategory].map((school, index) => (
-                                <Card key={school.id} className="transform transition-all duration-300 hover:shadow-2xl hover:shadow-primary/20 flex flex-col bg-card/80 backdrop-blur-sm border-primary/20">
-                                    <CardHeader className="flex-row items-center gap-4">
-                                      <div className="flex-shrink-0 w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center border-2 border-primary/20 shadow-inner">
-                                        <SchoolIcon className="w-9 h-9 text-primary" />
-                                      </div>
-                                      <div className="flex-1">
-                                        <CardTitle className="font-headline text-2xl md:text-3xl leading-tight">
-                                          {school.name}
-                                        </CardTitle>
-                                        <CardDescription className="text-base">
-                                           Sl. No: {school.serialNumber ?? index + 1}
-                                        </CardDescription>
-                                      </div>
+                                <Card key={school.id}>
+                                    <CardHeader>
+                                      <CardTitle className="flex items-center gap-2">
+                                        <SchoolIcon className="w-6 h-6 text-primary"/>
+                                        {school.name}
+                                      </CardTitle>
+                                      <CardDescription>
+                                         Serial Number: {school.serialNumber ?? index + 1}
+                                      </CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-6 flex-grow flex flex-col">
-                                      <div className="space-y-4 flex-grow">
+                                    <CardContent className="space-y-4">
                                         {schoolCategory === 'Sub-Junior' ? (
-                                             <div className="space-y-3 pt-4">
-                                                <div className="flex items-center gap-3">
-                                                    <MessageSquare className="w-7 h-7 text-accent" />
-                                                    <label className="text-lg font-medium text-primary">Feedback & Notes</label>
+                                             <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <MessageSquare className="w-5 h-5 text-primary" />
+                                                    <label className="font-medium">Feedback & Notes</label>
                                                 </div>
                                                 <Textarea
                                                     placeholder={`Enter feedback for ${school.name}...`}
                                                     value={feedbacks[school.id] ?? ''}
                                                     onChange={(e) => handleFeedbackChange(school.id, e.target.value)}
                                                     disabled={submitting === school.id}
-                                                    rows={5}
-                                                    className="text-base"
+                                                    rows={4}
                                                 />
                                              </div>
                                         ) : (
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+                                            <div className="grid grid-cols-2 gap-4">
                                               {categories.map(category => (
                                                   <div key={category.id} className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                      {categoryIcons[category.name] || categoryIcons.default}
-                                                      <label className="text-base font-medium">{category.name}</label>
-                                                    </div>
-                                                      <div className="w-full">
-                                                          <Select
-                                                          value={(scores[school.id]?.[category.id] ?? 0).toString()}
-                                                          onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
-                                                          disabled={submitting === school.id}
-                                                          >
-                                                          <SelectTrigger className="text-base">
-                                                              <SelectValue placeholder="Score" />
-                                                          </SelectTrigger>
-                                                          <SelectContent>
-                                                              {Array.from({ length: 11 }, (_, i) => (
-                                                                  <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
-                                                              ))}
-                                                          </SelectContent>
-                                                          </Select>
+                                                      <div className="flex items-center gap-2">
+                                                        {categoryIcons[category.name] || categoryIcons.default}
+                                                        <label className="text-sm font-medium">{category.name}</label>
                                                       </div>
+                                                      <Select
+                                                      value={(scores[school.id]?.[category.id] ?? 0).toString()}
+                                                      onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
+                                                      disabled={submitting === school.id}
+                                                      >
+                                                      <SelectTrigger>
+                                                          <SelectValue placeholder="Score" />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                          {Array.from({ length: 11 }, (_, i) => (
+                                                              <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
+                                                          ))}
+                                                      </SelectContent>
+                                                      </Select>
                                                   </div>
                                               ))}
                                             </div>
                                         )}
-                                      </div>
-                                      <Button className="w-full mt-auto font-bold text-lg py-6" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id} style={{backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))'}}>
-                                          {submitting === school.id ? <Loader2 className="mr-2 h-5 w-5 animate-spin"/> : <Check className="mr-2 h-5 w-5"/>}
-                                          {submitting === school.id ? "Submitting..." : `Submit for ${school.name}`}
+                                      <Button className="w-full" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
+                                          {submitting === school.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Check className="mr-2 h-4 w-4"/>}
+                                          {submitting === school.id ? "Submitting..." : "Submit Score"}
                                       </Button>
                                     </CardContent>
                                 </Card>
@@ -431,19 +420,17 @@ export default function JudgesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-8 pt-20">
+    <div className="min-h-screen bg-background p-4 sm:p-6">
       <div className="fixed top-4 left-4 z-50">
         <NavButtons showBack={false} />
       </div>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-           <div className="inline-block bg-primary/10 p-4 rounded-2xl mb-4">
-             <h1 className="font-headline text-5xl md:text-6xl text-primary">
-                {authenticatedJudge ? `Scoring for ${authenticatedJudge.name}` : "Judge's Portal"}
-             </h1>
-           </div>
-          <p className="text-lg md:text-xl text-foreground/80 mt-2 font-body max-w-2xl mx-auto">
-            {authenticatedJudge ? "Assign your scores and feedback with precision and expertise." : "Select your name to begin scoring."}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-bold text-primary">
+            {authenticatedJudge ? `Scoring for ${authenticatedJudge.name}` : "Judge's Portal"}
+          </h1>
+          <p className="text-lg text-muted-foreground mt-2">
+            {authenticatedJudge ? "Please provide your scores for each school." : "Select your name to begin scoring."}
           </p>
         </div>
         
