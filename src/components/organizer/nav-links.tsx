@@ -11,9 +11,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 
 const navItems = [
+  { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10' },
   { href: '/organizers/schools', label: 'Schools', icon: School, color: 'text-blue-500', bgColor: 'bg-blue-400/10' },
   { href: '/organizers/judges', label: 'Judges', icon: Users, color: 'text-green-500', bgColor: 'bg-green-400/10' },
-  { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10', isCentral: true },
   { href: '/organizers/categories', label: 'Categories', icon: Shapes, color: 'text-purple-500', bgColor: 'bg-purple-400/10' },
   { href: '/organizers/lottery', label: 'Lottery', icon: Ticket, color: 'text-orange-500', bgColor: 'bg-orange-400/10' },
   { href: '/organizers/settings', label: 'Settings', icon: Settings, color: 'text-red-500', bgColor: 'bg-red-400/10' },
@@ -36,12 +36,11 @@ export default function NavLinks() {
                             'border border-transparent bg-clip-padding backdrop-filter backdrop-blur-sm',
                             item.bgColor,
                             'hover:scale-110 hover:shadow-lg',
-                             pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg' : 'scale-100',
-                             item.isCentral && 'h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-2 border-primary/50 shadow-xl'
+                             pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg' : 'scale-100'
                           )}
                       >
                           <Link href={item.href}>
-                              <item.icon className={cn("h-6 w-6 sm:h-8 sm:w-8", item.color, item.isCentral && "h-8 w-8 sm:h-10 sm:w-10")} />
+                              <item.icon className={cn("h-6 w-6 sm:h-8 sm:w-8", item.color)} />
                               <span className={cn("text-xs sm:block font-medium", item.color)}>{item.label}</span>
                           </Link>
                       </Button>
