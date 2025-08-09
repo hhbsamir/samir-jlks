@@ -6,52 +6,25 @@ import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-function MenubarMenu({
-  ...props
-}: React.ComponentProps<typeof MenubarPrimitive.Menu>) {
-  return <MenubarPrimitive.Menu {...props} />
-}
-
-function MenubarGroup({
-  ...props
-}: React.ComponentProps<typeof MenubarPrimitive.Group>) {
-  return <MenubarPrimitive.Group {...props} />
-}
-
-function MenubarPortal({
-  ...props
-}: React.ComponentProps<typeof MenubarPrimitive.Portal>) {
-  return <MenubarPrimitive.Portal {...props} />
-}
-
-function MenubarRadioGroup({
-  ...props
-}: React.ComponentProps<typeof MenubarPrimitive.RadioGroup>) {
-  return <MenubarPrimitive.RadioGroup {...props} />
-}
-
-function MenubarSub({
-  ...props
-}: React.ComponentProps<typeof MenubarPrimitive.Sub>) {
-  return <MenubarPrimitive.Sub data-slot="menubar-sub" {...props} />
-}
+const MenubarMenu = MenubarPrimitive.Menu
+const MenubarGroup = MenubarPrimitive.Group
+const MenubarPortal = MenubarPrimitive.Portal
+const MenubarSub = MenubarPrimitive.Sub
+const MenubarRadioGroup = MenubarPrimitive.RadioGroup
 
 const Menubar = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Root>,
-  Omit<React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>, "value" | "onValueChange">
->(({ className, ...props }, ref) => {
-  const {children: _, ...rest} = props;
-  return (
-    <MenubarPrimitive.Root
-      ref={ref}
-      className={cn(
-        'flex h-10 items-center space-x-1 rounded-md border bg-background p-1',
-        className
-      )}
-      {...rest}
-    />
-  );
-});
+  React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <MenubarPrimitive.Root
+    ref={ref}
+    className={cn(
+      "flex h-10 items-center space-x-1 rounded-md border bg-background p-1",
+      className
+    )}
+    {...props}
+  />
+))
 Menubar.displayName = MenubarPrimitive.Root.displayName
 
 const MenubarTrigger = React.forwardRef<
@@ -227,17 +200,13 @@ const MenubarShortcut = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLSpanElement>) => {
-  const {children: _, ...rest} = props;
   return (
     <span
-      className={cn(
-        'ml-auto text-xs tracking-widest text-muted-foreground',
-        className
-      )}
-      {...rest}
+      className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)}
+      {...props}
     />
-  );
-};
+  )
+}
 MenubarShortcut.displayname = "MenubarShortcut"
 
 export {
