@@ -93,16 +93,6 @@ To protect your data, you need to set up Firestore Security Rules. These rules d
           allow create, update: if true;
           allow delete: if isOrganizer();
         }
-
-        // Organizers can read and write to the archives collection
-        match /archives/{archiveId} {
-          allow read, write: if isOrganizer();
-        }
-
-        // Organizers can read from any of the archived collections
-        match /{collectionName}/{docId} {
-          allow read: if isOrganizer() && collectionName.matches('.*_archive_.*');
-        }
       }
     }
     ```
@@ -121,3 +111,5 @@ This is the final step to put your application on the internet!
 You can share this URL with your judges and audience.
 
 Congratulations! Your competition scoring application is now live. You can re-run the `firebase deploy --only hosting` command anytime you make changes to your app that you want to publish.
+
+    

@@ -42,17 +42,6 @@ export type ReportSettings = {
     remarks: string;
 }
 
-export type Archive = {
-    id: string;
-    name: string;
-    archivedAt: Timestamp | Date;
-    collections: {
-        schools: string;
-        scores: string;
-        feedbacks: string;
-    }
-}
-
 export const initialCategories: CompetitionCategory[] = [
 ];
 
@@ -64,5 +53,7 @@ export const initialJudges: Judge[] = [
 
 export const initialScores: Score[] = [
 ];
+
+    
 
     
