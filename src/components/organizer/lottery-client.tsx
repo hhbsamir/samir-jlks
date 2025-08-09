@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PageHeader } from '@/components/page-header';
 import type { School, SchoolCategory } from '@/lib/data';
-import { Dices, Save, ArrowRight } from 'lucide-react';
+import { Dices, Save, ArrowRight, Download } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { writeBatch, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import * as XLSX from 'xlsx';
 
 const schoolCategoryOrder: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
@@ -86,14 +87,41 @@ export default function LotteryClient({ initialSchools }: { initialSchools: Scho
             setIsSaving(false);
         }
     };
+    
+    const handleDownloadOrder = () => {
+        const workbook = XLSX.utils.book_new();
+
+        schoolCategoryOrder.forEach(category => {
+            if (categorizedSchools[category]) {
+                const worksheetData = categorizedSchools[category].map(school => ({
+                    "Serial Number": school.serialNumber,
+                    "School Name": school.name
+                }));
+                const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+                XLSX.utils.book_append_sheet(workbook, worksheet, category);
+            }
+        });
+
+        XLSX.writeFile(workbook, "Performance_Order.xlsx");
+        toast({
+            title: "Download Started",
+            description: "The performance order is being downloaded as an Excel file."
+        });
+    };
 
     return (
         <>
             <PageHeader title="Performance Order Lottery">
-                <Button onClick={handleSaveOrder} disabled={isSaving}>
-                    <Save className="mr-2 h-4 w-4" />
-                    {isSaving ? "Saving..." : "Save Order"}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleDownloadOrder} variant="outline">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Order
+                    </Button>
+                    <Button onClick={handleSaveOrder} disabled={isSaving}>
+                        <Save className="mr-2 h-4 w-4" />
+                        {isSaving ? "Saving..." : "Save Order"}
+                    </Button>
+                </div>
             </PageHeader>
             <div className="space-y-12">
                 {schoolCategoryOrder.map(category => (
