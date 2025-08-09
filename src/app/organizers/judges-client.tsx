@@ -173,16 +173,16 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
          <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="font-headline text-3xl text-primary">{judge ? 'Edit Judge' : 'Add New Judge'}</DialogTitle>
+                    <DialogTitle className="font-headline text-2xl sm:text-3xl text-primary">{judge ? 'Edit Judge' : 'Add New Judge'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Judge Name</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required className="text-base"/>
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="mobile" className="text-lg">Mobile Number</Label>
-                        <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required className="text-base" placeholder="Enter 10-digit number"/>
+                        <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required placeholder="Enter 10-digit number"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="password" className="text-lg">4-Digit Password</Label>
@@ -191,7 +191,6 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                                 id="password" 
                                 value={password} 
                                 onChange={e => setPassword(e.target.value)} 
-                                className="text-base"
                                 maxLength={4}
                                 placeholder="Enter 4-digit password"
                             />

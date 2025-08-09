@@ -158,12 +158,12 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
          <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="font-headline text-3xl text-primary">{category ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+                    <DialogTitle className="font-headline text-2xl sm:text-3xl text-primary">{category ? 'Edit Category' : 'Add New Category'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Category Name</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required className="text-base"/>
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required/>
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>

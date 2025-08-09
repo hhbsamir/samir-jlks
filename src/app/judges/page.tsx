@@ -265,7 +265,7 @@ export default function JudgesPage() {
             }}
         >
             <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
                     <ShieldAlert className="w-6 h-6"/>
                     Authentication for {selectedJudge?.name}
                 </DialogTitle>
@@ -303,10 +303,10 @@ export default function JudgesPage() {
   const renderJudgeSelection = () => (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-10">
-        <h1 className="font-headline text-5xl md:text-7xl font-bold text-primary">
+        <h1 className="font-headline text-4xl sm:text-5xl md:text-7xl font-bold text-primary">
           Judge's Portal
         </h1>
-        <p className="text-xl text-muted-foreground mt-2">
+        <p className="text-lg sm:text-xl text-muted-foreground mt-2">
           Select your name to begin scoring.
         </p>
       </div>
@@ -314,9 +314,9 @@ export default function JudgesPage() {
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <Card key={i} className="bg-card/50">
-              <CardContent className="flex flex-col items-center text-center gap-4 p-8">
+              <CardContent className="flex flex-col items-center text-center gap-4 p-6 sm:p-8">
                 <div className="p-3 bg-muted rounded-full">
-                  <Loader2 className="w-16 h-16 text-muted-foreground animate-spin" />
+                  <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground animate-spin" />
                 </div>
                 <div className="h-7 w-3/4 bg-muted rounded-md" />
               </CardContent>
@@ -329,11 +329,11 @@ export default function JudgesPage() {
               className="cursor-pointer group hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-primary/50 bg-card/50 backdrop-blur-sm" 
               onClick={() => handleJudgeSelection(judge)}
             >
-              <CardContent className="pt-8 items-center text-center flex flex-col gap-4">
+              <CardContent className="pt-6 sm:pt-8 items-center text-center flex flex-col gap-4">
                 <div className="p-4 bg-primary/10 rounded-full transition-transform duration-300 group-hover:scale-110">
-                  <User className="w-16 h-16 text-primary" />
+                  <User className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
                 </div>
-                <h2 className="text-3xl font-headline text-card-foreground">{judge.name}</h2>
+                <h2 className="text-2xl sm:text-3xl font-headline text-card-foreground">{judge.name}</h2>
               </CardContent>
             </Card>
           ))
@@ -356,10 +356,10 @@ export default function JudgesPage() {
                         Switch Judge
                     </Button>
                 </div>
-                <h1 className="font-headline text-5xl md:text-7xl font-bold text-primary">
+                <h1 className="font-headline text-4xl sm:text-5xl md:text-7xl font-bold text-primary">
                     Scoring for {authenticatedJudge.name}
                 </h1>
-                <p className="text-xl text-muted-foreground mt-2">
+                <p className="text-lg sm:text-xl text-muted-foreground mt-2">
                     Please provide your scores for each school.
                 </p>
             </div>
@@ -368,7 +368,7 @@ export default function JudgesPage() {
             {schoolCategoryOrder.map(schoolCategory => (
                 categorizedSchools[schoolCategory]?.length > 0 && (
                      <AccordionItem value={schoolCategory} key={schoolCategory}>
-                        <AccordionTrigger className="text-4xl font-headline text-primary/80 hover:text-primary transition-colors data-[state=open]:text-primary">
+                        <AccordionTrigger className="text-3xl sm:text-4xl font-headline text-primary/80 hover:text-primary transition-colors data-[state=open]:text-primary">
                           {schoolCategory} Schools
                         </AccordionTrigger>
                         <AccordionContent>
@@ -376,11 +376,11 @@ export default function JudgesPage() {
                                 {categorizedSchools[schoolCategory].map((school, index) => (
                                 <Card key={school.id} className="bg-card/50 backdrop-blur-sm shadow-lg">
                                     <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 font-headline text-3xl">
-                                        <SchoolIcon className="w-8 h-8 text-primary"/>
+                                      <CardTitle className="flex items-center gap-3 font-headline text-2xl sm:text-3xl">
+                                        <SchoolIcon className="w-7 h-7 sm:w-8 sm:h-8 text-primary"/>
                                         {school.name}
                                       </CardTitle>
-                                      <CardDescription className="text-base pt-1">
+                                      <CardDescription className="text-sm sm:text-base pt-1">
                                          Serial Number: {school.serialNumber ?? index + 1}
                                       </CardDescription>
                                     </CardHeader>
@@ -388,8 +388,8 @@ export default function JudgesPage() {
                                         {schoolCategory === 'Sub-Junior' ? (
                                              <div className="space-y-2">
                                                 <div className="flex items-center gap-2 text-primary">
-                                                    <MessageSquare className="w-6 h-6" />
-                                                    <label className="font-headline text-2xl">Feedback & Notes</label>
+                                                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+                                                    <label className="font-headline text-xl sm:text-2xl">Feedback & Notes</label>
                                                 </div>
                                                 <Textarea
                                                     placeholder={`Enter feedback for ${school.name}...`}
@@ -397,7 +397,7 @@ export default function JudgesPage() {
                                                     onChange={(e) => handleFeedbackChange(school.id, e.target.value)}
                                                     disabled={submitting === school.id}
                                                     rows={4}
-                                                    className="bg-background/80 text-base"
+                                                    className="bg-background/80 text-sm sm:text-base"
                                                 />
                                              </div>
                                         ) : (
@@ -406,14 +406,14 @@ export default function JudgesPage() {
                                                   <div key={category.id} className="space-y-2 flex-shrink-0 w-32">
                                                       <div className="flex items-center gap-2">
                                                         {categoryIcons[category.name] || categoryIcons.default}
-                                                        <label className="text-base font-medium">{category.name}</label>
+                                                        <label className="text-sm sm:text-base font-medium">{category.name}</label>
                                                       </div>
                                                       <Select
                                                       value={(scores[school.id]?.[category.id] ?? 0).toString()}
                                                       onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
                                                       disabled={submitting === school.id}
                                                       >
-                                                      <SelectTrigger className="text-base">
+                                                      <SelectTrigger className="text-sm sm:text-base">
                                                           <SelectValue placeholder="Score" />
                                                       </SelectTrigger>
                                                       <SelectContent>
@@ -426,7 +426,7 @@ export default function JudgesPage() {
                                               ))}
                                             </div>
                                         )}
-                                      <Button size="lg" className="w-full font-bold text-lg" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
+                                      <Button size="lg" className="w-full font-bold text-base sm:text-lg" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
                                           {submitting === school.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Check className="mr-2 h-4 w-4"/>}
                                           {submitting === school.id ? "Submitting..." : "Submit Score"}
                                       </Button>
@@ -454,5 +454,3 @@ export default function JudgesPage() {
     </div>
   );
 }
-
-    

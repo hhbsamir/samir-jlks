@@ -69,7 +69,7 @@ function PortalCard({ href, icon, title, className }: { href: string; icon: Reac
         <div className="p-4 bg-black/10 rounded-full mb-4 group-hover:animate-pulse">
           {icon}
         </div>
-        <CardTitle className="text-3xl sm:text-4xl text-card-foreground">{title}</CardTitle>
+        <CardTitle className="text-2xl sm:text-3xl md:text-4xl text-card-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent className="text-center flex flex-col items-center gap-6 p-6 sm:p-8 pt-0">
         <Button asChild className="rounded-full font-bold bg-background/80 text-foreground hover:bg-background" size="lg">

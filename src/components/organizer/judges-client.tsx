@@ -112,68 +112,70 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
       
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Judge Name</TableHead>
-                <TableHead>Mobile Number</TableHead>
-                <TableHead>Password</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {initialJudges.map(judge => (
-                <TableRow key={judge.id}>
-                  <TableCell className="font-medium">{judge.name}</TableCell>
-                  <TableCell>{judge.mobile}</TableCell>
-                  <TableCell>
-                    {judge.password || 'Not Set'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" onClick={() => handleSendWhatsApp(judge)}>
-                           <WhatsAppIcon className="h-5 w-5 text-green-600" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Send Password via WhatsApp</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                           <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
-                             <Edit className="h-4 w-4 text-accent" />
-                           </Button>
-                        </TooltipTrigger>
-                         <TooltipContent>
-                           <p>Edit Judge</p>
-                         </TooltipContent>
-                    </Tooltip>
-                     <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                         <Button variant="ghost" size="icon">
-                           <Trash2 className="h-4 w-4 text-destructive" />
-                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the judge and all associated scores.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(judge.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Judge Name</TableHead>
+                  <TableHead>Mobile Number</TableHead>
+                  <TableHead>Password</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {initialJudges.map(judge => (
+                  <TableRow key={judge.id}>
+                    <TableCell className="font-medium">{judge.name}</TableCell>
+                    <TableCell>{judge.mobile}</TableCell>
+                    <TableCell>
+                      {judge.password || 'Not Set'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" onClick={() => handleSendWhatsApp(judge)}>
+                            <WhatsAppIcon className="h-5 w-5 text-green-600" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Send Password via WhatsApp</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => openDialog(judge)}>
+                              <Edit className="h-4 w-4 text-accent" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Edit Judge</p>
+                          </TooltipContent>
+                      </Tooltip>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete the judge and all associated scores.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(judge.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -226,16 +228,16 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
          <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="font-headline text-3xl text-primary">{judge ? 'Edit Judge' : 'Add New Judge'}</DialogTitle>
+                    <DialogTitle className="font-headline text-2xl sm:text-3xl text-primary">{judge ? 'Edit Judge' : 'Add New Judge'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Judge Name</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required className="text-base"/>
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="mobile" className="text-lg">Mobile Number</Label>
-                        <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required className="text-base" placeholder="Enter 10-digit number"/>
+                        <Input id="mobile" value={mobile} onChange={e => setMobile(e.target.value)} required placeholder="Enter 10-digit number"/>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="password" className="text-lg">4-Digit Password</Label>
@@ -244,7 +246,6 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                                 id="password" 
                                 value={password} 
                                 onChange={e => setPassword(e.target.value)} 
-                                className="text-base"
                                 maxLength={4}
                                 placeholder="Enter 4-digit password"
                             />

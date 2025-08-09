@@ -182,47 +182,49 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
                 <h2 className="font-headline text-3xl md:text-4xl text-foreground/90 mb-6">{category} Schools</h2>
                 <Card>
                     <CardContent className="pt-6">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[80px]">Sl. No.</TableHead>
-                                    <TableHead>School Name</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {categorizedSchools[category].map((school, index) => (
-                                    <TableRow key={school.id}>
-                                        <TableCell className="font-medium">{school.serialNumber ?? index + 1}</TableCell>
-                                        <TableCell className="font-medium">{school.name}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
-                                            <Edit className="h-4 w-4 text-accent" />
-                                            </Button>
-                                            <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This action cannot be undone. This will permanently delete the school and all associated scores.
-                                                </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                            </AlertDialog>
-                                        </TableCell>
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="w-[80px]">Sl. No.</TableHead>
+                                        <TableHead>School Name</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {categorizedSchools[category].map((school, index) => (
+                                        <TableRow key={school.id}>
+                                            <TableCell className="font-medium">{school.serialNumber ?? index + 1}</TableCell>
+                                            <TableCell className="font-medium">{school.name}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
+                                                <Edit className="h-4 w-4 text-accent" />
+                                                </Button>
+                                                <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="ghost" size="icon">
+                                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        This action cannot be undone. This will permanently delete the school and all associated scores.
+                                                    </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDelete(school.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                                </AlertDialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </section>
@@ -278,21 +280,21 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
          <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle className="font-headline text-3xl text-primary">{school ? 'Edit School' : 'Add New School'}</DialogTitle>
+                    <DialogTitle className="font-headline text-2xl sm:text-3xl text-primary">{school ? 'Edit School' : 'Add New School'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">School Name</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required className="text-base" />
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="serialNumber" className="text-lg">Serial Number</Label>
-                        <Input id="serialNumber" type="number" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} className="text-base" placeholder="Optional, for custom ordering" />
+                        <Input id="serialNumber" type="number" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="Optional, for custom ordering" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category" className="text-lg">Category</Label>
                         <Select value={category} onValueChange={(value: SchoolCategory) => setCategory(value)} required>
-                            <SelectTrigger id="category" className="text-base">
+                            <SelectTrigger id="category">
                                 <SelectValue placeholder="Select a category" />
                             </SelectTrigger>
                             <SelectContent>

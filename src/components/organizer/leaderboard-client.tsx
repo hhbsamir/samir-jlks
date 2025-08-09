@@ -169,21 +169,21 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
   
   const getRankDisplay = (rank: number) => {
     const rankStyles = [
-        { icon: Trophy, color: 'text-yellow-500', size: 'w-8 h-8' }, // 1st
-        { icon: Medal, color: 'text-slate-400', size: 'w-7 h-7' },   // 2nd
-        { icon: Award, color: 'text-orange-400', size: 'w-6 h-6' },  // 3rd
+        { icon: Trophy, color: 'text-yellow-500', size: 'w-6 h-6 sm:w-8 sm:h-8' }, // 1st
+        { icon: Medal, color: 'text-slate-400', size: 'w-5 h-5 sm:w-7 sm:h-7' },   // 2nd
+        { icon: Award, color: 'text-orange-400', size: 'w-4 h-4 sm:w-6 sm:h-6' },  // 3rd
     ];
 
     if (rank >= 1 && rank <= 3) {
         const { icon: Icon, color, size } = rankStyles[rank - 1];
         return (
-            <div className="flex items-center justify-center gap-2 w-16">
+            <div className="flex items-center justify-center gap-2 w-12 sm:w-16">
                 <Icon className={cn(size, color)} />
-                <span className={cn("font-bold text-xl", color)}>{rank}</span>
+                <span className={cn("font-bold text-lg sm:text-xl", color)}>{rank}</span>
             </div>
         );
     }
-    return <div className="font-bold text-lg text-muted-foreground w-16 text-center">{rank}</div>;
+    return <div className="font-bold text-base sm:text-lg text-muted-foreground w-12 sm:w-16 text-center">{rank}</div>;
   }
 
   const renderJuniorSenior = (category: 'Junior' | 'Senior') => {
@@ -199,41 +199,41 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                         <AccordionItem value={entry.school.id} key={entry.school.id} className="border-b-0">
                            <Card className="overflow-hidden">
                             <AccordionTrigger className="hover:no-underline text-left p-0">
-                                <div className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center gap-4">
+                                <div className="flex items-center justify-between w-full p-2 sm:p-4 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-2 sm:gap-4">
                                         {getRankDisplay(rank)}
-                                        <span className="font-headline text-2xl">{entry.school.name}</span>
+                                        <span className="font-headline text-lg sm:text-2xl">{entry.school.name}</span>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-right hidden sm:block">
-                                            <div className="flex gap-4">
+                                    <div className="flex items-center gap-2 sm:gap-4">
+                                        <div className="text-right hidden md:block">
+                                            <div className="flex gap-2 sm:gap-4">
                                                 {categories.map(cat => (
-                                                    <div key={cat.id} className="text-center">
-                                                        <div className="text-xs text-muted-foreground">{cat.name}</div>
-                                                        <div className="font-semibold text-lg">{entry.totalScores[cat.id]}</div>
+                                                    <div key={cat.id} className="text-center w-12 sm:w-16">
+                                                        <div className="text-xs text-muted-foreground truncate">{cat.name}</div>
+                                                        <div className="font-semibold text-base sm:text-lg">{entry.totalScores[cat.id]}</div>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="text-right pl-4 border-l">
-                                            <div className="text-sm text-muted-foreground">Total</div>
-                                            <div className="font-bold text-primary text-2xl">{entry.totalScore}</div>
+                                        <div className="text-right pl-2 sm:pl-4 border-l">
+                                            <div className="text-xs sm:text-sm text-muted-foreground">Total</div>
+                                            <div className="font-bold text-primary text-xl sm:text-2xl">{entry.totalScore}</div>
                                         </div>
                                         <div className="pl-2 [&_svg]:mx-2"></div>
                                     </div>
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent>
-                                <div className="px-4 pb-4 bg-muted/30">
+                                <div className="px-4 pb-4 bg-muted/30 overflow-x-auto">
                                     <h4 className="font-headline text-lg text-primary pt-4 pb-2">Judge Score Breakdown</h4>
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Judge</TableHead>
+                                                <TableHead className="min-w-[120px]">Judge</TableHead>
                                                 {categories.map(cat => (
-                                                  <TableHead key={cat.id} className="text-center">{cat.name}</TableHead>
+                                                  <TableHead key={cat.id} className="text-center min-w-[80px]">{cat.name}</TableHead>
                                                 ))}
-                                                <TableHead className="text-right">Total</TableHead>
+                                                <TableHead className="text-right min-w-[80px]">Total</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -267,7 +267,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                 {subJuniorFeedbackData.map(entry => (
                      <Card key={entry.school.id}>
                         <CardHeader>
-                            <CardTitle className="font-headline text-2xl">{entry.school.name}</CardTitle>
+                            <CardTitle className="font-headline text-xl sm:text-2xl">{entry.school.name}</CardTitle>
                             <CardDescription>Feedback provided by the judges.</CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -275,7 +275,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                                 {Object.values(entry.feedbacks).map((feedbackData, index) => (
                                     <Card key={index} className="bg-muted/30">
                                         <CardHeader>
-                                            <CardTitle className="text-lg">{feedbackData.judgeName}</CardTitle>
+                                            <CardTitle className="text-base sm:text-lg">{feedbackData.judgeName}</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground italic">"{feedbackData.feedback}"</p>
@@ -325,7 +325,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                 {hasSeniorWinners && (
                 <Card>
                     <CardHeader>
-                    <CardTitle className="font-headline text-2xl text-purple-700">Senior - {selectedCategoryName} Winners</CardTitle>
+                    <CardTitle className="font-headline text-xl sm:text-2xl text-purple-700">Senior - {selectedCategoryName} Winners</CardTitle>
                     <CardDescription>Top 3 schools based on {selectedCategoryName} score, excluding overall top 3 winners.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -355,7 +355,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                 {hasJuniorWinners && (
                 <Card>
                     <CardHeader>
-                    <CardTitle className="font-headline text-2xl text-purple-700">Junior - {selectedCategoryName} Winners</CardTitle>
+                    <CardTitle className="font-headline text-xl sm:text-2xl text-purple-700">Junior - {selectedCategoryName} Winners</CardTitle>
                     <CardDescription>Top 3 schools based on {selectedCategoryName} score, excluding overall top 3 winners.</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -421,14 +421,14 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
           <div className="flex justify-center">
             <TabsList className="grid w-full max-w-2xl grid-cols-2 md:grid-cols-4 h-auto">
               {availableTabs.map(tab => (
-                 <TabsTrigger key={tab.value} value={tab.value} className="py-3 text-base">
+                 <TabsTrigger key={tab.value} value={tab.value} className="py-2 text-sm sm:py-3 sm:text-base">
                    {tab.label}
                  </TabsTrigger>
               ))}
             </TabsList>
           </div>
           {availableTabs.map(tab => (
-            <TabsContent key={tab.value} value={tab.value} className="pt-8">
+            <TabsContent key={tab.value} value={tab.value} className="pt-4 sm:pt-8">
               {tab.content()}
             </TabsContent>
           ))}
