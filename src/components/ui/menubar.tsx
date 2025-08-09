@@ -38,7 +38,7 @@ function MenubarSub({
 
 const Menubar = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>
+  Omit<React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>, "value" | "onValueChange">
 >(({ className, ...props }, ref) => (
   <MenubarPrimitive.Root
     ref={ref}
