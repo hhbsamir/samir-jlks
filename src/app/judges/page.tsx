@@ -19,12 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
-  Dance: <Drama className="w-5 h-5" />,
-  Costume: <Palette className="w-5 h-5" />,
-  Theme: <Theater className="w-5 h-5" />,
-  Music: <Music className="w-5 h-5" />,
-  "Make-up": <Brush className="w-5 h-5" />,
-  default: <BarChart className="w-5 h-5" />,
+  Dance: <Drama className="w-5 h-5 text-accent" />,
+  Costume: <Palette className="w-5 h-5 text-accent" />,
+  Theme: <Theater className="w-5 h-5 text-accent" />,
+  Music: <Music className="w-5 h-5 text-accent" />,
+  "Make-up": <Brush className="w-5 h-5 text-accent" />,
+  default: <BarChart className="w-5 h-5 text-accent" />,
 };
 
 type SchoolScores = {
@@ -302,72 +302,94 @@ export default function JudgesPage() {
 
   const renderJudgeSelection = () => (
     <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i}>
-                        <CardContent className="flex flex-col items-center text-center gap-4 p-6">
-                           <div className="p-3 bg-muted rounded-full">
-                               <Loader2 className="w-12 h-12 text-muted-foreground animate-spin" />
-                           </div>
-                           <div className="h-6 w-3/4 bg-muted rounded-md" />
-                        </CardContent>
-                    </Card>
-                ))
-            ) : (
-                judges.map(judge => (
-                    <Card key={judge.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleJudgeSelection(judge)}>
-                        <CardContent className="pt-6 items-center text-center flex flex-col gap-2">
-                            <User className="w-12 h-12 text-primary" />
-                            <h2 className="text-xl font-semibold">{judge.name}</h2>
-                        </CardContent>
-                    </Card>
-                ))
-            )}
-        </div>
+      <div className="text-center mb-10">
+        <h1 className="font-headline text-5xl md:text-7xl font-bold text-primary">
+          Judge's Portal
+        </h1>
+        <p className="text-xl text-muted-foreground mt-2">
+          Select your name to begin scoring.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="bg-card/50">
+              <CardContent className="flex flex-col items-center text-center gap-4 p-8">
+                <div className="p-3 bg-muted rounded-full">
+                  <Loader2 className="w-16 h-16 text-muted-foreground animate-spin" />
+                </div>
+                <div className="h-7 w-3/4 bg-muted rounded-md" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          judges.map(judge => (
+            <Card 
+              key={judge.id} 
+              className="cursor-pointer group hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-primary/50 bg-card/50 backdrop-blur-sm" 
+              onClick={() => handleJudgeSelection(judge)}
+            >
+              <CardContent className="pt-8 items-center text-center flex flex-col gap-4">
+                <div className="p-4 bg-primary/10 rounded-full transition-transform duration-300 group-hover:scale-110">
+                  <User className="w-16 h-16 text-primary" />
+                </div>
+                <h2 className="text-3xl font-headline text-card-foreground">{judge.name}</h2>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   );
 
   const renderScoringSheet = () => (
     <>
         {authenticatedJudge && (
-            <div className="flex justify-center mb-6">
-                <Button onClick={() => {
-                  setAuthenticatedJudge(null);
-                  setScores({});
-                  setFeedbacks({});
-                }} variant="outline">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Judge Selection
-                </Button>
+             <div className="text-center mb-10">
+                <div className="flex justify-center mb-6">
+                    <Button onClick={() => {
+                        setAuthenticatedJudge(null);
+                        setScores({});
+                        setFeedbacks({});
+                    }} variant="outline" className="shadow-lg">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Switch Judge
+                    </Button>
+                </div>
+                <h1 className="font-headline text-5xl md:text-7xl font-bold text-primary">
+                    Scoring for {authenticatedJudge.name}
+                </h1>
+                <p className="text-xl text-muted-foreground mt-2">
+                    Please provide your scores for each school.
+                </p>
             </div>
         )}
         <Accordion type="multiple" className="w-full space-y-6">
             {schoolCategoryOrder.map(schoolCategory => (
                 categorizedSchools[schoolCategory]?.length > 0 && (
                      <AccordionItem value={schoolCategory} key={schoolCategory}>
-                        <AccordionTrigger className="text-2xl font-bold text-primary">
+                        <AccordionTrigger className="text-4xl font-headline text-primary/80 hover:text-primary transition-colors data-[state=open]:text-primary">
                           {schoolCategory} Schools
                         </AccordionTrigger>
                         <AccordionContent>
                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pt-4">
                                 {categorizedSchools[schoolCategory].map((school, index) => (
-                                <Card key={school.id}>
+                                <Card key={school.id} className="bg-card/50 backdrop-blur-sm shadow-lg">
                                     <CardHeader>
-                                      <CardTitle className="flex items-center gap-2">
-                                        <SchoolIcon className="w-6 h-6 text-primary"/>
+                                      <CardTitle className="flex items-center gap-3 font-headline text-3xl">
+                                        <SchoolIcon className="w-8 h-8 text-primary"/>
                                         {school.name}
                                       </CardTitle>
-                                      <CardDescription>
+                                      <CardDescription className="text-base pt-1">
                                          Serial Number: {school.serialNumber ?? index + 1}
                                       </CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
+                                    <CardContent className="space-y-6">
                                         {schoolCategory === 'Sub-Junior' ? (
                                              <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <MessageSquare className="w-5 h-5 text-primary" />
-                                                    <label className="font-medium">Feedback & Notes</label>
+                                                <div className="flex items-center gap-2 text-primary">
+                                                    <MessageSquare className="w-6 h-6" />
+                                                    <label className="font-headline text-2xl">Feedback & Notes</label>
                                                 </div>
                                                 <Textarea
                                                     placeholder={`Enter feedback for ${school.name}...`}
@@ -375,22 +397,23 @@ export default function JudgesPage() {
                                                     onChange={(e) => handleFeedbackChange(school.id, e.target.value)}
                                                     disabled={submitting === school.id}
                                                     rows={4}
+                                                    className="bg-background/80 text-base"
                                                 />
                                              </div>
                                         ) : (
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="flex flex-row gap-4 overflow-x-auto pb-4">
                                               {categories.map(category => (
-                                                  <div key={category.id} className="space-y-2">
+                                                  <div key={category.id} className="space-y-2 flex-shrink-0 w-32">
                                                       <div className="flex items-center gap-2">
                                                         {categoryIcons[category.name] || categoryIcons.default}
-                                                        <label className="text-sm font-medium">{category.name}</label>
+                                                        <label className="text-base font-medium">{category.name}</label>
                                                       </div>
                                                       <Select
                                                       value={(scores[school.id]?.[category.id] ?? 0).toString()}
                                                       onValueChange={(value) => handleScoreChange(school.id, category.id, value)}
                                                       disabled={submitting === school.id}
                                                       >
-                                                      <SelectTrigger>
+                                                      <SelectTrigger className="text-base">
                                                           <SelectValue placeholder="Score" />
                                                       </SelectTrigger>
                                                       <SelectContent>
@@ -403,7 +426,7 @@ export default function JudgesPage() {
                                               ))}
                                             </div>
                                         )}
-                                      <Button className="w-full" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
+                                      <Button size="lg" className="w-full font-bold text-lg" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
                                           {submitting === school.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Check className="mr-2 h-4 w-4"/>}
                                           {submitting === school.id ? "Submitting..." : "Submit Score"}
                                       </Button>
@@ -420,23 +443,16 @@ export default function JudgesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
+    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <div className="fixed top-4 left-4 z-50">
         <NavButtons showBack={false} />
       </div>
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary">
-            {authenticatedJudge ? `Scoring for ${authenticatedJudge.name}` : "Judge's Portal"}
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            {authenticatedJudge ? "Please provide your scores for each school." : "Select your name to begin scoring."}
-          </p>
-        </div>
-        
         {authenticatedJudge ? renderScoringSheet() : renderJudgeSelection()}
         {renderAuthModal()}
       </div>
     </div>
   );
 }
+
+    
