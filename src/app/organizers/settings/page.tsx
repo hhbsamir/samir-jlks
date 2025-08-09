@@ -27,6 +27,7 @@ const REMARKS_DOC_ID = 'reportSettings';
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [generatingSummaryReport, setGeneratingSummaryReport] = useState(false);
   const [remarks, setRemarks] = useState('');
   const { toast } = useToast();
   
@@ -67,9 +68,222 @@ export default function SettingsPage() {
     }
   }
 
+  const handleGenerateSummaryReport = async () => {
+    setGeneratingSummaryReport(true);
+    toast({ title: "Generating Summary Report", description: "Please wait while the PDF is being created..." });
+
+    try {
+        // 1. Fetch all required data from Firestore
+        const [schoolsSnapshot, categoriesSnapshot, scoresSnapshot] = await Promise.all([
+            getDocs(collection(db, 'schools')),
+            getDocs(collection(db, 'categories')),
+            getDocs(collection(db, 'scores')),
+        ]);
+        const schools: School[] = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+        const categories: CompetitionCategory[] = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+        const scores: Score[] = scoresSnapshot.docs.map(doc => doc.data() as Score);
+        
+        // 2. Initialize PDF
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }) as jsPDFWithAutoTable;
+        
+        const primaryColor = '#2563eb';
+        const accentColor = '#f97316';
+        const reportDate = format(new Date(), 'do MMMM yyyy');
+        const pageMargin = 14;
+
+        // --- Helper Functions ---
+        const addHeaderAndFooter = () => {
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                
+                // Header
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(primaryColor);
+                doc.text('Competition Summary Report', 105, 15, { align: 'center' });
+                
+                if (remarks) {
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(80, 80, 80);
+                    const remarksLines = doc.splitTextToSize(remarks, 180);
+                    doc.text(remarksLines, 105, 22, { align: 'center' });
+                }
+
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
+                doc.text(`Report Date: ${reportDate}`, 210 - pageMargin, 287, { align: 'right' });
+            }
+        };
+
+        // --- Title Page ---
+        doc.setFontSize(36);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor);
+        doc.text('Competition Score Summary', 105, 120, { align: 'center' });
+
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(accentColor);
+        doc.text(`Date: ${reportDate}`, 105, 140, { align: 'center' });
+
+        if (remarks) {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(80, 80, 80);
+            const remarksLines = doc.splitTextToSize(remarks, 180);
+            doc.text(remarksLines, 105, 160, { align: 'center' });
+        }
+        
+        // --- Score Sections ---
+        const schoolCategories: SchoolCategory[] = ["Senior", "Junior"];
+        
+        schoolCategories.forEach(schoolCategory => {
+            const schoolsInCategory = schools.filter(s => s.category === schoolCategory);
+            if(schoolsInCategory.length === 0) return;
+
+            doc.addPage();
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(primaryColor);
+            doc.text(`${schoolCategory} Category Results`, pageMargin, 30);
+
+            // --- Summary Table ---
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(accentColor);
+            doc.text('Final Rankings', pageMargin, 42);
+            const head = [['Rank', 'School', ...categories.map(c => c.name), 'Total Score']];
+            const body = schoolsInCategory
+              .map(school => {
+                const totalScores = categories.map(cat => {
+                    return scores.filter(s => s.schoolId === school.id && s.categoryId === cat.id)
+                                 .reduce((sum, s) => sum + s.score, 0);
+                });
+                const totalScore = totalScores.reduce((sum, score) => sum + score, 0);
+                return { school, totalScores, totalScore };
+              })
+              .sort((a,b) => b.totalScore - a.totalScore)
+              .map((data, index) => [
+                index + 1,
+                data.school.name,
+                ...data.totalScores.map(String),
+                data.totalScore
+              ]);
+
+            doc.autoTable({
+                startY: 45,
+                head,
+                body,
+                theme: 'striped',
+                headStyles: { fillColor: primaryColor, textColor: 255 },
+                styles: { fontSize: 10, cellPadding: 2 },
+                margin: { left: pageMargin, right: pageMargin },
+                columnStyles: {
+                    1: { cellWidth: 'auto' }, // School name column
+                }
+            });
+        });
+        
+        // --- Theme Prize Section ---
+        const themeCategory = categories.find(c => c.name.toLowerCase() === 'theme');
+        if (themeCategory) {
+            doc.addPage();
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(primaryColor);
+            doc.text('Theme Category Prizes', pageMargin, 30);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            doc.text('Top 3 schools based on Theme score, excluding overall top 3 winners.', pageMargin, 36);
+            
+            let lastY = 45;
+
+            schoolCategories.forEach(schoolCategory => {
+                const schoolsInCategory = schools.filter(s => s.category === schoolCategory);
+                if (schoolsInCategory.length === 0) return;
+
+                const rankedSchools = schoolsInCategory.map(school => {
+                     const totalScore = categories.reduce((total, cat) => {
+                        return total + scores
+                            .filter(s => s.schoolId === school.id && s.categoryId === cat.id)
+                            .reduce((sum, s) => sum + s.score, 0);
+                    }, 0);
+                    return { school, totalScore };
+                }).sort((a, b) => b.totalScore - a.totalScore);
+                
+                const top3OverallIds = rankedSchools.slice(0, 3).map(entry => entry.school.id);
+
+                const contenders = schoolsInCategory
+                    .filter(school => !top3OverallIds.includes(school.id))
+                    .map(school => {
+                        const themeScore = scores
+                            .filter(s => s.schoolId === school.id && s.categoryId === themeCategory.id)
+                            .reduce((sum, s) => sum + s.score, 0);
+                        return { school, themeScore };
+                    })
+                    .sort((a, b) => b.themeScore - a.themeScore)
+                    .slice(0, 3);
+                
+                if (contenders.length > 0) {
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(accentColor);
+                    doc.text(`${schoolCategory} Winners`, pageMargin, lastY);
+
+                    const head = [['Rank', 'School', 'Theme Score']];
+                    const body = contenders.map((winner, index) => [
+                        index + 1,
+                        winner.school.name,
+                        winner.themeScore,
+                    ]);
+
+                    doc.autoTable({
+                        startY: lastY + 3,
+                        head,
+                        body,
+                        theme: 'striped',
+                        headStyles: { fillColor: '#8b5cf6', textColor: 255 },
+                        styles: { fontSize: 10, cellPadding: 2.5 },
+                        margin: { left: pageMargin, right: pageMargin },
+                        columnStyles: {
+                            1: { cellWidth: 'auto' }, // School name column
+                        }
+                    });
+                    lastY = (doc as any).lastAutoTable.finalY + 15;
+                }
+            });
+        }
+        
+        addHeaderAndFooter();
+        doc.save(`Competition-Summary-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+
+        toast({
+          title: "Summary Report Generated",
+          description: "Your PDF summary report has been downloaded.",
+        });
+
+        return true; 
+    } catch(error) {
+        console.error("Error generating PDF:", error);
+        toast({
+            title: "PDF Generation Failed",
+            description: "There was an error creating the summary report.",
+            variant: "destructive"
+        });
+        return false;
+    } finally {
+        setGeneratingSummaryReport(false);
+    }
+  };
+
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
-    toast({ title: "Generating Report", description: "Please wait while the PDF is being created..." });
+    toast({ title: "Generating Full Report", description: "Please wait while the PDF is being created..." });
 
     try {
         // 1. Fetch all required data from Firestore
@@ -352,10 +566,10 @@ export default function SettingsPage() {
         }
         
         addHeaderAndFooter();
-        doc.save(`Competition-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+        doc.save(`Competition-Full-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 
         toast({
-          title: "Report Generated",
+          title: "Full Report Generated",
           description: "Your PDF report has been downloaded.",
         });
 
@@ -421,12 +635,11 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" />
       <div className="grid gap-8 md:grid-cols-2">
-        <Card className="bg-card-1 text-card-foreground">
+        <Card>
           <CardHeader>
             <CardTitle>Generate Final Report</CardTitle>
             <CardDescription>
-                Download a complete PDF report of the competition including all scores and feedback. 
-                Enter any final remarks below to include them on every page of the report.
+                Download PDF reports of the competition. Enter any final remarks below to include them on every page of the reports.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -437,17 +650,26 @@ export default function SettingsPage() {
                     placeholder="e.g., Final results for the annual 2024 competition."
                     value={remarks}
                     onChange={handleRemarksChange}
-                    className="bg-background/80"
                 />
             </div>
-            <Button onClick={handleGenerateReport} disabled={generatingReport} className="bg-background/80 text-foreground hover:bg-background">
-              {generatingReport ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              {generatingReport ? "Generating..." : "Download Report"}
-            </Button>
+            <div className="flex flex-wrap gap-4">
+              <Button onClick={handleGenerateReport} disabled={generatingReport || generatingSummaryReport}>
+                {generatingReport ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                {generatingReport ? "Generating..." : "Download Full Report"}
+              </Button>
+              <Button onClick={handleGenerateSummaryReport} disabled={generatingReport || generatingSummaryReport} variant="outline">
+                {generatingSummaryReport ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                {generatingSummaryReport ? "Generating..." : "Download Summary"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
         <Card className="border-destructive bg-destructive/10 text-destructive-foreground">
@@ -499,5 +721,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-    
