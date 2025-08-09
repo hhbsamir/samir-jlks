@@ -3,13 +3,28 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Gavel, Crown, MoveRight } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+const JalksLogo = () => (
+    <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="95" fill="url(#paint0_linear_1_2)" stroke="white" strokeWidth="4"/>
+        <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle" fontFamily="Belleza, sans-serif" fontSize="60" fill="white" dy=".1em">
+            JLKS
+        </text>
+        <defs>
+            <linearGradient id="paint0_linear_1_2" x1="100" y1="0" x2="100" y2="200" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#D946EF"/>
+            <stop offset="1" stopColor="#8B5CF6"/>
+            </linearGradient>
+        </defs>
+    </svg>
+);
+
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
@@ -35,14 +50,7 @@ export default function Home() {
 
        <div className="mb-8">
         <div className="mx-auto w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden shadow-2xl shadow-primary/30 border-4 border-primary/20 p-1 bg-primary/10">
-            <Image
-                src="https://i.pinimg.com/564x/e7/0a/68/e70a68f3a3e6c0f8625556276856c91a.jpg"
-                alt="Lord Jagannath"
-                width={224}
-                height={224}
-                className="w-full h-full object-cover rounded-full"
-                priority
-            />
+            <JalksLogo />
         </div>
       </div>
 
