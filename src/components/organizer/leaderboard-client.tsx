@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Medal, Award, Star } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 
 type SchoolScore = {
@@ -166,11 +167,23 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
     };
   }, [categorizedLeaderboardData, selectedPrizeCategoryId]);
   
-  const getRankIcon = (rank: number) => {
-    if(rank === 1) return <Trophy className="w-8 h-8 text-yellow-500" />;
-    if(rank === 2) return <Medal className="w-8 h-8 text-slate-400" />;
-    if(rank === 3) return <Award className="w-8 h-8 text-orange-400" />;
-    return <span className="font-bold text-lg text-muted-foreground w-8 text-center">{rank}</span>
+  const getRankDisplay = (rank: number) => {
+    const rankStyles = [
+        { icon: Trophy, color: 'text-yellow-500', size: 'w-8 h-8' }, // 1st
+        { icon: Medal, color: 'text-slate-400', size: 'w-7 h-7' },   // 2nd
+        { icon: Award, color: 'text-orange-400', size: 'w-6 h-6' },  // 3rd
+    ];
+
+    if (rank >= 1 && rank <= 3) {
+        const { icon: Icon, color, size } = rankStyles[rank - 1];
+        return (
+            <div className="flex items-center justify-center gap-2 w-16">
+                <Icon className={cn(size, color)} />
+                <span className={cn("font-bold text-xl", color)}>{rank}</span>
+            </div>
+        );
+    }
+    return <div className="font-bold text-lg text-muted-foreground w-16 text-center">{rank}</div>;
   }
 
   const renderJuniorSenior = (category: 'Junior' | 'Senior') => {
@@ -188,7 +201,7 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                             <AccordionTrigger className="hover:no-underline text-left p-0">
                                 <div className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-4">
-                                        {getRankIcon(rank)}
+                                        {getRankDisplay(rank)}
                                         <span className="font-headline text-2xl">{entry.school.name}</span>
                                     </div>
                                     <div className="flex items-center gap-4">
