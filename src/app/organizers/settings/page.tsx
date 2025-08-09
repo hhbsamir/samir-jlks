@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, getDoc, setDoc, addDoc, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Loader2, Download } from 'lucide-react';
+import { Trash2, Loader2, Download, History } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import type { School, CompetitionCategory, Score, Feedback, Judge, SchoolCategory } from '@/lib/data';
+import type { School, CompetitionCategory, Score, Feedback, Judge, SchoolCategory, Archive } from '@/lib/data';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -26,8 +26,10 @@ const REMARKS_DOC_ID = 'reportSettings';
 
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [generatingReportType, setGeneratingReportType] = useState<'full' | 'summary' | null>(null);
+  const [generatingReportType, setGeneratingReportType] = useState<'full' | 'summary' | 'archive' | null>(null);
+  const [generatingArchiveId, setGeneratingArchiveId] = useState<string | null>(null);
   const [remarks, setRemarks] = useState('');
+  const [archives, setArchives] = useState<Archive[]>([]);
   const { toast } = useToast();
   
   const fetchRemarks = useCallback(async () => {
@@ -46,10 +48,24 @@ export default function SettingsPage() {
         });
     }
   }, [toast]);
+  
+  const fetchArchives = useCallback(async () => {
+    try {
+        const archivesCollection = collection(db, 'archives');
+        const q = query(archivesCollection, orderBy('archivedAt', 'desc'));
+        const archivesSnapshot = await getDocs(q);
+        const archivesList = archivesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Archive));
+        setArchives(archivesList);
+    } catch(error) {
+        console.error("Error fetching archives:", error);
+        toast({ title: "Error", description: "Could not load competition archives.", variant: "destructive" });
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchRemarks();
-  }, [fetchRemarks]);
+    fetchArchives();
+  }, [fetchRemarks, fetchArchives]);
 
   const handleRemarksChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newRemarks = e.target.value;
@@ -67,39 +83,57 @@ export default function SettingsPage() {
     }
   }
 
-  const generatePdf = async (reportType: 'full' | 'summary') => {
-    setGeneratingReportType(reportType);
+  const generatePdf = async (reportType: 'full' | 'summary', archiveId?: string) => {
+    if (archiveId) {
+        setGeneratingArchiveId(archiveId);
+    }
+    setGeneratingReportType(reportType === 'full' ? (archiveId ? 'archive' : 'full') : 'summary');
     toast({ title: "Generating Report", description: "Please wait while the PDF is being created..." });
 
     try {
-        // 1. Fetch all data
-        const schoolsCollection = collection(db, 'schools');
-        const schoolsSnapshot = await getDocs(schoolsCollection);
-        const schools = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+        let schools: School[], categories: CompetitionCategory[], scores: Score[], feedbacks: Feedback[], judges: Judge[];
+        let archiveTimestamp: Date | undefined;
 
-        const categoriesCollection = collection(db, 'categories');
-        const categoriesSnapshot = await getDocs(categoriesCollection);
-        const categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+        if (archiveId) {
+            const archive = archives.find(a => a.id === archiveId);
+            if (!archive) throw new Error("Archive not found");
+            archiveTimestamp = (archive.archivedAt as Timestamp).toDate();
 
-        const scoresCollection = collection(db, 'scores');
-        const scoresSnapshot = await getDocs(scoresCollection);
-        const scores = scoresSnapshot.docs.map(doc => doc.data() as Score);
+            const [schoolsSnapshot, categoriesSnapshot, scoresSnapshot, feedbacksSnapshot, judgesSnapshot] = await Promise.all([
+                getDocs(collection(db, archive.collections.schools)),
+                getDocs(collection(db, 'categories')), // Categories are not archived
+                getDocs(collection(db, archive.collections.scores)),
+                getDocs(collection(db, archive.collections.feedbacks)),
+                getDocs(collection(db, 'judges')) // Judges are not archived
+            ]);
+            schools = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+            categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+            scores = scoresSnapshot.docs.map(doc => doc.data() as Score);
+            feedbacks = feedbacksSnapshot.docs.map(doc => doc.data() as Feedback);
+            judges = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
 
-        const feedbacksCollection = collection(db, 'feedbacks');
-        const feedbacksSnapshot = await getDocs(feedbacksCollection);
-        const feedbacks = feedbacksSnapshot.docs.map(doc => doc.data() as Feedback);
+        } else {
+            const [schoolsSnapshot, categoriesSnapshot, scoresSnapshot, feedbacksSnapshot, judgesSnapshot] = await Promise.all([
+                getDocs(collection(db, 'schools')),
+                getDocs(collection(db, 'categories')),
+                getDocs(collection(db, 'scores')),
+                getDocs(collection(db, 'feedbacks')),
+                getDocs(collection(db, 'judges'))
+            ]);
+            schools = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+            categories = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+            scores = scoresSnapshot.docs.map(doc => doc.data() as Score);
+            feedbacks = feedbacksSnapshot.docs.map(doc => doc.data() as Feedback);
+            judges = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+        }
 
-        const judgesCollection = collection(db, 'judges');
-        const judgesSnapshot = await getDocs(judgesCollection);
-        const judges = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
-        
         // 2. Initialize PDF
         const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }) as jsPDFWithAutoTable;
         
         const primaryColor = '#2563eb';
         const accentColor = '#f97316';
         const date = format(new Date(), 'yyyy-MM-dd');
-        const reportDate = format(new Date(), 'do MMMM yyyy');
+        const reportDate = format(archiveTimestamp || new Date(), 'do MMMM yyyy');
         const pageMargin = 14;
 
         // --- Helper Functions ---
@@ -112,9 +146,12 @@ export default function SettingsPage() {
                 doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(primaryColor);
-                doc.text(`JLKS Paradip - Competition ${reportType === 'full' ? 'Full' : 'Summary'} Report`, 105, 15, { align: 'center' });
+                const reportTitle = archiveId 
+                    ? `Archived Report`
+                    : `Competition ${reportType === 'full' ? 'Full' : 'Summary'} Report`;
+                doc.text(reportTitle, 105, 15, { align: 'center' });
                 
-                if (remarks) {
+                if (remarks && !archiveId) {
                     doc.setFontSize(10);
                     doc.setFont('helvetica', 'italic');
                     doc.setTextColor(80, 80, 80);
@@ -126,7 +163,7 @@ export default function SettingsPage() {
                 doc.setFontSize(8);
                 doc.setTextColor(100);
                 doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
-                doc.text(`Generated on: ${reportDate}`, 210 - pageMargin, 287, { align: 'right' });
+                doc.text(`Report Date: ${reportDate}`, 210 - pageMargin, 287, { align: 'right' });
             }
         };
 
@@ -134,14 +171,14 @@ export default function SettingsPage() {
         doc.setFontSize(36);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
-        doc.text(`Competition ${reportType === 'summary' ? 'Summary' : 'Score'} Report`, 105, 120, { align: 'center' });
+        doc.text(archiveId ? "Archived Competition Report" : `Competition ${reportType === 'summary' ? 'Summary' : 'Score'} Report`, 105, 120, { align: 'center' });
 
         doc.setFontSize(20);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(accentColor);
         doc.text(`Date: ${reportDate}`, 105, 140, { align: 'center' });
 
-        if (remarks) {
+        if (remarks && !archiveId) {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(80, 80, 80);
@@ -364,7 +401,10 @@ export default function SettingsPage() {
         }
         
         addHeaderAndFooter();
-        doc.save(`Competition-Report-${reportType === 'summary' ? 'Summary-': ''}${date}.pdf`);
+        const filename = archiveId 
+            ? `Competition-Report-Archived-${format(archiveTimestamp!, 'yyyy-MM-dd')}.pdf`
+            : `Competition-Report-${reportType === 'summary' ? 'Summary-': ''}${date}.pdf`;
+        doc.save(filename);
 
         toast({
           title: "Report Generated",
@@ -382,6 +422,7 @@ export default function SettingsPage() {
         return false; // PDF generation failed
     } finally {
         setGeneratingReportType(null);
+        setGeneratingArchiveId(null);
     }
   };
 
@@ -392,7 +433,7 @@ export default function SettingsPage() {
     if (!pdfGenerated) {
         toast({
             title: "Action Stopped",
-            description: "Competition data was not cleared because the report failed to generate.",
+            description: "Competition data was not archived because the report failed to generate.",
             variant: "destructive"
         });
         setIsDeleting(false);
@@ -400,124 +441,189 @@ export default function SettingsPage() {
     }
 
     try {
-      const batch = writeBatch(db);
+        const batch = writeBatch(db);
+        const timestamp = new Date();
+        const archiveSuffix = format(timestamp, 'yyyy-MM-dd_HH-mm-ss');
+        
+        const archiveCollectionNames = {
+            schools: `schools_archive_${archiveSuffix}`,
+            scores: `scores_archive_${archiveSuffix}`,
+            feedbacks: `feedbacks_archive_${archiveSuffix}`,
+        };
 
-      const collectionsToDelete = ['schools', 'scores', 'feedbacks'];
+        const collectionsToArchive = {
+            'schools': archiveCollectionNames.schools,
+            'scores': archiveCollectionNames.scores,
+            'feedbacks': archiveCollectionNames.feedbacks,
+        };
 
-      for (const collectionName of collectionsToDelete) {
-        const collectionRef = collection(db, collectionName);
-        const snapshot = await getDocs(collectionRef);
-        snapshot.forEach(doc => {
-          batch.delete(doc.ref);
+        for (const [originalName, archiveName] of Object.entries(collectionsToArchive)) {
+            const originalCollectionRef = collection(db, originalName);
+            const snapshot = await getDocs(originalCollectionRef);
+            if (snapshot.empty) continue;
+
+            snapshot.forEach(originalDoc => {
+                const archiveDocRef = doc(db, archiveName, originalDoc.id);
+                batch.set(archiveDocRef, originalDoc.data());
+                batch.delete(originalDoc.ref);
+            });
+        }
+        
+        // Add a record of this archive
+        const archiveData: Omit<Archive, 'id'> = {
+            name: `Competition ending ${format(timestamp, 'do MMMM yyyy, h:mm a')}`,
+            archivedAt: timestamp,
+            collections: archiveCollectionNames,
+        };
+        const archiveDocRef = doc(collection(db, 'archives'));
+        batch.set(archiveDocRef, archiveData);
+        
+        await batch.commit();
+        
+        await fetchArchives();
+
+        toast({
+            title: "New Competition Started!",
+            description: "All schools, scores, and feedback have been successfully archived and cleared.",
         });
-      }
-      
-      await batch.commit();
-
-      toast({
-        title: "New Competition Started!",
-        description: "All schools, scores, and feedback have been successfully deleted.",
-      });
 
     } catch (error) {
-      console.error("Error starting new competition:", error);
-      toast({
-        title: "Error",
-        description: "There was a problem resetting the competition data. Please try again.",
-        variant: "destructive",
-      });
+        console.error("Error starting new competition:", error);
+        toast({
+            title: "Error",
+            description: "There was a problem resetting the competition data. Please try again.",
+            variant: "destructive",
+        });
     } finally {
-      setIsDeleting(false);
+        setIsDeleting(false);
     }
   };
 
   return (
     <>
       <PageHeader title="Settings" />
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card className="bg-card-1 text-card-foreground">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-1">
+        <div className="grid gap-8 md:grid-cols-2">
+            <Card className="bg-card-1 text-card-foreground">
+                <CardHeader>
+                <CardTitle>Generate Final Report</CardTitle>
+                <CardDescription>
+                    Download a complete PDF report of the competition including all scores and feedback. 
+                    Enter any final remarks below to include them on every page of the report.
+                </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="remarks">Remarks for Report</Label>
+                        <Textarea 
+                            id="remarks"
+                            placeholder="e.g., Final results for the annual 2024 competition."
+                            value={remarks}
+                            onChange={handleRemarksChange}
+                            className="bg-background/80"
+                        />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button onClick={() => generatePdf('full')} disabled={!!generatingReportType} className="bg-background/80 text-foreground hover:bg-background">
+                            {generatingReportType === 'full' ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="mr-2 h-4 w-4" />
+                            )}
+                            {generatingReportType === 'full' ? "Generating..." : "Download Full Report"}
+                        </Button>
+                        <Button onClick={() => generatePdf('summary')} disabled={!!generatingReportType} variant="outline" className="bg-transparent hover:bg-background/20 border-card-foreground/50">
+                            {generatingReportType === 'summary' ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="mr-2 h-4 w-4" />
+                            )}
+                            {generatingReportType === 'summary' ? "Generating..." : "Download Summary Report"}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="border-destructive bg-destructive/10 text-destructive-foreground">
+              <CardHeader>
+                <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
+                <CardDescription className="text-destructive/80">
+                  This archives the current data and clears the board for a new competition. It is highly
+                  recommended to download the final report before proceeding.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isDeleting}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {isDeleting ? 'Processing...' : 'Start New Competition'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action is irreversible. It will first generate and
+                        download a final PDF report, then permanently archive the current
+                        competition data and clear the boards.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleStartNewCompetition}
+                        disabled={isDeleting}
+                        className="bg-destructive hover:bg-destructive/90"
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        {isDeleting
+                          ? 'Processing...'
+                          : 'Yes, Save, Archive and Reset'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardContent>
+            </Card>
+        </div>
+        <Card>
             <CardHeader>
-            <CardTitle>Generate Final Report</CardTitle>
-            <CardDescription>
-                Download a complete PDF report of the competition including all scores and feedback. 
-                Enter any final remarks below to include them on every page of the report.
-            </CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                    <History className="text-primary"/>
+                    Archived Competition Reports
+                </CardTitle>
+                <CardDescription>
+                    Download final reports from previous competitions that have been archived.
+                </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="remarks">Remarks for Report</Label>
-                    <Textarea 
-                        id="remarks"
-                        placeholder="e.g., Final results for the annual 2024 competition."
-                        value={remarks}
-                        onChange={handleRemarksChange}
-                        className="bg-background/80"
-                    />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button onClick={() => generatePdf('full')} disabled={!!generatingReportType} className="bg-background/80 text-foreground hover:bg-background">
-                        {generatingReportType === 'full' ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Download className="mr-2 h-4 w-4" />
-                        )}
-                        {generatingReportType === 'full' ? "Generating..." : "Download Full Report"}
-                    </Button>
-                    <Button onClick={() => generatePdf('summary')} disabled={!!generatingReportType} variant="outline" className="bg-transparent hover:bg-background/20 border-card-foreground/50">
-                        {generatingReportType === 'summary' ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Download className="mr-2 h-4 w-4" />
-                        )}
-                        {generatingReportType === 'summary' ? "Generating..." : "Download Summary Report"}
-                    </Button>
-                </div>
+            <CardContent>
+                {archives.length > 0 ? (
+                    <div className="space-y-2">
+                        {archives.map(archive => (
+                            <div key={archive.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                                <span>{archive.name}</span>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => generatePdf('full', archive.id)}
+                                    disabled={!!generatingArchiveId}
+                                >
+                                    {generatingArchiveId === archive.id ? (
+                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                         <Download className="mr-2 h-4 w-4" />
+                                    )}
+                                    Download Report
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-sm text-muted-foreground">No archived competitions found.</p>
+                )}
             </CardContent>
-        </Card>
-        <Card className="border-destructive bg-destructive/10 text-destructive-foreground">
-          <CardHeader>
-            <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
-            <CardDescription className="text-destructive/80">
-              This will permanently delete all existing schools, scores, and
-              feedback. Judges and Categories will not be affected. It is highly
-              recommended to download the final report before proceeding.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isDeleting}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {isDeleting ? 'Processing...' : 'Start New Competition'}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action is irreversible. It will first generate and
-                    download the final PDF report, then permanently delete all
-                    schools, scores, and feedback.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleStartNewCompetition}
-                    disabled={isDeleting}
-                    className="bg-destructive hover:bg-destructive/90"
-                  >
-                    {isDeleting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    {isDeleting
-                      ? 'Processing...'
-                      : 'Yes, Save Report and Delete'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </CardContent>
         </Card>
       </div>
     </>

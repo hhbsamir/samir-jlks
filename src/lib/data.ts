@@ -1,5 +1,7 @@
 
 
+import { Timestamp } from "firebase/firestore";
+
 export type SchoolCategory = "Sub-Junior" | "Junior" | "Senior";
 
 export type School = {
@@ -18,7 +20,7 @@ export type Judge = {
 };
 
 export type CompetitionCategory = {
-  id: string;
+  id:string;
   name: string;
 };
 
@@ -38,6 +40,17 @@ export type Feedback = {
 export type ReportSettings = {
     id: string;
     remarks: string;
+}
+
+export type Archive = {
+    id: string;
+    name: string;
+    archivedAt: Timestamp | Date;
+    collections: {
+        schools: string;
+        scores: string;
+        feedbacks: string;
+    }
 }
 
 export const initialCategories: CompetitionCategory[] = [
