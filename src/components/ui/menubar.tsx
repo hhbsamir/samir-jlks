@@ -39,16 +39,19 @@ function MenubarSub({
 const Menubar = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Root>,
   Omit<React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>, "value" | "onValueChange">
->(({ className, ...props }, ref) => (
-  <MenubarPrimitive.Root
-    ref={ref}
-    className={cn(
-      "flex h-10 items-center space-x-1 rounded-md border bg-background p-1",
-      className
-    )}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const {children: _, ...rest} = props;
+  return (
+    <MenubarPrimitive.Root
+      ref={ref}
+      className={cn(
+        'flex h-10 items-center space-x-1 rounded-md border bg-background p-1',
+        className
+      )}
+      {...rest}
+    />
+  );
+});
 Menubar.displayName = MenubarPrimitive.Root.displayName
 
 const MenubarTrigger = React.forwardRef<
@@ -224,16 +227,17 @@ const MenubarShortcut = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLSpanElement>) => {
+  const {children: _, ...rest} = props;
   return (
     <span
       className={cn(
-        "ml-auto text-xs tracking-widest text-muted-foreground",
+        'ml-auto text-xs tracking-widest text-muted-foreground',
         className
       )}
-      {...props}
+      {...rest}
     />
-  )
-}
+  );
+};
 MenubarShortcut.displayname = "MenubarShortcut"
 
 export {
