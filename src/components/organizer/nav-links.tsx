@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Trophy, School, Users, Shapes, Settings } from 'lucide-react';
+import { Trophy, School, Users, Shapes, Settings, Ticket } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ const navItems = [
   { href: '/organizers/judges', label: 'Judges', icon: Users, color: 'text-green-500', bgColor: 'bg-green-400/10' },
   { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10', isCentral: true },
   { href: '/organizers/categories', label: 'Categories', icon: Shapes, color: 'text-purple-500', bgColor: 'bg-purple-400/10' },
+  { href: '/organizers/lottery', label: 'Lottery', icon: Ticket, color: 'text-orange-500', bgColor: 'bg-orange-400/10' },
   { href: '/organizers/settings', label: 'Settings', icon: Settings, color: 'text-red-500', bgColor: 'bg-red-400/10' },
 ];
 
