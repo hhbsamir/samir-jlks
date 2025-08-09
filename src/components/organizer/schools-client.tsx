@@ -53,7 +53,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
     setEditingSchool(null);
   };
 
-  const handleSave = async (schoolData: Omit<School, 'id'>) => {
+  const handleSave = async (schoolData: Partial<Omit<School, 'id'>> & { name: string; category: SchoolCategory; }) => {
     try {
         if (editingSchool) {
             const schoolDoc = doc(db, "schools", editingSchool.id);
@@ -119,7 +119,14 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
         const batch = writeBatch(db);
         newSchools.forEach(school => {
             const newSchoolRef = doc(collection(db, "schools"));
-            batch.set(newSchoolRef, school);
+            const schoolData: Partial<School> = {
+                name: school.name,
+                category: school.category,
+            };
+            if(school.serialNumber) {
+                schoolData.serialNumber = school.serialNumber;
+            }
+            batch.set(newSchoolRef, schoolData);
         });
 
         await batch.commit();
@@ -236,7 +243,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
 type SchoolFormDialogProps = {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<School, 'id'>) => void;
+    onSave: (data: Partial<Omit<School, 'id'>> & { name: string; category: SchoolCategory; }) => void;
     school: School | null;
 }
 
@@ -258,7 +265,11 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         e.preventDefault();
         if (name && category) {
             setIsSaving(true);
-            await onSave({ name, category, serialNumber: serialNumber ? parseInt(serialNumber, 10) : undefined });
+            const schoolData: Partial<Omit<School, 'id'>> & { name: string; category: SchoolCategory; } = { name, category };
+            if (serialNumber) {
+                schoolData.serialNumber = parseInt(serialNumber, 10);
+            }
+            await onSave(schoolData);
             setIsSaving(false);
         }
     };
@@ -302,5 +313,3 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
-
-    
