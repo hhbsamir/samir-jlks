@@ -28,6 +28,7 @@ export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
   const [generatingSummaryReport, setGeneratingSummaryReport] = useState(false);
+  const [generatingFeedbackReport, setGeneratingFeedbackReport] = useState(false);
   const [remarks, setRemarks] = useState('');
   const { toast } = useToast();
   
@@ -67,6 +68,115 @@ export default function SettingsPage() {
         });
     }
   }
+
+  const handleGenerateSubJuniorFeedbackReport = async () => {
+    setGeneratingFeedbackReport(true);
+    toast({ title: "Generating Sub-Junior Feedback Report", description: "Please wait while the PDF is being created..." });
+    
+    try {
+        const [schoolsSnapshot, feedbacksSnapshot, judgesSnapshot] = await Promise.all([
+            getDocs(collection(db, 'schools')),
+            getDocs(collection(db, 'feedbacks')),
+            getDocs(collection(db, 'judges'))
+        ]);
+        const schools: School[] = schoolsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School));
+        const feedbacks: Feedback[] = feedbacksSnapshot.docs.map(doc => doc.data() as Feedback);
+        const judges: Judge[] = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }) as jsPDFWithAutoTable;
+        const primaryColor = '#2563eb';
+        const accentColor = '#f97316';
+        const reportDate = format(new Date(), 'do MMMM yyyy');
+        const pageMargin = 14;
+
+        const addHeaderAndFooter = () => {
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(primaryColor);
+                doc.text('Sub-Junior Feedback Report', 105, 15, { align: 'center' });
+                
+                if (remarks) {
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(80, 80, 80);
+                    const remarksLines = doc.splitTextToSize(remarks, 180);
+                    doc.text(remarksLines, 105, 22, { align: 'center' });
+                }
+
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
+                doc.text(`Report Date: ${reportDate}`, 210 - pageMargin, 287, { align: 'right' });
+            }
+        };
+
+        const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
+        if (subJuniorSchools.length > 0) {
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(primaryColor);
+            doc.text('Sub-Junior Category Feedback', pageMargin, 30);
+            
+            let lastY = 35;
+            subJuniorSchools.forEach(school => {
+                const feedbackBody = judges.map(judge => {
+                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
+                    return [judge.name, feedback];
+                });
+
+                const tableHeight = (feedbackBody.length + 1) * 10 + 10;
+                if (lastY + tableHeight > 280) {
+                    doc.addPage();
+                    lastY = 30;
+                }
+                
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(accentColor);
+                doc.text(school.name, pageMargin, lastY + 5);
+
+                doc.autoTable({
+                    startY: lastY + 8,
+                    head: [['Judge', 'Feedback']],
+                    body: feedbackBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: primaryColor, textColor: 255 },
+                    columnStyles: { 
+                        0: { cellWidth: 'auto' },
+                        1: { cellWidth: 'auto' } 
+                    },
+                    margin: { left: pageMargin, right: pageMargin }
+                });
+                lastY = (doc as any).lastAutoTable.finalY + 10;
+            });
+        } else {
+             doc.setFontSize(12);
+             doc.text("No feedback found for Sub-Junior schools.", pageMargin, 40);
+        }
+        
+        addHeaderAndFooter();
+        doc.save(`Sub-Junior-Feedback-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+
+        toast({
+          title: "Feedback Report Generated",
+          description: "Your PDF feedback report has been downloaded.",
+        });
+
+    } catch (error) {
+        console.error("Error generating feedback PDF:", error);
+        toast({
+            title: "PDF Generation Failed",
+            description: "There was an error creating the feedback report.",
+            variant: "destructive"
+        });
+    } finally {
+        setGeneratingFeedbackReport(false);
+    }
+  };
+
 
   const handleGenerateSummaryReport = async () => {
     setGeneratingSummaryReport(true);
@@ -653,7 +763,7 @@ export default function SettingsPage() {
                 />
             </div>
             <div className="flex flex-wrap gap-4">
-              <Button onClick={handleGenerateReport} disabled={generatingReport || generatingSummaryReport}>
+              <Button onClick={handleGenerateReport} disabled={generatingReport || generatingSummaryReport || generatingFeedbackReport}>
                 {generatingReport ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -661,7 +771,7 @@ export default function SettingsPage() {
                 )}
                 {generatingReport ? "Generating..." : "Download Full Report"}
               </Button>
-              <Button onClick={handleGenerateSummaryReport} disabled={generatingReport || generatingSummaryReport} variant="outline">
+              <Button onClick={handleGenerateSummaryReport} disabled={generatingReport || generatingSummaryReport || generatingFeedbackReport} variant="outline">
                 {generatingSummaryReport ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -669,10 +779,18 @@ export default function SettingsPage() {
                 )}
                 {generatingSummaryReport ? "Generating..." : "Download Summary"}
               </Button>
+               <Button onClick={handleGenerateSubJuniorFeedbackReport} disabled={generatingReport || generatingSummaryReport || generatingFeedbackReport} variant="secondary">
+                {generatingFeedbackReport ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                {generatingFeedbackReport ? "Generating..." : "Sub-Junior Feedback"}
+              </Button>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-destructive bg-destructive/10 text-destructive-foreground">
+        <Card className="border-destructive bg-destructive/10">
           <CardHeader>
             <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
             <CardDescription className="text-destructive/80">
