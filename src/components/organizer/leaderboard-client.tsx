@@ -199,40 +199,28 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
                         <AccordionItem value={entry.school.id} key={entry.school.id} className="border-b-0">
                            <Card className="overflow-hidden">
                             <AccordionTrigger className="hover:no-underline text-left p-0 data-[state=open]:bg-muted/50">
-                                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between w-full p-2 sm:p-4 hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center gap-2 sm:gap-4 flex-grow">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full p-2 sm:p-4 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-2 sm:gap-4 flex-grow w-full sm:w-auto">
                                         {getRankDisplay(rank)}
                                         <div className="flex-grow">
                                             <span className="font-headline text-lg sm:text-2xl">{entry.school.name}</span>
-                                            {/* Mobile-only score display */}
-                                            <div className="flex md:hidden gap-4 mt-2">
-                                                {categories.map(cat => (
-                                                    <div key={cat.id} className="text-center">
-                                                        <div className="text-xs text-muted-foreground truncate">{cat.name}</div>
-                                                        <div className="font-semibold text-base">{entry.totalScores[cat.id]}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 sm:gap-4 mt-2 md:mt-0 self-end md:self-center">
-                                        {/* Desktop-only score display */}
-                                        <div className="text-right hidden md:flex">
-                                            <div className="flex gap-2 sm:gap-4">
-                                                {categories.map(cat => (
-                                                    <div key={cat.id} className="text-center w-12 sm:w-16">
-                                                        <div className="text-xs text-muted-foreground truncate">{cat.name}</div>
-                                                        <div className="font-semibold text-base sm:text-lg">{entry.totalScores[cat.id]}</div>
-                                                    </div>
-                                                ))}
+
+                                    <div className="flex items-center justify-end gap-2 sm:gap-4 mt-2 sm:mt-0 w-full sm:w-auto flex-nowrap">
+                                        {categories.map(cat => (
+                                            <div key={cat.id} className="text-center flex-shrink-0 w-14 sm:w-16">
+                                                <div className="text-xs text-muted-foreground truncate">{cat.name}</div>
+                                                <div className="font-semibold text-base sm:text-lg">{entry.totalScores[cat.id]}</div>
                                             </div>
-                                        </div>
-                                        <div className="text-right pl-2 sm:pl-4 border-l">
+                                        ))}
+                                        <div className="text-right pl-2 sm:pl-4 border-l flex-shrink-0 w-16 sm:w-20">
                                             <div className="text-xs sm:text-sm text-muted-foreground">Total</div>
                                             <div className="font-bold text-primary text-xl sm:text-2xl">{entry.totalScore}</div>
                                         </div>
-                                        <div className="pl-2 [&_svg]:mx-2 self-center"></div>
+                                        <div className="hidden sm:block pl-2 [&_svg]:mx-2 self-center"></div>
                                     </div>
+
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent>
