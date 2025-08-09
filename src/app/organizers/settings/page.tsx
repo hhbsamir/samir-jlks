@@ -449,39 +449,50 @@ export default function SettingsPage() {
                 </div>
             </CardContent>
         </Card>
-        <Card className="border-destructive bg-destructive/20">
-            <CardHeader>
-            <CardTitle className="text-destructive-foreground">Reset Competition Data</CardTitle>
-            <CardDescription className="text-destructive-foreground/80">
-                This will permanently delete all existing schools, scores, and feedback. 
-                Judges and Categories will not be affected. It is highly recommended to download the final report before proceeding.
+        <Card className="border-destructive bg-destructive/20 text-destructive">
+          <CardHeader>
+            <CardTitle>Reset Competition Data</CardTitle>
+            <CardDescription className="text-destructive/90">
+              This will permanently delete all existing schools, scores, and
+              feedback. Judges and Categories will not be affected. It is highly
+              recommended to download the final report before proceeding.
             </CardDescription>
-            </CardHeader>
-            <CardContent>
+          </CardHeader>
+          <CardContent>
             <AlertDialog>
-                <AlertDialogTrigger asChild>
+              <AlertDialogTrigger asChild>
                 <Button variant="destructive" disabled={isDeleting}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {isDeleting ? "Processing..." : "Start New Competition"}
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {isDeleting ? 'Processing...' : 'Start New Competition'}
                 </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                    This action is irreversible. It will first generate and download the final PDF report, then permanently delete all schools, scores, and feedback.
-                    </AlertDialogDescription>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action is irreversible. It will first generate and
+                    download the final PDF report, then permanently delete all
+                    schools, scores, and feedback.
+                  </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleStartNewCompetition} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                        {isDeleting ? (<Loader2 className="mr-2 h-4 w-4 animate-spin"/>) : null}
-                        {isDeleting ? "Processing..." : "Yes, Save Report and Delete"}
-                    </AlertDialogAction>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleStartNewCompetition}
+                    disabled={isDeleting}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
+                    {isDeleting
+                      ? 'Processing...'
+                      : 'Yes, Save Report and Delete'}
+                  </AlertDialogAction>
                 </AlertDialogFooter>
-                </AlertDialogContent>
+              </AlertDialogContent>
             </AlertDialog>
-            </CardContent>
+          </CardContent>
         </Card>
       </div>
     </>
