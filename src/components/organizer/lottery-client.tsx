@@ -111,7 +111,7 @@ export default function LotteryClient({ initialSchools }: { initialSchools: Scho
 
     return (
         <>
-            <PageHeader title="Performance Order Lottery">
+            <PageHeader title="Lottery">
                 <div className="flex flex-wrap gap-2">
                     <Button onClick={handleDownloadOrder} variant="outline">
                         <Download className="mr-2 h-4 w-4" />
