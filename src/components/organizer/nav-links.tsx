@@ -24,7 +24,7 @@ export default function NavLinks() {
 
   return (
     <TooltipProvider>
-      <nav className="flex items-center justify-center gap-2 sm:gap-4 overflow-x-auto p-2">
+      <nav className="flex items-center justify-center gap-1 sm:gap-4 overflow-x-auto p-1">
           {navItems.map(item => (
               <Tooltip key={item.href}>
                   <TooltipTrigger asChild>
@@ -32,7 +32,7 @@ export default function NavLinks() {
                           asChild
                           variant="ghost"
                           className={cn(
-                            'relative rounded-full h-16 w-16 sm:h-20 sm:w-20 flex flex-col items-center justify-center gap-1 transition-all duration-300 ease-in-out',
+                            'relative rounded-full h-14 w-14 sm:h-20 sm:w-20 flex flex-col items-center justify-center gap-1 transition-all duration-300 ease-in-out',
                             'border border-transparent bg-clip-padding backdrop-filter backdrop-blur-sm',
                             item.bgColor,
                             'hover:scale-110 hover:shadow-lg',
@@ -40,8 +40,8 @@ export default function NavLinks() {
                           )}
                       >
                           <Link href={item.href}>
-                              <item.icon className={cn("h-6 w-6 sm:h-8 sm:w-8", item.color)} />
-                              <span className={cn("text-xs sm:block font-medium", item.color)}>{item.label}</span>
+                              <item.icon className={cn("h-5 w-5 sm:h-8 sm:w-8", item.color)} />
+                              <span className={cn("text-[10px] sm:text-xs font-medium", item.color)}>{item.label}</span>
                           </Link>
                       </Button>
                   </TooltipTrigger>
