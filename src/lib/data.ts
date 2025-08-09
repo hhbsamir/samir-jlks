@@ -35,6 +35,11 @@ export type Feedback = {
   feedback: string;
 }
 
+export type ReportSettings = {
+    id: string;
+    remarks: string;
+}
+
 export const initialCategories: CompetitionCategory[] = [
 ];
 

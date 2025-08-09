@@ -1,13 +1,13 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Loader2, Download } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +22,7 @@ interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: any) => jsPDFWithAutoTable;
 }
 
-const REMARKS_STORAGE_KEY = 'competition-report-remarks';
+const REMARKS_DOC_ID = 'reportSettings';
 
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -30,16 +30,41 @@ export default function SettingsPage() {
   const [remarks, setRemarks] = useState('');
   const { toast } = useToast();
   
-  useEffect(() => {
-    const savedRemarks = localStorage.getItem(REMARKS_STORAGE_KEY);
-    if (savedRemarks) {
-        setRemarks(savedRemarks);
+  const fetchRemarks = useCallback(async () => {
+    try {
+        const remarksDocRef = doc(db, 'settings', REMARKS_DOC_ID);
+        const remarksDoc = await getDoc(remarksDocRef);
+        if (remarksDoc.exists()) {
+            setRemarks(remarksDoc.data().remarks);
+        }
+    } catch (error) {
+        console.error("Error fetching remarks:", error);
+        toast({
+            title: "Error",
+            description: "Could not load saved remarks.",
+            variant: "destructive"
+        });
     }
-  }, []);
+  }, [toast]);
 
-  const handleRemarksChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setRemarks(e.target.value);
-    localStorage.setItem(REMARKS_STORAGE_KEY, e.target.value);
+  useEffect(() => {
+    fetchRemarks();
+  }, [fetchRemarks]);
+
+  const handleRemarksChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newRemarks = e.target.value;
+    setRemarks(newRemarks);
+    try {
+        const remarksDocRef = doc(db, 'settings', REMARKS_DOC_ID);
+        await setDoc(remarksDocRef, { remarks: newRemarks }, { merge: true });
+    } catch (error) {
+        console.error("Error saving remarks:", error);
+        toast({
+            title: "Error",
+            description: "Could not save remarks. Please try again.",
+            variant: "destructive"
+        });
+    }
   }
 
   const generatePdf = async (reportType: 'full' | 'summary') => {
@@ -449,10 +474,10 @@ export default function SettingsPage() {
                 </div>
             </CardContent>
         </Card>
-        <Card className="border-destructive bg-destructive/20 text-destructive">
+        <Card className="border-destructive bg-destructive/10 text-destructive-foreground">
           <CardHeader>
-            <CardTitle>Reset Competition Data</CardTitle>
-            <CardDescription className="text-destructive/90">
+            <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
+            <CardDescription className="text-destructive/80">
               This will permanently delete all existing schools, scores, and
               feedback. Judges and Categories will not be affected. It is highly
               recommended to download the final report before proceeding.
