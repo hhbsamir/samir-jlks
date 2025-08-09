@@ -74,6 +74,11 @@ To protect your data, you need to set up Firestore Security Rules. These rules d
           allow read: if true;
           allow write: if isOrganizer();
         }
+        
+        // Settings can only be managed by an organizer
+        match /settings/{settingId} {
+            allow read, write: if isOrganizer();
+        }
 
         // Scores and Feedback can be written by anyone (judges),
         // but can only be deleted by an organizer during a competition reset.
