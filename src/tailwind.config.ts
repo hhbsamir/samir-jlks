@@ -49,7 +49,7 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
-          '1': '#a78bfa', // Violet
+          '1': '#4ade80', // Green
           '2': '#facc15', // Yellow
           '3': '#fb923c', // Orange
           '4': '#4ade80', // Green
