@@ -11,22 +11,6 @@ import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-const JalksLogo = () => (
-    <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="100" cy="100" r="95" fill="url(#paint0_linear_1_2)" stroke="white" strokeWidth="4"/>
-        <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle" fontFamily="Belleza, sans-serif" fontSize="60" fill="white" dy=".1em">
-            JLKS
-        </text>
-        <defs>
-            <linearGradient id="paint0_linear_1_2" x1="100" y1="0" x2="100" y2="200" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#D946EF"/>
-            <stop offset="1" stopColor="#8B5CF6"/>
-            </linearGradient>
-        </defs>
-    </svg>
-);
-
-
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<string | null>(null);
