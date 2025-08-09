@@ -11,7 +11,15 @@ import { db } from '@/lib/firebase';
 import { writeBatch, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
+
+// Extend jsPDF with autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDFWithAutoTable;
+}
+
 
 const schoolCategoryOrder: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
@@ -89,24 +97,81 @@ export default function LotteryClient({ initialSchools }: { initialSchools: Scho
     };
     
     const handleDownloadOrder = () => {
-        const workbook = XLSX.utils.book_new();
+        try {
+            const doc = new jsPDF() as jsPDFWithAutoTable;
+            const pageMargin = 15;
+            const primaryColor = '#16a34a'; // Green
+            const accentColor = '#6366f1'; // Indigo
 
-        schoolCategoryOrder.forEach(category => {
-            if (categorizedSchools[category]) {
-                const worksheetData = categorizedSchools[category].map(school => ({
-                    "Serial Number": school.serialNumber,
-                    "School Name": school.name
-                }));
-                const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-                XLSX.utils.book_append_sheet(workbook, worksheet, category);
-            }
-        });
+            // Title
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(primaryColor);
+            doc.text('Performance Order Lottery', 105, 20, { align: 'center' });
 
-        XLSX.writeFile(workbook, "Performance_Order.xlsx");
-        toast({
-            title: "Download Started",
-            description: "The performance order is being downloaded as an Excel file."
-        });
+            // Date
+            const reportDate = format(new Date(), 'do MMMM yyyy');
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            doc.text(`Generated on: ${reportDate}`, 105, 28, { align: 'center' });
+
+            let lastY = 40;
+
+            schoolCategoryOrder.forEach(category => {
+                const schoolsInCategory = categorizedSchools[category];
+                if (schoolsInCategory && schoolsInCategory.length > 0) {
+                    
+                    if (lastY > 40) { // Add space between categories
+                        lastY += 15;
+                    }
+
+                    if (lastY > 250) { // Add new page if not enough space
+                        doc.addPage();
+                        lastY = 20;
+                    }
+
+                    // Category Title
+                    doc.setFontSize(18);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(accentColor);
+                    doc.text(`${category} Category`, pageMargin, lastY);
+                    
+                    const head = [['Serial Number', 'School Name']];
+                    const body = schoolsInCategory.map(school => [
+                        school.serialNumber,
+                        school.name,
+                    ]);
+
+                    doc.autoTable({
+                        startY: lastY + 5,
+                        head,
+                        body,
+                        theme: 'striped',
+                        headStyles: { fillColor: primaryColor, textColor: 255 },
+                        styles: { fontSize: 12, cellPadding: 3 },
+                        margin: { left: pageMargin, right: pageMargin },
+                        didDrawPage: (data) => {
+                            lastY = data.cursor?.y || 0;
+                        }
+                    });
+                }
+            });
+
+            doc.save("Performance_Order.pdf");
+
+            toast({
+                title: "Download Started",
+                description: "The performance order is being downloaded as a PDF file."
+            });
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            toast({
+                title: "PDF Generation Failed",
+                description: "There was an error creating the PDF.",
+                variant: "destructive"
+            });
+        }
     };
 
     return (
