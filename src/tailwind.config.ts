@@ -49,6 +49,11 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+          '1': '#a78bfa', // Violet
+          '2': '#facc15', // Yellow
+          '3': '#fb923c', // Orange
+          '4': '#4ade80', // Green
+          '5': '#60a5fa', // Blue
         },
         chart: {
           '1': 'hsl(var(--chart-1))',
@@ -72,10 +77,32 @@ export default {
           from: {height: 'var(--radix-accordion-content-height)'},
           to: {height: '0'},
         },
+         'fade-in-down': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(-20px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+        'fade-in-up': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(20px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in-down': 'fade-in-down 0.5s ease-out forwards',
+        'fade-in-up': 'fade-in-up 0.5s 0.2s ease-out forwards',
       },
     },
   },

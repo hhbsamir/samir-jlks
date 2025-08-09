@@ -32,17 +32,16 @@ export default function NavLinks() {
                           variant="ghost"
                           className={cn(
                             'relative rounded-full h-16 w-16 sm:h-20 sm:w-20 flex flex-col items-center justify-center gap-1 transition-all duration-300 ease-in-out',
-                            'border border-transparent bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-50',
-                            item.color,
+                            'border border-transparent bg-clip-padding backdrop-filter backdrop-blur-sm',
                             item.bgColor,
-                            'hover:scale-110 hover:shadow-lg hover:shadow-primary/20',
-                             pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg shadow-primary/30' : 'scale-100',
-                             item.isCentral && 'h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-2 border-primary/50 shadow-xl shadow-primary/30'
+                            'hover:scale-110 hover:shadow-lg',
+                             pathname === item.href ? 'ring-2 ring-primary/80 scale-110 shadow-lg' : 'scale-100',
+                             item.isCentral && 'h-20 w-20 sm:h-24 sm:w-24 rounded-2xl border-2 border-primary/50 shadow-xl'
                           )}
                       >
                           <Link href={item.href}>
-                              <item.icon className={cn("h-6 w-6 sm:h-8 sm:w-8", item.isCentral && "h-8 w-8 sm:h-10 sm:w-10")} />
-                              <span className="text-xs sm:block font-medium">{item.label}</span>
+                              <item.icon className={cn("h-6 w-6 sm:h-8 sm:w-8", item.color, item.isCentral && "h-8 w-8 sm:h-10 sm:w-10")} />
+                              <span className={cn("text-xs sm:block font-medium", item.color)}>{item.label}</span>
                           </Link>
                       </Button>
                   </TooltipTrigger>

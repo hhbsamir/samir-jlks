@@ -410,7 +410,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" />
       <div className="grid gap-8 md:grid-cols-2">
-        <Card>
+        <Card className="bg-card-1 text-card-foreground">
             <CardHeader>
             <CardTitle>Generate Final Report</CardTitle>
             <CardDescription>
@@ -426,10 +426,11 @@ export default function SettingsPage() {
                         placeholder="e.g., Final results for the annual 2024 competition."
                         value={remarks}
                         onChange={handleRemarksChange}
+                        className="bg-background/80"
                     />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button onClick={() => generatePdf('full')} disabled={!!generatingReportType}>
+                    <Button onClick={() => generatePdf('full')} disabled={!!generatingReportType} className="bg-background/80 text-foreground hover:bg-background">
                         {generatingReportType === 'full' ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
@@ -437,7 +438,7 @@ export default function SettingsPage() {
                         )}
                         {generatingReportType === 'full' ? "Generating..." : "Download Full Report"}
                     </Button>
-                    <Button onClick={() => generatePdf('summary')} disabled={!!generatingReportType} variant="outline">
+                    <Button onClick={() => generatePdf('summary')} disabled={!!generatingReportType} variant="outline" className="bg-transparent hover:bg-background/20 border-card-foreground/50">
                         {generatingReportType === 'summary' ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         ) : (
@@ -448,10 +449,10 @@ export default function SettingsPage() {
                 </div>
             </CardContent>
         </Card>
-        <Card className="border-destructive">
+        <Card className="border-destructive bg-destructive/20">
             <CardHeader>
-            <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-destructive-foreground">Reset Competition Data</CardTitle>
+            <CardDescription className="text-destructive-foreground/80">
                 This will permanently delete all existing schools, scores, and feedback. 
                 Judges and Categories will not be affected. It is highly recommended to download the final report before proceeding.
             </CardDescription>
@@ -486,5 +487,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-    
