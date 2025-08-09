@@ -32,13 +32,11 @@ export default function Home() {
         <NavButtons showBack={false} showHome={false} />
       </div>
 
-       <div className="mb-8 mx-auto w-48 h-48 sm:w-56 sm:h-56 rounded-full overflow-hidden shadow-2xl shadow-primary/30 border-4 border-primary/20 p-1 bg-primary/10">
-          <img 
-            src="https://i.pinimg.com/564x/1a/c5/4b/1ac54b2a370b39c2997e0b57e7924c55.jpg"
-            alt="Lord Jagannath"
-            className="rounded-full object-cover w-full h-full"
-            data-ai-hint="religious deity"
-          />
+       <div 
+          className="mb-8 mx-auto w-48 h-48 sm:w-56 sm:h-56 rounded-full shadow-2xl shadow-primary/30 border-4 border-primary/20 p-1 bg-primary/10 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://i.pinimg.com/564x/1a/c5/4b/1ac54b2a370b39c2997e0b57e7924c55.jpg')" }}
+          data-ai-hint="religious deity"
+        >
       </div>
 
       <div className="text-center mb-12">
