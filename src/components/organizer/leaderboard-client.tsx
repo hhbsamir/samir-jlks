@@ -1,17 +1,19 @@
 
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/page-header';
 import type { School, CompetitionCategory, Score, SchoolCategory, Judge, Feedback } from '@/lib/data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Medal, Award, Star } from 'lucide-react';
+import { Trophy, Medal, Award, Star, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
 
 
 type SchoolScore = {
@@ -47,19 +49,58 @@ type CategoryWinner = {
     score: number;
 }
 
-type LeaderboardClientProps = {
-    schools: School[];
-    categories: CompetitionCategory[];
-    scores: Score[];
-    feedbacks: Feedback[];
-    judges: Judge[];
-}
+export default function LeaderboardClient() {
+  const [schools, setSchools] = useState<School[]>([]);
+  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
+  const [scores, setScores] = useState<Score[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [judges, setJudges] = useState<Judge[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function LeaderboardClient({ schools, categories, scores, feedbacks, judges }: LeaderboardClientProps) {
+  useEffect(() => {
+    const unsubscribes = [
+      onSnapshot(collection(db, 'schools'), (snapshot) => {
+        setSchools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School)));
+        setLoading(false);
+      }),
+      onSnapshot(collection(db, 'categories'), (snapshot) => {
+        setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory)));
+      }),
+      onSnapshot(collection(db, 'scores'), (snapshot) => {
+        setScores(snapshot.docs.map(doc => doc.data() as Score));
+      }),
+      onSnapshot(collection(db, 'feedbacks'), (snapshot) => {
+        setFeedbacks(snapshot.docs.map(doc => doc.data() as Feedback));
+      }),
+      onSnapshot(collection(db, 'judges'), (snapshot) => {
+        const judgesList = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAt = data.createdAt;
+            const serializableCreatedAt = createdAt instanceof Timestamp ? createdAt.toMillis() : (createdAt || null);
+            return { 
+              id: doc.id, 
+              ...data,
+              createdAt: serializableCreatedAt,
+            } as unknown as Judge;
+        });
+        setJudges(judgesList);
+      }),
+    ];
+
+    return () => unsubscribes.forEach(unsub => unsub());
+  }, []);
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
   const themeCategory = useMemo(() => categories.find(c => c.name.toLowerCase() === 'theme'), [categories]);
-  const [selectedPrizeCategoryId, setSelectedPrizeCategoryId] = useState<string | undefined>(themeCategory?.id ?? categories[0]?.id);
+  const [selectedPrizeCategoryId, setSelectedPrizeCategoryId] = useState<string | undefined>(themeCategory?.id ?? (categories.length > 0 ? categories[0]?.id : undefined));
+
+  useEffect(() => {
+    if (!selectedPrizeCategoryId && themeCategory?.id) {
+        setSelectedPrizeCategoryId(themeCategory.id);
+    } else if (!selectedPrizeCategoryId && categories.length > 0) {
+        setSelectedPrizeCategoryId(categories[0].id);
+    }
+  }, [categories, themeCategory, selectedPrizeCategoryId]);
 
 
   const categorizedLeaderboardData = useMemo(() => {
@@ -395,6 +436,14 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
   const hasJuniorData = categorizedLeaderboardData.Junior && categorizedLeaderboardData.Junior.length > 0;
   const hasSubJuniorData = subJuniorFeedbackData.length > 0;
   const hasCategoryPrizes = categories.length > 0;
+  
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </div>
+    );
+  }
 
   const TABS = [
     { value: 'senior', label: 'Senior', hasData: hasSeniorData, content: () => renderJuniorSenior('Senior') },
@@ -409,6 +458,8 @@ export default function LeaderboardClient({ schools, categories, scores, feedbac
   React.useEffect(() => {
     if (availableTabs.length > 0 && !availableTabs.find(tab => tab.value === activeTab)) {
       setActiveTab(availableTabs[0].value);
+    } else if (availableTabs.length > 0 && !activeTab) {
+        setActiveTab(availableTabs[0].value);
     }
   }, [availableTabs, activeTab]);
 
