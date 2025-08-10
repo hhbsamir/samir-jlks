@@ -34,7 +34,7 @@ export default function Home() {
       </div>
 
       <div className="text-center mb-12 mt-8">
-        <h1 className="text-5xl md:text-8xl font-bold text-primary animate-fade-in-down">
+        <h1 className="text-5xl md:text-8xl font-extrabold animate-fade-in-down font-headline bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg">
           JLKS Paradip
         </h1>
         <div className="text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">

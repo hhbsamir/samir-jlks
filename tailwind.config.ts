@@ -12,7 +12,6 @@ export default {
       fontFamily: {
         body: ['var(--font-body)', 'serif'],
         headline: ['var(--font-headline)', 'sans-serif'], 
-        code: ['monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
