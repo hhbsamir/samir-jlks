@@ -16,6 +16,7 @@ import { NavButtons } from "@/components/common/NavButtons";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, writeBatch, doc } from "firebase/firestore";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
@@ -300,47 +301,57 @@ export default function JudgesPage() {
     </Dialog>
   );
 
-  const renderJudgeSelection = () => (
-    <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-10">
-        <h1 className="font-headline text-4xl sm:text-5xl md:text-7xl font-bold text-primary">
-          Judge's Portal
-        </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground mt-2">
-          Select your name to begin scoring.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="bg-card/50">
-              <CardContent className="flex flex-col items-center text-center gap-4 p-6 sm:p-8">
-                <div className="p-3 bg-muted rounded-full">
-                  <Loader2 className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground animate-spin" />
-                </div>
-                <div className="h-7 w-3/4 bg-muted rounded-md" />
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          judges.map(judge => (
-            <Card 
-              key={judge.id} 
-              className="cursor-pointer group hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-2 transition-all duration-300 border-2 border-transparent hover:border-primary/50 bg-card/50 backdrop-blur-sm" 
-              onClick={() => handleJudgeSelection(judge)}
-            >
-              <CardContent className="pt-6 sm:pt-8 items-center text-center flex flex-col gap-4">
-                <div className="p-4 bg-primary/10 rounded-full transition-transform duration-300 group-hover:scale-110">
-                  <User className="w-12 h-12 sm:w-16 sm:h-16 text-primary" />
-                </div>
-                <h2 className="text-2xl sm:text-3xl font-headline text-card-foreground">{judge.name}</h2>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
-  );
+  const renderJudgeSelection = () => {
+    const judgeColors = [
+        'from-pink-500 to-purple-600',
+        'from-green-400 to-blue-500',
+        'from-yellow-400 to-orange-500',
+        'from-teal-400 to-cyan-500',
+        'from-rose-500 to-fuchsia-600',
+        'from-lime-400 to-emerald-500'
+    ];
+
+    return (
+        <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+                <h1 className="font-headline text-4xl sm:text-5xl md:text-7xl font-bold text-primary">
+                Judge's Portal
+                </h1>
+                <p className="text-lg sm:text-xl text-muted-foreground mt-2">
+                Select your name to begin scoring.
+                </p>
+            </div>
+            <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+                {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2">
+                        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-muted animate-pulse flex items-center justify-center">
+                            <Loader2 className="w-12 h-12 text-muted-foreground animate-spin"/>
+                        </div>
+                        <div className="h-6 w-24 bg-muted rounded-md animate-pulse" />
+                    </div>
+                ))
+                ) : (
+                judges.map((judge, index) => (
+                    <div key={judge.id} className="flex flex-col items-center gap-4 text-center group">
+                        <button
+                            onClick={() => handleJudgeSelection(judge)}
+                            className={cn(
+                                'relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-background',
+                                judgeColors[index % judgeColors.length]
+                            )}
+                        >
+                            <div className={cn("absolute inset-0 rounded-full bg-gradient-to-br opacity-100 group-hover:opacity-90 transition-opacity", judgeColors[index % judgeColors.length])}></div>
+                            <User className="relative w-16 h-16 sm:w-20 sm:h-20" />
+                        </button>
+                        <h2 className="text-xl sm:text-2xl font-headline text-card-foreground transition-colors group-hover:text-primary">{judge.name}</h2>
+                    </div>
+                ))
+                )}
+            </div>
+        </div>
+    );
+  };
 
   const renderScoringSheet = () => (
     <>
@@ -454,3 +465,5 @@ export default function JudgesPage() {
     </div>
   );
 }
+
+    
