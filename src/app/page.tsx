@@ -10,6 +10,7 @@ import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { AppLogo } from '@/components/common/AppLogo';
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
@@ -34,9 +35,9 @@ export default function Home() {
       </div>
 
       <div className="text-center mb-12 mt-8">
-        <h1 className="text-5xl md:text-8xl font-extrabold animate-fade-in-down font-headline animated-gradient" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-          JLKS Paradip
-        </h1>
+        <div className="animate-fade-in-down" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
+          <AppLogo />
+        </div>
         <div className="text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
             {currentDate ? <p>{currentDate}</p> : <div className="h-7" /> }
             {currentTime ? (
