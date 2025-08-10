@@ -37,6 +37,7 @@ export default function Home() {
            <h1 className="text-4xl md:text-6xl font-extrabold font-headline animated-gradient">
               JLKS Paradip
             </h1>
+           <p className="text-base mt-2 text-foreground/70">🙏 ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏</p>
         </div>
         <div className="text-lg md:text-2xl mt-4 text-foreground/80 max-w-3xl mx-auto animate-fade-in-up">
             {currentDate ? <p>{currentDate}</p> : <div className="h-7" /> }
