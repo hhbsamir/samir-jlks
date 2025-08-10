@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: "Adjudicator's Arena",
+  title: "JLKS Paradip",
   description: 'The ultimate platform for fair and transparent competition scoring.',
 };
 

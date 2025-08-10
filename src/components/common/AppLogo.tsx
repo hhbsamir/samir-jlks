@@ -33,11 +33,8 @@ export function AppLogo({ className }: { className?: string }) {
       </svg>
       <div className="flex flex-col">
         <h1 className="text-4xl md:text-6xl font-extrabold font-headline animated-gradient">
-            Adjudicator's
+            JLKS Paradip
         </h1>
-        <h2 className="text-3xl md:text-5xl font-extrabold font-headline animated-gradient -mt-2">
-            Arena
-        </h2>
       </div>
     </div>
   );
