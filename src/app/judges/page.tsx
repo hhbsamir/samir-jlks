@@ -428,7 +428,11 @@ export default function JudgesPage() {
                                         )}
                                       <Button size="lg" className="w-full font-bold text-base sm:text-lg" onClick={() => handleSubmit(school.id, school.category)} disabled={submitting === school.id}>
                                           {submitting === school.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Check className="mr-2 h-4 w-4"/>}
-                                          {submitting === school.id ? "Submitting..." : "Submit Score"}
+                                          {submitting === school.id
+                                            ? "Submitting..."
+                                            : school.category === 'Sub-Junior'
+                                            ? "Submit Feedback"
+                                            : "Submit Score"}
                                       </Button>
                                     </CardContent>
                                 </Card>
@@ -454,3 +458,5 @@ export default function JudgesPage() {
     </div>
   );
 }
+
+    
