@@ -213,32 +213,6 @@ export default function LeaderboardClient() {
   const hasSubJuniorData = subJuniorFeedbackData.length > 0;
   const hasCategoryPrizes = categories.length > 0;
 
-  const TABS = [
-    { value: 'senior', label: 'Senior', hasData: hasSeniorData, content: () => renderJuniorSenior('Senior') },
-    { value: 'junior', label: 'Junior', hasData: hasJuniorData, content: () => renderJuniorSenior('Junior') },
-    { value: 'category-prizes', label: 'Category', hasData: hasCategoryPrizes, content: renderCategoryPrizes },
-    { value: 'sub-junior', label: 'Sub-Junior', hasData: hasSubJuniorData, content: renderSubJunior },
-  ];
-  
-  const availableTabs = TABS.filter(tab => tab.hasData);
-  const [activeTab, setActiveTab] = useState(availableTabs[0]?.value || '');
-
-  React.useEffect(() => {
-    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.value === activeTab)) {
-      setActiveTab(availableTabs[0].value);
-    } else if (availableTabs.length > 0 && !activeTab) {
-        setActiveTab(availableTabs[0].value);
-    }
-  }, [availableTabs, activeTab]);
-
-  if (loading) {
-    return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-            <Loader2 className="w-12 h-12 text-primary animate-spin" />
-        </div>
-    );
-  }
-
   const getRankDisplay = (rank: number) => {
     const rankStyles = [
         { icon: Trophy, color: 'text-yellow-500', size: 'w-6 h-6 sm:w-8 sm:h-8' }, // 1st
@@ -462,7 +436,32 @@ export default function LeaderboardClient() {
         </div>
     );
   };
+  
+  const TABS = [
+    { value: 'senior', label: 'Senior', hasData: hasSeniorData, content: () => renderJuniorSenior('Senior') },
+    { value: 'junior', label: 'Junior', hasData: hasJuniorData, content: () => renderJuniorSenior('Junior') },
+    { value: 'category-prizes', label: 'Category', hasData: hasCategoryPrizes, content: renderCategoryPrizes },
+    { value: 'sub-junior', label: 'Sub-Junior', hasData: hasSubJuniorData, content: renderSubJunior },
+  ];
+  
+  const availableTabs = TABS.filter(tab => tab.hasData);
+  const [activeTab, setActiveTab] = useState(availableTabs[0]?.value || '');
 
+  React.useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.value === activeTab)) {
+      setActiveTab(availableTabs[0].value);
+    } else if (availableTabs.length > 0 && !activeTab) {
+        setActiveTab(availableTabs[0].value);
+    }
+  }, [availableTabs, activeTab]);
+
+  if (loading) {
+    return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div>
