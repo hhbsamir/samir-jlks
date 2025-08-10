@@ -45,7 +45,7 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
           <div className="flex items-center justify-between w-full">
             <NavButtons showBack={false} />
             <div className="flex-1 flex justify-center">
-                 <h1 className="font-headline text-2xl sm:text-3xl">Organizer's Dashboard</h1>
+                 <h1 className="font-headline text-2xl sm:text-3xl font-bold">🙏Organizer's Dashboard🙏</h1>
             </div>
              <div className="w-10"></div>
           </div>
