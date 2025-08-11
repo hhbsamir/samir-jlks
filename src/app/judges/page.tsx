@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { School, CompetitionCategory, Judge, Score, SchoolCategory, Feedback } from "@/lib/data";
 import { NavButtons } from "@/components/common/NavButtons";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, where, writeBatch, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, writeBatch, doc, Timestamp } from "firebase/firestore";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +72,27 @@ export default function JudgesPage() {
 
         const judgesCollection = collection(db, 'judges');
         const judgesSnapshot = await getDocs(judgesCollection);
-        const judgesList = judgesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Judge));
+        const judgesList = judgesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            const createdAt = data.createdAt;
+            const serializableCreatedAt = createdAt instanceof Timestamp ? createdAt.toMillis() : (createdAt || null);
+            return { 
+                id: doc.id, 
+                ...data,
+                createdAt: serializableCreatedAt,
+            } as unknown as Judge;
+        });
+
+        judgesList.sort((a, b) => {
+            const aTime = a.createdAt ?? 0;
+            const bTime = b.createdAt ?? 0;
+            if (aTime !== bTime) {
+                return aTime - bTime;
+            }
+            return (a.name || '').localeCompare(b.name || '');
+        });
         setJudges(judgesList);
+
       } catch (error) {
         console.error("Error fetching initial data: ", error);
         toast({ title: "Error", description: "Failed to load competition data.", variant: "destructive" });
@@ -466,4 +485,3 @@ export default function JudgesPage() {
   );
 }
 
-    
