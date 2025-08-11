@@ -31,9 +31,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("flex flex-col min-h-screen", fontHeadline.variable, fontBody.variable)}>
         <div className="flex-grow">{children}</div>
-        <footer className="text-center p-4 text-foreground/60">
-            <p>ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏 ସମୀର କୁମାର ମାହାପତ୍ର</p>
-        </footer>
         <Toaster />
       </body>
     </html>
