@@ -4,6 +4,7 @@ import { Belleza, Alegreya } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
+import { ConditionalFooter } from '@/components/common/ConditionalFooter';
 
 export const metadata: Metadata = {
   title: "JLKS Paradip",
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={cn("flex flex-col min-h-screen", fontHeadline.variable, fontBody.variable)}>
         <div className="flex-grow">{children}</div>
+        <ConditionalFooter />
         <Toaster />
       </body>
     </html>
