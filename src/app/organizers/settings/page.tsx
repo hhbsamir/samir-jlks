@@ -87,70 +87,100 @@ export default function SettingsPage() {
         const primaryColor = '#2563eb';
         const accentColor = '#f97316';
         const reportDate = format(new Date(), 'do MMMM yyyy');
-        const pageMargin = 14;
+        const pageMargin = 15;
+        const pageWidth = doc.internal.pageSize.getWidth();
 
         const addHeaderAndFooter = () => {
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
-                doc.setFontSize(16);
+                
+                // Header
+                doc.setFontSize(20);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(primaryColor);
-                doc.text('Sub-Junior Feedback Report', 105, 15, { align: 'center' });
+                doc.text('Sub-Junior Feedback Report', pageWidth / 2, 20, { align: 'center' });
                 
-                if (remarks) {
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'italic');
-                    doc.setTextColor(80, 80, 80);
-                    const remarksLines = doc.splitTextToSize(remarks, 180);
-                    doc.text(remarksLines, 105, 22, { align: 'center' });
-                }
-
-                doc.setFontSize(8);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
                 doc.setTextColor(100);
-                doc.text(`Page ${i} of ${pageCount}`, 105, 287, { align: 'center' });
-                doc.text(`Report Date: ${reportDate}`, 210 - pageMargin, 287, { align: 'right' });
+                doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 26, { align: 'center' });
+                
+                doc.setDrawColor(primaryColor);
+                doc.setLineWidth(0.5);
+                doc.line(pageMargin, 32, pageWidth - pageMargin, 32);
+
+                // Footer
+                doc.setFontSize(9);
+                doc.setTextColor(150);
+                doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, 287, { align: 'center' });
             }
         };
 
-        const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
+        const subJuniorSchools = schools
+            .filter(s => s.category === 'Sub-Junior')
+            .sort((a,b) => (a.serialNumber || 0) - (b.serialNumber || 0));
+
+        let lastY = 40;
+        
+        if (remarks) {
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(80, 80, 80);
+            const remarksLines = doc.splitTextToSize(remarks, pageWidth - (pageMargin * 2));
+            doc.text(remarksLines, pageWidth / 2, lastY, { align: 'center' });
+            lastY += (remarksLines.length * 5) + 10;
+        }
+
         if (subJuniorSchools.length > 0) {
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(primaryColor);
-            doc.text('Sub-Junior Category Feedback', pageMargin, 30);
-            
-            let lastY = 35;
             subJuniorSchools.forEach(school => {
                 const feedbackBody = judges.map(judge => {
-                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
-                    return [judge.name, feedback];
+                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "No feedback provided.";
+                    return [{ content: judge.name, styles: { fontStyle: 'bold' } }, feedback];
                 });
 
-                const tableHeight = (feedbackBody.length + 1) * 10 + 10;
-                if (lastY + tableHeight > 280) {
+                // Estimate height to prevent awkward page breaks
+                const tableHeight = (feedbackBody.length * 8) + 25; // Approximation
+                if (lastY + tableHeight > 270) {
                     doc.addPage();
-                    lastY = 30;
+                    lastY = 40;
                 }
                 
-                doc.setFontSize(14);
+                doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(accentColor);
-                doc.text(school.name, pageMargin, lastY + 5);
+                doc.text(school.name, pageMargin, lastY);
+                if(school.serialNumber) {
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(100);
+                    doc.text(`Serial Number: ${school.serialNumber}`, pageWidth - pageMargin, lastY, { align: 'right' });
+                }
+                lastY += 2;
 
                 doc.autoTable({
-                    startY: lastY + 8,
+                    startY: lastY + 3,
                     head: [['Judge', 'Feedback']],
                     body: feedbackBody,
                     theme: 'grid',
-                    headStyles: { fillColor: primaryColor, textColor: 255 },
+                    headStyles: { 
+                        fillColor: primaryColor, 
+                        textColor: 255, 
+                        fontSize: 12,
+                        halign: 'center' 
+                    },
                     columnStyles: { 
-                        0: { cellWidth: 'auto' },
-                        1: { cellWidth: 'auto' } 
+                        0: { cellWidth: 50, halign: 'left' },
+                        1: { cellWidth: 'auto', halign: 'left' } 
+                    },
+                    styles: {
+                        cellPadding: 3,
+                        fontSize: 10,
+                        valign: 'middle'
                     },
                     margin: { left: pageMargin, right: pageMargin }
                 });
-                lastY = (doc as any).lastAutoTable.finalY + 10;
+                lastY = (doc as any).lastAutoTable.finalY + 15;
             });
         } else {
              doc.setFontSize(12);
