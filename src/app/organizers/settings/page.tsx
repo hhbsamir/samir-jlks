@@ -752,18 +752,12 @@ export default function SettingsPage() {
           batch.delete(doc.ref);
         });
       }
-      
-      // Reset serial numbers on schools
-      const schoolsSnapshot = await getDocs(collection(db, 'schools'));
-      schoolsSnapshot.forEach(schoolDoc => {
-          batch.update(schoolDoc.ref, { serialNumber: null });
-      });
 
       await batch.commit();
       
       toast({
         title: "Competition Reset!",
-        description: "All scores and feedback have been cleared. Schools are preserved.",
+        description: "All scores and feedback have been cleared. Schools and their serial numbers are preserved.",
       });
 
     } catch (error) {
@@ -832,7 +826,7 @@ export default function SettingsPage() {
             <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
             <CardDescription className="text-destructive/80">
               This action will clear all scores and feedback for every school to start a new competition. 
-              Your list of schools and judges will NOT be deleted.
+              Your list of schools, judges, and serial numbers will NOT be deleted.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -847,7 +841,7 @@ export default function SettingsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete all scores and feedback, but keep your schools and judges.
+                    This will permanently delete all scores and feedback, but keep your schools, judges, and serial numbers.
                     It is highly recommended to download the final reports first.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
