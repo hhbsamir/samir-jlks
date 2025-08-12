@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Loader2, Download } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -743,8 +743,9 @@ export default function SettingsPage() {
 
     try {
       const batch = writeBatch(db);
-      const collectionsToDelete = ['schools', 'scores', 'feedbacks'];
+      const collectionsToDelete = ['scores', 'feedbacks'];
 
+      // Clear scores and feedback
       for (const collectionName of collectionsToDelete) {
         const snapshot = await getDocs(collection(db, collectionName));
         snapshot.forEach(doc => {
@@ -752,11 +753,17 @@ export default function SettingsPage() {
         });
       }
       
+      // Reset serial numbers on schools
+      const schoolsSnapshot = await getDocs(collection(db, 'schools'));
+      schoolsSnapshot.forEach(schoolDoc => {
+          batch.update(schoolDoc.ref, { serialNumber: null });
+      });
+
       await batch.commit();
       
       toast({
         title: "Competition Reset!",
-        description: "All schools, scores, and feedback have been cleared.",
+        description: "All scores and feedback have been cleared. Schools are preserved.",
       });
 
     } catch (error) {
@@ -824,9 +831,8 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
             <CardDescription className="text-destructive/80">
-              This will clear all schools, scores, and feedback to start a new
-              competition. It is highly recommended to download the final report
-              before proceeding.
+              This action will clear all scores and feedback for every school to start a new competition. 
+              Your list of schools and judges will NOT be deleted.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -841,9 +847,8 @@ export default function SettingsPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action is irreversible. It will first generate and
-                    download a final PDF report, then permanently delete all
-                    competition data (schools, scores, feedback).
+                    This will permanently delete all scores and feedback, but keep your schools and judges.
+                    It is highly recommended to download the final reports first.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
