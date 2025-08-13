@@ -1,6 +1,8 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -8,7 +10,7 @@ import { getFirestore } from "firebase/firestore";
 const firebaseConfig = {
   "projectId": "jlks-paradip",
   "appId": "1:168780164501:web:0d528092ea0ff558609a9c",
-  "storageBucket": "jlks-paradip.firebasestorage.app",
+  "storageBucket": "jlks-paradip.appspot.com",
   "apiKey": "AIzaSyBZulAyAzOJVySzxVzpAftT3xi4codPlhM",
   "authDomain": "jlks-paradip.firebaseapp.com",
   "measurementId": "",
@@ -18,5 +20,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { app, db };
+export { app, db, storage };
