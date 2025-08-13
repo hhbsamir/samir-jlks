@@ -16,6 +16,7 @@ export type Judge = {
   name: string;
   mobile: string;
   password?: string;
+  photoURL?: string;
   createdAt: number | null;
 };
 

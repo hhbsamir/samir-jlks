@@ -17,6 +17,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, writeBatch, doc, Timestamp } from "firebase/firestore";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
@@ -321,15 +322,6 @@ export default function JudgesPage() {
   );
 
   const renderJudgeSelection = () => {
-    const judgeColors = [
-        'from-pink-500 to-purple-600',
-        'from-green-400 to-blue-500',
-        'from-yellow-400 to-orange-500',
-        'from-teal-400 to-cyan-500',
-        'from-rose-500 to-fuchsia-600',
-        'from-lime-400 to-emerald-500'
-    ];
-
     return (
         <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
@@ -351,17 +343,20 @@ export default function JudgesPage() {
                     </div>
                 ))
                 ) : (
-                judges.map((judge, index) => (
+                judges.map((judge) => (
                     <div key={judge.id} className="flex flex-col items-center gap-4 text-center group">
                         <button
                             onClick={() => handleJudgeSelection(judge)}
                             className={cn(
-                                'relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-background',
-                                judgeColors[index % judgeColors.length]
+                                'relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-background bg-card'
                             )}
                         >
-                            <div className={cn("absolute inset-0 rounded-full bg-gradient-to-br opacity-100 group-hover:opacity-90 transition-opacity", judgeColors[index % judgeColors.length])}></div>
-                            <User className="relative w-16 h-16 sm:w-20 sm:h-20" />
+                            <Avatar className="h-full w-full">
+                                <AvatarImage src={judge.photoURL} alt={judge.name} className="object-cover" />
+                                <AvatarFallback className="text-muted-foreground">
+                                    <User className="w-16 h-16 sm:w-20 sm:h-20" />
+                                </AvatarFallback>
+                            </Avatar>
                         </button>
                         <h2 className="text-xl sm:text-2xl font-headline text-card-foreground transition-colors group-hover:text-primary">{judge.name}</h2>
                     </div>
@@ -484,4 +479,3 @@ export default function JudgesPage() {
     </div>
   );
 }
-
