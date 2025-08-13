@@ -10,16 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, RefreshCw, User } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useRouter } from 'next/navigation';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Image from 'next/image';
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -76,24 +73,14 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
     window.open(whatsappUrl, '_blank');
   };
 
-  const handleSave = async (judgeData: Omit<Judge, 'id' | 'createdAt'>, photoFile: File | null) => {
+  const handleSave = async (judgeData: Omit<Judge, 'id' | 'createdAt'>) => {
     try {
-        let photoURL = judgeData.photoURL;
-
-        if (photoFile) {
-            const storageRef = ref(storage, `judges/${photoFile.name}_${Date.now()}`);
-            const snapshot = await uploadBytes(storageRef, photoFile);
-            photoURL = await getDownloadURL(snapshot.ref);
-        }
-
-        const finalJudgeData = { ...judgeData, photoURL };
-      
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
-        await updateDoc(judgeDoc, finalJudgeData);
+        await updateDoc(judgeDoc, judgeData);
         toast({ title: "Success", description: "Judge updated successfully." });
       } else {
-        await addDoc(collection(db, "judges"), { ...finalJudgeData, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
         toast({ title: "Success", description: "Judge added successfully." });
       }
       refreshData();
@@ -129,7 +116,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Judge</TableHead>
+                  <TableHead>Judge Name</TableHead>
                   <TableHead>Mobile Number</TableHead>
                   <TableHead>Password</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -139,15 +126,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
                 {initialJudges.map(judge => (
                   <TableRow key={judge.id}>
                     <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarImage src={judge.photoURL} alt={judge.name} />
-                                <AvatarFallback>
-                                    <User />
-                                </AvatarFallback>
-                            </Avatar>
-                            <span>{judge.name}</span>
-                        </div>
+                        {judge.name}
                     </TableCell>
                     <TableCell>{judge.mobile}</TableCell>
                     <TableCell>
@@ -215,7 +194,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
 type JudgeFormDialogProps = {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<Judge, 'id' | 'createdAt'>, photoFile: File | null) => void;
+    onSave: (data: Omit<Judge, 'id' | 'createdAt'>) => void;
     judge: Judge | null;
 }
 
@@ -223,32 +202,15 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
-    const [photoFile, setPhotoFile] = useState<File | null>(null);
-    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
         if(isOpen) {
             setName(judge?.name || '');
             setMobile(judge?.mobile || '');
             setPassword(judge?.password || '');
-            setPhotoPreview(judge?.photoURL || null);
-            setPhotoFile(null);
         }
     }, [isOpen, judge]);
-
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setPhotoFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPhotoPreview(reader.result as string);
-            }
-            reader.readAsDataURL(file);
-        }
-    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -256,7 +218,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         
         setIsSaving(true);
         try {
-            await onSave({ name, mobile, password, photoURL: judge?.photoURL }, photoFile);
+            await onSave({ name, mobile, password });
         } finally {
             setIsSaving(false);
         }
@@ -274,24 +236,6 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     <DialogTitle className="font-headline text-2xl sm:text-3xl text-primary">{judge ? 'Edit Judge' : 'Add New Judge'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
-                    <div className="flex flex-col items-center gap-4">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            ref={fileInputRef}
-                            onChange={handlePhotoChange}
-                            className="hidden"
-                        />
-                         <Avatar className="h-32 w-32 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                            <AvatarImage src={photoPreview || undefined} alt={name} className="object-cover" />
-                            <AvatarFallback className="h-32 w-32">
-                                <User className="h-16 w-16" />
-                            </AvatarFallback>
-                        </Avatar>
-                         <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                            Upload Photo
-                        </Button>
-                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Judge Name</Label>
                         <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
