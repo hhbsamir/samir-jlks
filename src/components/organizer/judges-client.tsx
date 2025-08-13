@@ -252,9 +252,12 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (name && mobile) {
-            setIsSaving(true);
+        if (!name || !mobile) return;
+        
+        setIsSaving(true);
+        try {
             await onSave({ name, mobile, password, photoURL: judge?.photoURL }, photoFile);
+        } finally {
             setIsSaving(false);
         }
     };
