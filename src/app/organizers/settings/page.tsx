@@ -480,7 +480,7 @@ export default function SettingsPage() {
         doc.setFontSize(36);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
-        doc.text('Competition Score Report', 105, 120, { align: 'center' });
+        doc.text('JLKS Paradip Port', 105, 120, { align: 'center' });
 
         doc.setFontSize(20);
         doc.setFont('helvetica', 'normal');
