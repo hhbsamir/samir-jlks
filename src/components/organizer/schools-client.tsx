@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/page-header';
 import type { School, SchoolCategory } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Upload, Loader2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, getDocs } from 'firebase/firestore';
@@ -26,6 +26,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -81,6 +82,42 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
     } catch (error) {
         console.error("Error deleting school: ", error);
         toast({ title: "Error", description: "Could not delete school.", variant: "destructive" });
+    }
+  }
+
+  const handleDeleteAllSchools = async () => {
+    setIsDeletingAll(true);
+    try {
+        const schoolsSnapshot = await getDocs(collection(db, "schools"));
+        if (schoolsSnapshot.empty) {
+            toast({ title: "No Schools Found", description: "There are no schools to delete." });
+            return;
+        }
+        
+        const batch = writeBatch(db);
+        schoolsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+        
+        toast({
+            title: "All Schools Deleted",
+            description: "All school records have been successfully removed."
+        });
+        
+        setSchools([]);
+        refreshData();
+
+    } catch(error) {
+        console.error("Error deleting all schools: ", error);
+        toast({
+            title: "Deletion Failed",
+            description: "An error occurred while trying to delete all schools.",
+            variant: "destructive"
+        });
+    } finally {
+        setIsDeletingAll(false);
     }
   }
 
@@ -172,6 +209,38 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
             <Button onClick={() => openDialog()}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add School
             </Button>
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isDeletingAll || schools.length === 0}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {isDeletingAll ? 'Deleting...' : 'Delete All Schools'}
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete ALL schools from the database.
+                        This action will not delete judges, categories, scores, or feedback.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        onClick={handleDeleteAllSchools}
+                        disabled={isDeletingAll}
+                        className="bg-destructive hover:bg-destructive/90"
+                    >
+                        {isDeletingAll ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        {isDeletingAll
+                        ? 'Deleting all schools...'
+                        : 'Yes, Delete All Schools'}
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
       </PageHeader>
       
