@@ -291,11 +291,6 @@ export default function SettingsPage() {
         doc.setTextColor(primaryColor);
         doc.text('JLKS Paradip Port', 105, 120, { align: 'center' });
 
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(accentColor);
-        doc.text(`Date: ${reportDate}`, 105, 140, { align: 'center' });
-
         if (remarks) {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'italic');
@@ -510,11 +505,6 @@ export default function SettingsPage() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
         doc.text('JLKS Paradip Port', 105, 120, { align: 'center' });
-
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(accentColor);
-        doc.text(`Date: ${reportDate}`, 105, 140, { align: 'center' });
 
         if (remarks) {
             doc.setFontSize(12);
