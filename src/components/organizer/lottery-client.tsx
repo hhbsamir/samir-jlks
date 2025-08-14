@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { useCompetitionData } from '@/app/organizers/layout';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -33,11 +34,16 @@ const shuffleArray = <T extends any[]>(array: T): T => {
     return newArray;
 };
 
-export default function LotteryClient({ initialSchools }: { initialSchools: School[] }) {
+export default function LotteryClient() {
+    const { schools: initialSchools } = useCompetitionData();
     const [schools, setSchools] = useState<School[]>(initialSchools);
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
+
+    React.useEffect(() => {
+        setSchools(initialSchools);
+    }, [initialSchools]);
 
     const categorizedSchools = useMemo(() => {
         return schoolCategoryOrder.reduce((acc, category) => {
@@ -73,17 +79,15 @@ export default function LotteryClient({ initialSchools }: { initialSchools: Scho
         try {
             const batch = writeBatch(db);
             schools.forEach(school => {
-                if (school.serialNumber) {
-                    const schoolRef = doc(db, 'schools', school.id);
-                    batch.update(schoolRef, { serialNumber: school.serialNumber });
-                }
+                const schoolRef = doc(db, 'schools', school.id);
+                batch.update(schoolRef, { serialNumber: school.serialNumber ?? null });
             });
             await batch.commit();
             toast({
                 title: "Save Successful",
                 description: "The new performance order has been saved.",
             });
-            router.refresh();
+            // Data updates via real-time listener, no refresh needed.
         } catch (error) {
             console.error("Error saving school order: ", error);
             toast({

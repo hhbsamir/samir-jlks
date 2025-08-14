@@ -12,8 +12,7 @@ import { Trophy, Medal, Award, Star, Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
+import { useCompetitionData } from '@/app/organizers/layout';
 
 
 type SchoolScore = {
@@ -50,45 +49,7 @@ type CategoryWinner = {
 }
 
 export default function LeaderboardClient() {
-  const [schools, setSchools] = useState<School[]>([]);
-  const [categories, setCategories] = useState<CompetitionCategory[]>([]);
-  const [scores, setScores] = useState<Score[]>([]);
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [judges, setJudges] = useState<Judge[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribes = [
-      onSnapshot(collection(db, 'schools'), (snapshot) => {
-        setSchools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School)));
-        setLoading(false);
-      }),
-      onSnapshot(collection(db, 'categories'), (snapshot) => {
-        setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory)));
-      }),
-      onSnapshot(collection(db, 'scores'), (snapshot) => {
-        setScores(snapshot.docs.map(doc => doc.data() as Score));
-      }),
-      onSnapshot(collection(db, 'feedbacks'), (snapshot) => {
-        setFeedbacks(snapshot.docs.map(doc => doc.data() as Feedback));
-      }),
-      onSnapshot(collection(db, 'judges'), (snapshot) => {
-        const judgesList = snapshot.docs.map(doc => {
-            const data = doc.data();
-            const createdAt = data.createdAt;
-            const serializableCreatedAt = createdAt instanceof Timestamp ? createdAt.toMillis() : (createdAt || null);
-            return { 
-              id: doc.id, 
-              ...data,
-              createdAt: serializableCreatedAt,
-            } as unknown as Judge;
-        });
-        setJudges(judgesList);
-      }),
-    ];
-
-    return () => unsubscribes.forEach(unsub => unsub());
-  }, []);
+  const { schools, categories, scores, feedbacks, judges, loading } = useCompetitionData();
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
   const themeCategory = useMemo(() => categories.find(c => c.name.toLowerCase() === 'theme'), [categories]);
@@ -493,5 +454,3 @@ export default function LeaderboardClient() {
     </div>
   );
 }
-
-    

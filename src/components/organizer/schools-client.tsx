@@ -18,10 +18,12 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, getDocs } fr
 import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { useRouter } from 'next/navigation';
+import { useCompetitionData } from '@/app/organizers/layout';
 
 const validCategories: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
-export default function SchoolsClient({ initialSchools }: { initialSchools: School[] }) {
+export default function SchoolsClient() {
+  const { schools: initialSchools } = useCompetitionData();
   const [schools, setSchools] = useState<School[]>(initialSchools);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
@@ -30,8 +32,15 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  // The schools data from context will update in real-time.
+  // We use useEffect to keep our local state in sync.
+  React.useEffect(() => {
+    setSchools(initialSchools);
+  }, [initialSchools]);
+
   const refreshData = () => {
-    router.refresh();
+    // No longer need to call router.refresh() as context provides real-time data.
+    // This is a placeholder if some non-data related refresh is needed.
   }
 
   const categorizedSchools = useMemo(() => {
@@ -64,9 +73,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
             await addDoc(collection(db, "schools"), schoolData);
             toast({ title: "Success", description: "School added successfully." });
         }
-        refreshData();
-        const newSchoolsSnapshot = await getDocs(collection(db, 'schools'));
-        setSchools(newSchoolsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as School)));
+        // Data will update via the real-time listener in the layout.
         closeDialog();
     } catch (error) {
         console.error("Error saving school: ", error);
@@ -78,7 +85,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
     try {
         await deleteDoc(doc(db, "schools", schoolId));
         toast({ title: "Success", description: "School deleted successfully." });
-        setSchools(schools.filter(s => s.id !== schoolId));
+        // Data will update via the real-time listener in the layout.
     } catch (error) {
         console.error("Error deleting school: ", error);
         toast({ title: "Error", description: "Could not delete school.", variant: "destructive" });
@@ -106,8 +113,7 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
             description: "All school records have been successfully removed."
         });
         
-        setSchools([]);
-        refreshData();
+        // Data will update via the real-time listener in the layout.
 
     } catch(error) {
         console.error("Error deleting all schools: ", error);
@@ -172,10 +178,8 @@ export default function SchoolsClient({ initialSchools }: { initialSchools: Scho
             title: "Upload Successful",
             description: `${newSchools.length} schools have been added.`
         });
-
-        refreshData();
-        const newSchoolsSnapshot = await getDocs(collection(db, 'schools'));
-        setSchools(newSchoolsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as School)));
+        
+        // Data will update via the real-time listener in the layout.
 
       } catch (error) {
         console.error("Error processing Excel file: ", error);

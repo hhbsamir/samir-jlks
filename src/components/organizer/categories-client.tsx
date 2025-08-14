@@ -15,17 +15,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useCompetitionData } from '@/app/organizers/layout';
 
-export default function CategoriesClient({ initialCategories }: { initialCategories: CompetitionCategory[] }) {
-  const [categories, setCategories] = useState<CompetitionCategory[]>(initialCategories);
+export default function CategoriesClient() {
+  const { categories } = useCompetitionData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CompetitionCategory | null>(null);
-  const router = useRouter();
-
-  const refreshData = () => {
-    router.refresh();
-  };
 
   const openDialog = (category: CompetitionCategory | null = null) => {
     setEditingCategory(category);
@@ -47,7 +42,6 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
         await addDoc(collection(db, "categories"), categoryData);
         toast({ title: "Success", description: "Category added successfully." });
       }
-      refreshData();
       closeDialog();
     } catch (error) {
       console.error("Error saving category: ", error);
@@ -59,7 +53,6 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
     try {
       await deleteDoc(doc(db, "categories", categoryId));
       toast({ title: "Success", description: "Category deleted successfully." });
-      setCategories(categories.filter(c => c.id !== categoryId));
     } catch (error) {
       console.error("Error deleting category: ", error);
       toast({ title: "Error", description: "Could not delete category.", variant: "destructive" });

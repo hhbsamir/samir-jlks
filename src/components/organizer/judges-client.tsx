@@ -16,7 +16,7 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { useRouter } from 'next/navigation';
+import { useCompetitionData } from '@/app/organizers/layout';
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -36,14 +36,10 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 
-export default function JudgesClient({ initialJudges }: { initialJudges: Judge[] }) {
+export default function JudgesClient() {
+  const { judges } = useCompetitionData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingJudge, setEditingJudge] = useState<Judge | null>(null);
-  const router = useRouter();
-
-  const refreshData = () => {
-    router.refresh();
-  };
 
   const openDialog = (judge: Judge | null = null) => {
     setEditingJudge(judge);
@@ -83,7 +79,6 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
         await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
         toast({ title: "Success", description: "Judge added successfully." });
       }
-      refreshData();
       closeDialog();
     } catch (error) {
       console.error("Error saving judge: ", error);
@@ -95,12 +90,20 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
     try {
         await deleteDoc(doc(db, "judges", judgeId));
         toast({ title: "Success", description: "Judge deleted successfully." });
-        refreshData();
     } catch(error) {
         console.error("Error deleting judge: ", error);
         toast({ title: "Error", description: "Could not delete judge.", variant: "destructive" });
     }
   }
+  
+  const sortedJudges = [...judges].sort((a, b) => {
+    const aTime = a.createdAt ?? 0;
+    const bTime = b.createdAt ?? 0;
+    if (aTime !== bTime) {
+        return aTime - bTime;
+    }
+    return (a.name || '').localeCompare(b.name || '');
+  });
 
   return (
     <TooltipProvider>
@@ -123,7 +126,7 @@ export default function JudgesClient({ initialJudges }: { initialJudges: Judge[]
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {initialJudges.map(judge => (
+                {sortedJudges.map(judge => (
                   <TableRow key={judge.id}>
                     <TableCell className="font-medium">
                         {judge.name}
