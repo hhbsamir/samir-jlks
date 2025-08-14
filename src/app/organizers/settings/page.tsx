@@ -101,11 +101,6 @@ export default function SettingsPage() {
         doc.setTextColor(accentColor);
         doc.text('Sub-Junior Feedback Report', 105, 135, { align: 'center' });
 
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100);
-        doc.text(`Date: ${reportDate}`, 105, 150, { align: 'center' });
-
         if (remarks) {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'italic');
