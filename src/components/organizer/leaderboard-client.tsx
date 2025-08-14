@@ -159,7 +159,7 @@ export default function LeaderboardClient() {
 
   const subJuniorFeedbackData = useMemo(() => {
     const subJuniorSchools = schools.filter(s => s.category === 'Sub-Junior');
-    if (subJuniorSchools.length === 0 || feedbacks.length === 0 || judges.length === 0) return [];
+    if (subJuniorSchools.length === 0 || judges.length === 0) return [];
 
     return subJuniorSchools.map(school => {
         const schoolData: SchoolFeedback = {
@@ -210,7 +210,7 @@ export default function LeaderboardClient() {
   
   const hasSeniorData = categorizedLeaderboardData.Senior && categorizedLeaderboardData.Senior.length > 0;
   const hasJuniorData = categorizedLeaderboardData.Junior && categorizedLeaderboardData.Junior.length > 0;
-  const hasSubJuniorData = subJuniorFeedbackData.length > 0;
+  const hasSubJuniorData = useMemo(() => schools.some(s => s.category === 'Sub-Junior'), [schools]);
   const hasCategoryPrizes = categories.length > 0;
 
   const getRankDisplay = (rank: number) => {
@@ -318,7 +318,7 @@ export default function LeaderboardClient() {
                         </CardHeader>
                         <CardContent>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {Object.values(entry.feedbacks).map((feedbackData, index) => (
+                                {Object.values(entry.feedbacks).length > 0 ? Object.values(entry.feedbacks).map((feedbackData, index) => (
                                     <Card key={index} className="bg-muted/30">
                                         <CardHeader>
                                             <CardTitle className="text-base sm:text-lg">{feedbackData.judgeName}</CardTitle>
@@ -327,7 +327,7 @@ export default function LeaderboardClient() {
                                             <p className="text-sm text-muted-foreground italic">"{feedbackData.feedback}"</p>
                                         </CardContent>
                                     </Card>
-                                ))}
+                                )) : <p className="p-4 text-center text-muted-foreground col-span-full">No feedback submitted for this school yet.</p>}
                             </div>
                         </CardContent>
                     </Card>
@@ -493,3 +493,5 @@ export default function LeaderboardClient() {
     </div>
   );
 }
+
+    
