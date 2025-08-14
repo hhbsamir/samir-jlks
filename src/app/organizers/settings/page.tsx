@@ -89,26 +89,52 @@ export default function SettingsPage() {
         const reportDate = format(new Date(), 'do MMMM yyyy');
         const pageMargin = 15;
         const pageWidth = doc.internal.pageSize.getWidth();
+        
+        // --- Title Page ---
+        doc.setFontSize(36);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor);
+        doc.text('JLKS Paradip Port', 105, 120, { align: 'center' });
 
-        const addHeaderAndFooter = () => {
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(accentColor);
+        doc.text('Sub-Junior Feedback Report', 105, 135, { align: 'center' });
+
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text(`Date: ${reportDate}`, 105, 150, { align: 'center' });
+
+        if (remarks) {
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(80, 80, 80);
+            const remarksLines = doc.splitTextToSize(remarks, 180);
+            doc.text(remarksLines, 105, 170, { align: 'center' });
+        }
+
+        const addHeaderAndFooter = (isContentPage: boolean) => {
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
                 doc.setPage(i);
                 
-                // Header
-                doc.setFontSize(20);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(primaryColor);
-                doc.text('Sub-Junior Feedback Report', pageWidth / 2, 20, { align: 'center' });
-                
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(100);
-                doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 26, { align: 'center' });
-                
-                doc.setDrawColor(primaryColor);
-                doc.setLineWidth(0.5);
-                doc.line(pageMargin, 32, pageWidth - pageMargin, 32);
+                if (isContentPage && i > 1) { // Only add header to content pages
+                    // Header
+                    doc.setFontSize(20);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(primaryColor);
+                    doc.text('Sub-Junior Feedback Report', pageWidth / 2, 20, { align: 'center' });
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(100);
+                    doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 26, { align: 'center' });
+                    
+                    doc.setDrawColor(primaryColor);
+                    doc.setLineWidth(0.5);
+                    doc.line(pageMargin, 32, pageWidth - pageMargin, 32);
+                }
 
                 // Footer
                 doc.setFontSize(9);
@@ -121,25 +147,25 @@ export default function SettingsPage() {
             .filter(s => s.category === 'Sub-Junior')
             .sort((a,b) => (a.serialNumber || 0) - (b.serialNumber || 0));
 
-        let lastY = 40;
-        
-        if (remarks) {
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'italic');
-            doc.setTextColor(80, 80, 80);
-            const remarksLines = doc.splitTextToSize(remarks, pageWidth - (pageMargin * 2));
-            doc.text(remarksLines, pageWidth / 2, lastY, { align: 'center' });
-            lastY += (remarksLines.length * 5) + 10;
-        }
-
         if (subJuniorSchools.length > 0) {
+            doc.addPage();
+            let lastY = 40;
+        
+            if (remarks) {
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'italic');
+                doc.setTextColor(80, 80, 80);
+                const remarksLines = doc.splitTextToSize(remarks, pageWidth - (pageMargin * 2));
+                doc.text(remarksLines, pageWidth / 2, lastY, { align: 'center' });
+                lastY += (remarksLines.length * 5) + 10;
+            }
+
             subJuniorSchools.forEach(school => {
                 const feedbackBody = judges.map(judge => {
                     const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "No feedback provided.";
                     return [{ content: judge.name, styles: { fontStyle: 'bold' } }, feedback];
                 });
 
-                // Estimate height to prevent awkward page breaks
                 const tableHeight = (feedbackBody.length * 8) + 25; // Approximation
                 if (lastY + tableHeight > 270) {
                     doc.addPage();
@@ -182,12 +208,14 @@ export default function SettingsPage() {
                 });
                 lastY = (doc as any).lastAutoTable.finalY + 15;
             });
+             addHeaderAndFooter(true);
         } else {
+             doc.addPage();
              doc.setFontSize(12);
              doc.text("No feedback found for Sub-Junior schools.", pageMargin, 40);
+             addHeaderAndFooter(true);
         }
         
-        addHeaderAndFooter();
         doc.save(`Sub-Junior-Feedback-Report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 
         toast({
@@ -238,18 +266,21 @@ export default function SettingsPage() {
                 doc.setPage(i);
                 
                 // Header
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(primaryColor);
-                doc.text('Competition Summary Report', 105, 15, { align: 'center' });
-                
-                if (remarks) {
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'italic');
-                    doc.setTextColor(80, 80, 80);
-                    const remarksLines = doc.splitTextToSize(remarks, 180);
-                    doc.text(remarksLines, 105, 22, { align: 'center' });
+                if (i > 1) { // Dont show header on first page
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(primaryColor);
+                    doc.text('Competition Summary Report', 105, 15, { align: 'center' });
+                    
+                    if (remarks) {
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'italic');
+                        doc.setTextColor(80, 80, 80);
+                        const remarksLines = doc.splitTextToSize(remarks, 180);
+                        doc.text(remarksLines, 105, 22, { align: 'center' });
+                    }
                 }
+
 
                 // Footer
                 doc.setFontSize(8);
@@ -455,18 +486,21 @@ export default function SettingsPage() {
                 doc.setPage(i);
                 
                 // Header
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(primaryColor);
-                doc.text('Competition Full Report', 105, 15, { align: 'center' });
-                
-                if (remarks) {
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'italic');
-                    doc.setTextColor(80, 80, 80);
-                    const remarksLines = doc.splitTextToSize(remarks, 180);
-                    doc.text(remarksLines, 105, 22, { align: 'center' });
+                if (i > 1) { // Don't show header on first page
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(primaryColor);
+                    doc.text('Competition Full Report', 105, 15, { align: 'center' });
+                    
+                    if (remarks) {
+                        doc.setFontSize(10);
+                        doc.setFont('helvetica', 'italic');
+                        doc.setTextColor(80, 80, 80);
+                        const remarksLines = doc.splitTextToSize(remarks, 180);
+                        doc.text(remarksLines, 105, 22, { align: 'center' });
+                    }
                 }
+
 
                 // Footer
                 doc.setFontSize(8);
