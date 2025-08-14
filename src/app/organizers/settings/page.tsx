@@ -290,13 +290,18 @@ export default function SettingsPage() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
         doc.text('JLKS Paradip Port', 105, 120, { align: 'center' });
+        
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(accentColor);
+        doc.text('Competition Summary Report', 105, 135, { align: 'center' });
 
         if (remarks) {
             doc.setFontSize(12);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(80, 80, 80);
             const remarksLines = doc.splitTextToSize(remarks, 180);
-            doc.text(remarksLines, 105, 160, { align: 'center' });
+            doc.text(remarksLines, 160, 160, { align: 'center' });
         }
         
         // --- Score Sections ---
@@ -505,6 +510,11 @@ export default function SettingsPage() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
         doc.text('JLKS Paradip Port', 105, 120, { align: 'center' });
+        
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(accentColor);
+        doc.text('Competition Full Report', 105, 135, { align: 'center' });
 
         if (remarks) {
             doc.setFontSize(12);
