@@ -8,7 +8,7 @@ import { ConditionalFooter } from '@/components/common/ConditionalFooter';
 
 export const metadata: Metadata = {
   title: "JLKS Paradip",
-  description: 'The ultimate platform for fair and transparent competition scoring.',
+  description: 'Jay Jagannath',
 };
 
 const fontHeadline = Belleza({
