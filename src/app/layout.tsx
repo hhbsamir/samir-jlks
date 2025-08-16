@@ -8,7 +8,7 @@ import { ConditionalFooter } from '@/components/common/ConditionalFooter';
 
 export const metadata: Metadata = {
   title: "JLKS Paradip",
-  description: 'Jay Jagannath',
+  description: '🙏 ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏',
 };
 
 const fontHeadline = Belleza({
