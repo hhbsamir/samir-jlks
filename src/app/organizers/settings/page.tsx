@@ -24,6 +24,14 @@ interface jsPDFWithAutoTable extends jsPDF {
 
 const REMARKS_DOC_ID = 'reportSettings';
 
+// Function to remove emojis from a string
+const removeEmojis = (text: string) => {
+  if (!text) return "";
+  // This regex matches most common emojis.
+  return text.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+};
+
+
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
@@ -157,8 +165,9 @@ export default function SettingsPage() {
 
             subJuniorSchools.forEach(school => {
                 const feedbackBody = judges.map(judge => {
-                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "No feedback provided.";
-                    return [{ content: judge.name, styles: { fontStyle: 'bold' } }, feedback];
+                    const feedbackText = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "No feedback provided.";
+                    const cleanFeedback = removeEmojis(feedbackText);
+                    return [{ content: judge.name, styles: { fontStyle: 'bold' } }, cleanFeedback];
                 });
 
                 const tableHeight = (feedbackBody.length * 8) + 25; // Approximation
@@ -301,7 +310,7 @@ export default function SettingsPage() {
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(80, 80, 80);
             const remarksLines = doc.splitTextToSize(remarks, 180);
-            doc.text(remarksLines, 160, 160, { align: 'center' });
+            doc.text(remarksLines, 105, 160, { align: 'center' });
         }
         
         // --- Score Sections ---
