@@ -552,7 +552,7 @@ export default function SettingsPage() {
             doc.setTextColor(accentColor);
             doc.text('Final Rankings', pageMargin, 42);
             const head = [['Rank', 'School', ...categories.map(c => c.name), 'Total Score']];
-            const body = schoolsInCategory
+            const rankedSchoolsData = schoolsInCategory
               .map(school => {
                 const totalScores = categories.map(cat => {
                     return scores.filter(s => s.schoolId === school.id && s.categoryId === cat.id)
@@ -561,8 +561,9 @@ export default function SettingsPage() {
                 const totalScore = totalScores.reduce((sum, score) => sum + score, 0);
                 return { school, totalScores, totalScore };
               })
-              .sort((a,b) => b.totalScore - a.totalScore)
-              .map((data, index) => [
+              .sort((a,b) => b.totalScore - a.totalScore);
+            
+            const body = rankedSchoolsData.map((data, index) => [
                 index + 1,
                 data.school.name,
                 ...data.totalScores.map(String),
@@ -590,7 +591,7 @@ export default function SettingsPage() {
             doc.text(`Judge Score Breakdown`, pageMargin, lastY + 15);
             lastY += 20;
 
-            schoolsInCategory.forEach(school => {
+            rankedSchoolsData.forEach(({school}) => { // Use rankedSchoolsData to ensure order
                 const judgeHead = [['Judge', ...categories.map(c => c.name), 'Total']];
                 const judgeBody = judges.map(judge => {
                     const judgeCategoryScores = categories.map(cat => {
@@ -712,8 +713,9 @@ export default function SettingsPage() {
             let lastY = 35;
             subJuniorSchools.forEach(school => {
                 const feedbackBody = judges.map(judge => {
-                    const feedback = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
-                    return [judge.name, feedback];
+                    const feedbackText = feedbacks.find(f => f.schoolId === school.id && f.judgeId === judge.id)?.feedback || "N/A";
+                    const cleanFeedback = removeEmojis(feedbackText);
+                    return [judge.name, cleanFeedback];
                 });
 
                 const tableHeight = (feedbackBody.length + 1) * 10 + 10; // Approximate height
