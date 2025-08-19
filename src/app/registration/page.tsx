@@ -104,12 +104,12 @@ export default function RegistrationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8 relative">
       <div className="absolute top-4 left-4 z-50">
         <NavButtons />
       </div>
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 pt-12 sm:pt-0">
             <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">Registration for Inter-School Cultural Meet</h1>
             <p className="text-muted-foreground mt-2">Enter your school's details to participate</p>
         </div>
