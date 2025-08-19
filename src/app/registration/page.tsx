@@ -11,15 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Upload } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
-  idCard: z.instanceof(File).refine(file => file.size > 0, "ID Card is required."),
 });
 
 const registrationSchema = z.object({
@@ -44,7 +42,7 @@ export default function RegistrationPage() {
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       schoolName: '',
-      participants: [{ name: '', idCard: undefined }],
+      participants: [{ name: '' }],
       accountHolderName: '',
       bankName: '',
       accountNumber: '',
@@ -65,25 +63,10 @@ export default function RegistrationPage() {
     setIsSubmitting(true);
     
     try {
-        // 1. Upload ID cards to Firebase Storage
-        const uploadedParticipants = await Promise.all(
-            data.participants.map(async (participant) => {
-                const file = participant.idCard;
-                const storageRef = ref(storage, `id_cards/${data.schoolName}/${Date.now()}_${file.name}`);
-                await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(storageRef);
-                return {
-                    name: participant.name,
-                    idCardUrl: downloadURL,
-                    idCardFileName: file.name,
-                };
-            })
-        );
-
-        // 2. Prepare data for Firestore
+        // Prepare data for Firestore
         const registrationData = {
             schoolName: data.schoolName,
-            participants: uploadedParticipants,
+            participants: data.participants,
             bankDetails: {
                 accountHolderName: data.accountHolderName,
                 bankName: data.bankName,
@@ -99,7 +82,7 @@ export default function RegistrationPage() {
             createdAt: serverTimestamp(),
         };
 
-        // 3. Save to Firestore
+        // Save to Firestore
         await addDoc(collection(db, 'registrations'), registrationData);
         
         toast({
@@ -156,7 +139,7 @@ export default function RegistrationPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Participants</CardTitle>
-                <CardDescription>Add participant details and upload their ID cards.</CardDescription>
+                <CardDescription>Add participant details.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {fields.map((field, index) => (
@@ -175,34 +158,6 @@ export default function RegistrationPage() {
                             </FormItem>
                         )}
                         />
-                         <Controller
-                            control={form.control}
-                            name={`participants.${index}.idCard`}
-                            render={({ field: { onChange, value, ...rest }, fieldState }) => (
-                                <FormItem>
-                                    <FormLabel>ID Card</FormLabel>
-                                    <FormControl>
-                                        <div className="flex items-center gap-2">
-                                            <label className="flex-grow">
-                                                <Input
-                                                    type="file"
-                                                    onChange={(e) => onChange(e.target.files?.[0])}
-                                                    className="hidden"
-                                                    accept="image/*,.pdf"
-                                                />
-                                                <Button type="button" variant="outline" asChild>
-                                                    <div className="flex items-center gap-2 cursor-pointer">
-                                                        <Upload className="w-4 h-4"/>
-                                                        <span>{value?.name || "Upload ID Card"}</span>
-                                                    </div>
-                                                </Button>
-                                            </label>
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage>{fieldState.error?.message}</FormMessage>
-                                </FormItem>
-                            )}
-                        />
                     </div>
                     {fields.length > 1 && (
                       <Button
@@ -220,7 +175,7 @@ export default function RegistrationPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => append({ name: '', idCard: undefined as any })}
+                  onClick={() => append({ name: '' })}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Participant

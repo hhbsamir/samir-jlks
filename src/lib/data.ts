@@ -44,8 +44,6 @@ export type ReportSettings = {
 
 export interface Participant {
   name: string;
-  idCardUrl: string;
-  idCardFileName: string;
 }
 
 export interface BankDetails {

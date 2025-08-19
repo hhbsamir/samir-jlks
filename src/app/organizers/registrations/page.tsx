@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
@@ -20,23 +20,14 @@ interface jsPDFWithAutoTable extends jsPDF {
 }
 
 export default function RegistrationsPage() {
-    const { loading } = useCompetitionData();
-    const [registeredSchools, setRegisteredSchools] = useState<Registration[]>([]);
+    const { registrations, loading } = useCompetitionData();
     const [isDownloading, setIsDownloading] = useState(false);
     const { toast } = useToast();
-
-    // This component no longer fetches its own data.
-    // It will be updated to use the context.
-    // For now, we are just fixing the display logic.
-    // In a future step, we will connect it to the `useCompetitionData` hook.
-    
-    // Placeholder rendering until context is fully wired up.
-    // The main fix is to remove the direct `onSnapshot` call that was causing permission errors.
 
     const handleDownloadBankExcel = () => {
         setIsDownloading(true);
         try {
-            const dataForExcel = registeredSchools.map(school => ({
+            const dataForExcel = registrations.map(school => ({
                 "School Name": school.schoolName,
                 "Account Holder Name": school.bankDetails.accountHolderName,
                 "Bank Name": school.bankDetails.bankName,
@@ -68,7 +59,7 @@ export default function RegistrationsPage() {
             doc.text("School Bank and Contact Details", 14, 15);
             doc.autoTable({
                 head: [['School', 'Account Name', 'Bank', 'Account No', 'IFSC', 'Contact', 'Mobile']],
-                body: registeredSchools.map(s => ([
+                body: registrations.map(s => ([
                     s.schoolName,
                     s.bankDetails.accountHolderName,
                     s.bankDetails.bankName,
@@ -94,7 +85,7 @@ export default function RegistrationsPage() {
         try {
             const doc = new jsPDF() as jsPDFWithAutoTable;
 
-            registeredSchools.forEach((school, index) => {
+            registrations.forEach((school, index) => {
                 if (index > 0) doc.addPage();
                 
                 doc.setFontSize(18);
@@ -153,13 +144,13 @@ export default function RegistrationsPage() {
             <div className="max-w-7xl mx-auto">
                 <PageHeader title="Registered School Data">
                     <div className="flex flex-wrap justify-end gap-2">
-                        <Button onClick={handleDownloadAllPdf} variant="outline" disabled={isDownloading || registeredSchools.length === 0}>
+                        <Button onClick={handleDownloadAllPdf} variant="outline" disabled={isDownloading || registrations.length === 0}>
                             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4" />} Download All (PDF)
                         </Button>
-                        <Button onClick={handleDownloadBankPdf} disabled={isDownloading || registeredSchools.length === 0}>
+                        <Button onClick={handleDownloadBankPdf} disabled={isDownloading || registrations.length === 0}>
                             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileText className="mr-2 h-4 w-4" />} Bank Details (PDF)
                         </Button>
-                        <Button onClick={handleDownloadBankExcel} disabled={isDownloading || registeredSchools.length === 0}>
+                        <Button onClick={handleDownloadBankExcel} disabled={isDownloading || registrations.length === 0}>
                             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileSpreadsheet className="mr-2 h-4 w-4" />} Bank Details (Excel)
                         </Button>
                     </div>
@@ -169,8 +160,8 @@ export default function RegistrationsPage() {
                         <div className="flex justify-center items-center py-20">
                             <Loader2 className="h-12 w-12 animate-spin text-primary" />
                         </div>
-                    ) : registeredSchools.length > 0 ? (
-                        registeredSchools.map(school => (
+                    ) : registrations.length > 0 ? (
+                        registrations.map(school => (
                             <Card key={school.id}>
                                 <CardHeader>
                                     <CardTitle>{school.schoolName}</CardTitle>
@@ -195,19 +186,15 @@ export default function RegistrationsPage() {
                                             <Table>
                                                 <TableHeader>
                                                     <TableRow>
+                                                        <TableHead>#</TableHead>
                                                         <TableHead>Participant Name</TableHead>
-                                                        <TableHead className="text-right">ID Card</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
                                                     {school.participants.map((p: Participant, index: number) => (
                                                         <TableRow key={index}>
+                                                            <TableCell>{index + 1}</TableCell>
                                                             <TableCell>{p.name}</TableCell>
-                                                            <TableCell className="text-right">
-                                                                <Button variant="link" asChild>
-                                                                    <a href={p.idCardUrl} target="_blank" rel="noopener noreferrer">View ID</a>
-                                                                </Button>
-                                                            </TableCell>
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
