@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -20,7 +21,7 @@ interface jsPDFWithAutoTable extends jsPDF {
 }
 
 export default function RegistrationsPage() {
-    const { registrations, loading } = useCompetitionData();
+    const { registrations, schools, loading } = useCompetitionData();
     const [isDownloading, setIsDownloading] = useState(false);
     const { toast } = useToast();
 
@@ -215,56 +216,70 @@ export default function RegistrationsPage() {
                         {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileSpreadsheet className="mr-2 h-4 w-4" />} Bank Details (Excel)
                     </Button>
                 </div>
-                <div className="space-y-8">
+                <div className="space-y-4">
                      {loading ? (
                         <div className="flex justify-center items-center py-20">
                             <Loader2 className="h-12 w-12 animate-spin text-primary" />
                         </div>
                     ) : registrations.length > 0 ? (
-                        registrations.map(school => (
-                            <Card key={school.id}>
-                                <CardHeader>
-                                    <CardTitle>{school.schoolName}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h4 className="font-semibold text-lg mb-2">Contact Information</h4>
-                                            <p><strong>Contact Person:</strong> {school.contactPerson.contactName} ({school.contactPerson.designation})</p>
-                                            <p><strong>Mobile:</strong> {school.contactPerson.mobileNumber}</p>
-                                            {school.contactPerson.email && <p><strong>Email:</strong> {school.contactPerson.email}</p>}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-lg mb-2">Bank Details</h4>
-                                            <p><strong>Account Name:</strong> {school.bankDetails.accountHolderName}</p>
-                                            <p><strong>Bank:</strong> {school.bankDetails.bankName}</p>
-                                            <p><strong>Account No:</strong> {school.bankDetails.accountNumber}</p>
-                                            <p><strong>IFSC:</strong> {school.bankDetails.ifscCode}</p>
-                                            {school.bankDetails.upiId && <p><strong>UPI ID:</strong> {school.bankDetails.upiId}</p>}
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-lg mb-2">Participants</h4>
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>#</TableHead>
-                                                        <TableHead>Participant Name</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {school.participants.map((p: Participant, index: number) => (
-                                                        <TableRow key={index}>
-                                                            <TableCell>{index + 1}</TableCell>
-                                                            <TableCell>{p.name}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))
+                        <Accordion type="multiple" className="w-full space-y-4">
+                            {registrations.map(school => {
+                                const schoolInfo = schools.find(s => s.name === school.schoolName);
+                                return (
+                                    <AccordionItem value={school.id} key={school.id}>
+                                        <Card>
+                                            <AccordionTrigger className="w-full p-0 hover:no-underline">
+                                                <CardHeader className="flex-row items-center justify-between w-full">
+                                                    <CardTitle className="flex items-baseline gap-4">
+                                                        {school.schoolName}
+                                                        {schoolInfo?.serialNumber && <span className="text-sm font-medium text-muted-foreground">(Sl. No: {schoolInfo.serialNumber})</span>}
+                                                    </CardTitle>
+                                                </CardHeader>
+                                            </AccordionTrigger>
+                                            <AccordionContent>
+                                                <CardContent>
+                                                    <div className="space-y-6">
+                                                        <div>
+                                                            <h4 className="font-semibold text-lg mb-2">Contact Information</h4>
+                                                            <p><strong>Contact Person:</strong> {school.contactPerson.contactName} ({school.contactPerson.designation})</p>
+                                                            <p><strong>Mobile:</strong> {school.contactPerson.mobileNumber}</p>
+                                                            {school.contactPerson.email && <p><strong>Email:</strong> {school.contactPerson.email}</p>}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-semibold text-lg mb-2">Bank Details</h4>
+                                                            <p><strong>Account Name:</strong> {school.bankDetails.accountHolderName}</p>
+                                                            <p><strong>Bank:</strong> {school.bankDetails.bankName}</p>
+                                                            <p><strong>Account No:</strong> {school.bankDetails.accountNumber}</p>
+                                                            <p><strong>IFSC:</strong> {school.bankDetails.ifscCode}</p>
+                                                            {school.bankDetails.upiId && <p><strong>UPI ID:</strong> {school.bankDetails.upiId}</p>}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-semibold text-lg mb-2">Participants</h4>
+                                                            <Table>
+                                                                <TableHeader>
+                                                                    <TableRow>
+                                                                        <TableHead>#</TableHead>
+                                                                        <TableHead>Participant Name</TableHead>
+                                                                    </TableRow>
+                                                                </TableHeader>
+                                                                <TableBody>
+                                                                    {school.participants.map((p: Participant, index: number) => (
+                                                                        <TableRow key={index}>
+                                                                            <TableCell>{index + 1}</TableCell>
+                                                                            <TableCell>{p.name}</TableCell>
+                                                                        </TableRow>
+                                                                    ))}
+                                                                </TableBody>
+                                                            </Table>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </AccordionContent>
+                                        </Card>
+                                    </AccordionItem>
+                                )}
+                            )}
+                        </Accordion>
                     ) : (
                         <Card>
                             <CardContent className="pt-6">
