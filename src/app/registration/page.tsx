@@ -15,6 +15,7 @@ import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
@@ -34,6 +35,75 @@ const registrationSchema = z.object({
 });
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
+
+const indianBankNames = [
+    "State Bank of India",
+    "Punjab National Bank",
+    "Bank of Baroda",
+    "Canara Bank",
+    "Union Bank of India",
+    "HDFC Bank",
+    "ICICI Bank",
+    "Axis Bank",
+    "Kotak Mahindra Bank",
+    "IndusInd Bank",
+    "Yes Bank",
+    "Bank of India",
+    "Central Bank of India",
+    "Indian Bank",
+    "UCO Bank",
+    "Bank of Maharashtra",
+    "Punjab & Sind Bank",
+    "IDBI Bank",
+    "Federal Bank",
+    "South Indian Bank",
+    "Karur Vysya Bank",
+    "Karnataka Bank",
+    "Jammu & Kashmir Bank",
+    "City Union Bank",
+    "Tamilnad Mercantile Bank",
+    "Nainital Bank",
+    "Dhanlaxmi Bank",
+    "IDFC First Bank",
+    "Bandhan Bank",
+    "CSB Bank",
+    "RBL Bank",
+    "DCB Bank",
+    "AU Small Finance Bank",
+    "Equitas Small Finance Bank",
+    "Ujjivan Small Finance Bank",
+    "Jana Small Finance Bank",
+    "Suryoday Small Finance Bank",
+    "Fincare Small Finance Bank",
+    "ESAF Small Finance Bank",
+    "Utkarsh Small Finance Bank",
+    "Shivalik Small Finance Bank",
+    "Capital Small Finance Bank",
+    "North East Small Finance Bank",
+    "Unity Small Finance Bank",
+    "Paytm Payments Bank",
+    "Airtel Payments Bank",
+    "India Post Payments Bank",
+    "Fino Payments Bank",
+    "Jio Payments Bank",
+    "NSDL Payments Bank",
+    "Standard Chartered Bank",
+    "HSBC Bank",
+    "Citibank",
+    "DBS Bank",
+    "Deutsche Bank",
+    "American Express",
+    "Barclays Bank",
+    "BNP Paribas",
+    "Credit Suisse",
+    "Morgan Stanley",
+    "Goldman Sachs",
+    "J.P. Morgan Chase",
+    "Bank of America",
+    "The Royal Bank of Scotland",
+    "Other"
+];
+
 
 export default function RegistrationPage() {
   const { toast } = useToast();
@@ -191,9 +261,28 @@ export default function RegistrationPage() {
                     <FormField control={form.control} name="accountHolderName" render={({ field }) => (
                         <FormItem><FormLabel>Account Holder's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField control={form.control} name="bankName" render={({ field }) => (
-                        <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Name</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a bank" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {indianBankNames.map((bank) => (
+                                <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField control={form.control} name="accountNumber" render={({ field }) => (
                         <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
