@@ -42,6 +42,36 @@ export type ReportSettings = {
     remarks: string;
 }
 
+export interface Participant {
+  name: string;
+  idCardUrl: string;
+  idCardFileName: string;
+}
+
+export interface BankDetails {
+    accountHolderName: string;
+    bankName: string;
+    accountNumber: string;
+    ifscCode: string;
+    upiId?: string;
+}
+
+export interface ContactPerson {
+    contactName: string;
+    designation: string;
+    mobileNumber: string;
+}
+
+export interface Registration {
+    id: string;
+    schoolName: string;
+    participants: Participant[];
+    bankDetails: BankDetails;
+    contactPerson: ContactPerson;
+    createdAt: Timestamp;
+}
+
+
 export const initialCategories: CompetitionCategory[] = [
 ];
 
@@ -57,4 +87,5 @@ export const initialScores: Score[] = [
     
 
     
+
 

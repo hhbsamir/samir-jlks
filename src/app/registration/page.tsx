@@ -13,10 +13,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, Upload } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
+import { db, storage } from '@/lib/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
-  idCard: z.any().refine(file => file, "ID Card is required."),
+  idCard: z.instanceof(File).refine(file => file.size > 0, "ID Card is required."),
 });
 
 const registrationSchema = z.object({
@@ -41,7 +44,7 @@ export default function RegistrationPage() {
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       schoolName: '',
-      participants: [{ name: '', idCard: null }],
+      participants: [{ name: '', idCard: undefined }],
       accountHolderName: '',
       bankName: '',
       accountNumber: '',
@@ -60,19 +63,61 @@ export default function RegistrationPage() {
 
   const onSubmit = async (data: RegistrationFormValues) => {
     setIsSubmitting(true);
-    // Here you would typically handle file uploads to a storage service (like Firebase Storage)
-    // and then save the form data (with file URLs) to a database (like Firestore).
-    console.log(data);
+    
+    try {
+        // 1. Upload ID cards to Firebase Storage
+        const uploadedParticipants = await Promise.all(
+            data.participants.map(async (participant) => {
+                const file = participant.idCard;
+                const storageRef = ref(storage, `id_cards/${data.schoolName}/${Date.now()}_${file.name}`);
+                await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(storageRef);
+                return {
+                    name: participant.name,
+                    idCardUrl: downloadURL,
+                    idCardFileName: file.name,
+                };
+            })
+        );
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
+        // 2. Prepare data for Firestore
+        const registrationData = {
+            schoolName: data.schoolName,
+            participants: uploadedParticipants,
+            bankDetails: {
+                accountHolderName: data.accountHolderName,
+                bankName: data.bankName,
+                accountNumber: data.accountNumber,
+                ifscCode: data.ifscCode,
+                upiId: data.upiId || '',
+            },
+            contactPerson: {
+                contactName: data.contactName,
+                designation: data.designation,
+                mobileNumber: data.mobileNumber,
+            },
+            createdAt: serverTimestamp(),
+        };
 
-    toast({
-      title: 'Registration Submitted!',
-      description: 'Thank you for registering. We will be in touch shortly.',
-    });
-    form.reset();
-    setIsSubmitting(false);
+        // 3. Save to Firestore
+        await addDoc(collection(db, 'registrations'), registrationData);
+        
+        toast({
+          title: 'Registration Submitted!',
+          description: 'Thank you for registering. We will be in touch shortly.',
+        });
+        form.reset();
+
+    } catch (error) {
+        console.error("Error submitting registration: ", error);
+        toast({
+            title: "Submission Failed",
+            description: "An unexpected error occurred. Please try again.",
+            variant: "destructive"
+        })
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -133,7 +178,7 @@ export default function RegistrationPage() {
                          <Controller
                             control={form.control}
                             name={`participants.${index}.idCard`}
-                            render={({ field: { onChange, value, ...rest } }) => (
+                            render={({ field: { onChange, value, ...rest }, fieldState }) => (
                                 <FormItem>
                                     <FormLabel>ID Card</FormLabel>
                                     <FormControl>
@@ -142,7 +187,6 @@ export default function RegistrationPage() {
                                                 <Input
                                                     type="file"
                                                     onChange={(e) => onChange(e.target.files?.[0])}
-                                                    {...rest}
                                                     className="hidden"
                                                     accept="image/*,.pdf"
                                                 />
@@ -155,26 +199,28 @@ export default function RegistrationPage() {
                                             </label>
                                         </div>
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage>{fieldState.error?.message}</FormMessage>
                                 </FormItem>
                             )}
                         />
                     </div>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => remove(index)}
-                      className="mt-2 sm:mt-0 flex-shrink-0"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {fields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        className="mt-2 sm:mt-0 flex-shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 ))}
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => append({ name: '', idCard: null })}
+                  onClick={() => append({ name: '', idCard: undefined as any })}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Participant
@@ -187,19 +233,19 @@ export default function RegistrationPage() {
                     <CardTitle>Bank Details</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField name="accountHolderName" render={({ field }) => (
+                    <FormField control={form.control} name="accountHolderName" render={({ field }) => (
                         <FormItem><FormLabel>Account Holder's Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField name="bankName" render={({ field }) => (
+                    <FormField control={form.control} name="bankName" render={({ field }) => (
                         <FormItem><FormLabel>Bank Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField name="accountNumber" render={({ field }) => (
+                    <FormField control={form.control} name="accountNumber" render={({ field }) => (
                         <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField name="ifscCode" render={({ field }) => (
+                    <FormField control={form.control} name="ifscCode" render={({ field }) => (
                         <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                    <FormField name="upiId" render={({ field }) => (
+                    <FormField control={form.control} name="upiId" render={({ field }) => (
                         <FormItem><FormLabel>UPI ID (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </CardContent>
@@ -210,13 +256,13 @@ export default function RegistrationPage() {
                     <CardTitle>Contact Person</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <FormField name="contactName" render={({ field }) => (
+                     <FormField control={form.control} name="contactName" render={({ field }) => (
                         <FormItem><FormLabel>Contact Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                     <FormField name="designation" render={({ field }) => (
+                     <FormField control={form.control} name="designation" render={({ field }) => (
                         <FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                     <FormField name="mobileNumber" render={({ field }) => (
+                     <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                         <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                 </CardContent>
