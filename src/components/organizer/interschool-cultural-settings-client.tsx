@@ -10,20 +10,18 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, XCircle, File as FileIcon } from 'lucide-react';
 import type { InterschoolCulturalSettings } from '@/lib/data';
-import { getPublicIdFromUrl } from '@/lib/data';
 
 const SETTINGS_DOC_ID = 'interschoolCulturalSettings';
 
-async function deleteCloudinaryFile(fileUrl: string) {
+async function deleteCloudinaryFile(publicId: string) {
     try {
-        const publicId = getPublicIdFromUrl(fileUrl);
         if (!publicId) {
             throw new Error("Could not extract public_id from URL");
         }
         const response = await fetch('/api/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ publicId }),
+            body: JSON.stringify({ publicId, resourceType: 'raw' }),
         });
         const data = await response.json();
         if (!data.success) {
@@ -100,16 +98,22 @@ export default function InterschoolCulturalSettingsClient() {
         formData.append('file', file);
 
         try {
+            // If there's an existing PDF, delete it from Cloudinary first.
+            if (settings?.registrationPdfPublicId) {
+                await deleteCloudinaryFile(settings.registrationPdfPublicId);
+            }
+
             const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
             });
             const data = await response.json();
             if (data.success) {
-                if (settings?.registrationPdfUrl) {
-                    await deleteCloudinaryFile(settings.registrationPdfUrl);
-                }
-                await handleSettingsUpdate({ registrationPdfUrl: data.url, registrationPdfName: file.name });
+                await handleSettingsUpdate({ 
+                    registrationPdfUrl: data.url, 
+                    registrationPdfName: file.name,
+                    registrationPdfPublicId: data.public_id,
+                });
                 toast({ title: 'PDF uploaded successfully!' });
             } else {
                 throw new Error(data.error || 'Upload failed');
@@ -127,11 +131,11 @@ export default function InterschoolCulturalSettingsClient() {
     };
 
     const handleRemoveFile = async () => {
-        if (!settings?.registrationPdfUrl) return;
+        if (!settings?.registrationPdfPublicId) return;
         setIsRemoving(true);
-        const success = await deleteCloudinaryFile(settings.registrationPdfUrl);
+        const success = await deleteCloudinaryFile(settings.registrationPdfPublicId);
         if (success) {
-            await handleSettingsUpdate({ registrationPdfUrl: '', registrationPdfName: '' });
+            await handleSettingsUpdate({ registrationPdfUrl: '', registrationPdfName: '', registrationPdfPublicId: '' });
             toast({ title: 'Success', description: 'PDF removed.' });
         } else {
             toast({ title: 'Error', description: 'Failed to remove PDF.', variant: 'destructive'});
@@ -147,12 +151,12 @@ export default function InterschoolCulturalSettingsClient() {
                     <CardHeader>
                         <CardTitle>Registration PDF</CardTitle>
                         <CardDescription>
-                            Upload a PDF file (e.g., a circular or rulebook) to be displayed on the registration page.
+                            Upload a PDF file (e.g., a circular or rulebook) to be displayed on the registration page for download.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-start gap-4">
                                 <div className="flex flex-col gap-2">
                                     <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept=".pdf" />
                                     <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading || isRemoving}>
@@ -167,9 +171,9 @@ export default function InterschoolCulturalSettingsClient() {
                                     )}
                                 </div>
                                 {settings?.registrationPdfUrl && (
-                                    <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
-                                        <FileIcon className="h-6 w-6 text-primary" />
-                                        <a href={settings.registrationPdfUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-sm hover:underline">
+                                    <div className="flex items-center gap-2 p-2 border rounded-md bg-muted flex-grow">
+                                        <FileIcon className="h-6 w-6 text-primary flex-shrink-0" />
+                                        <a href={settings.registrationPdfUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-sm hover:underline break-all">
                                             {settings.registrationPdfName || 'View PDF'}
                                         </a>
                                     </div>

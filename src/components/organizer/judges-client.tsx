@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { getPublicIdFromUrl } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, RefreshCw, Upload, User, Loader2, XCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
@@ -39,17 +38,16 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 // Function to call the delete API
-async function deleteCloudinaryImage(imageUrl: string) {
+async function deleteCloudinaryImage(publicId: string) {
     try {
-        const publicId = getPublicIdFromUrl(imageUrl);
         if (!publicId) {
-            throw new Error("Could not extract public_id from URL");
+            throw new Error("No public_id provided");
         }
 
         const response = await fetch('/api/delete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ publicId }),
+            body: JSON.stringify({ publicId, resourceType: 'image' }),
         });
 
         const data = await response.json();
@@ -64,7 +62,7 @@ async function deleteCloudinaryImage(imageUrl: string) {
         console.error('Error deleting image from Cloudinary:', error);
         toast({
             title: 'Deletion Failed',
-            description: `Could not delete image from Cloudinary. Reason: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            description: `Could not delete image. Reason: ${error instanceof Error ? error.message : 'Unknown error'}`,
             variant: 'destructive',
         });
         return false;
@@ -105,7 +103,7 @@ export default function JudgesClient() {
     window.open(whatsappUrl, '_blank');
   };
 
-  const handleSave = async (judgeData: Omit<Judge, 'id' | 'createdAt'>) => {
+  const handleSave = async (judgeData: Partial<Omit<Judge, 'id' | 'createdAt'>>) => {
     try {
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
@@ -125,8 +123,10 @@ export default function JudgesClient() {
   const handleDelete = async (judge: Judge) => {
     try {
         // If judge has a photo, delete it from Cloudinary first
-        if (judge.imageUrl) {
-            await deleteCloudinaryImage(judge.imageUrl);
+        const publicId = judge.imageUrl ? new URL(judge.imageUrl).pathname.split('/').pop()?.split('.')[0] : null;
+        if (judge.imageUrl && publicId) {
+           const publicIdWithFolder = 'jlks-paradip-uploads/' + publicId.split('/').pop();
+           await deleteCloudinaryImage(publicIdWithFolder);
         }
         // Then delete the judge document from Firestore
         await deleteDoc(doc(db, "judges", judge.id));
@@ -245,7 +245,7 @@ export default function JudgesClient() {
 type JudgeFormDialogProps = {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: Omit<Judge, 'id' | 'createdAt'>) => void;
+    onSave: (data: Partial<Omit<Judge, 'id' | 'createdAt'>>) => void;
     judge: Judge | null;
 }
 
@@ -254,6 +254,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [imagePublicId, setImagePublicId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isRemoving, setIsRemoving] = useState(false);
@@ -261,10 +262,12 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
 
     React.useEffect(() => {
         if(isOpen) {
+            const publicId = judge?.imageUrl ? new URL(judge.imageUrl).pathname.split('/').pop()?.split('.')[0] : '';
             setName(judge?.name || '');
             setMobile(judge?.mobile || '');
             setPassword(judge?.password || '');
             setImageUrl(judge?.imageUrl || '');
+            setImagePublicId(publicId || '');
         }
     }, [isOpen, judge]);
 
@@ -286,6 +289,12 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
       formData.append('file', file);
 
       try {
+        // If there was an old image, delete it from Cloudinary
+        if(imagePublicId) {
+            const publicIdWithFolder = 'jlks-paradip-uploads/' + imagePublicId;
+            await deleteCloudinaryImage(publicIdWithFolder);
+        }
+
         const response = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
@@ -294,11 +303,8 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         const data = await response.json();
 
         if (data.success) {
-          // If there was an old image, delete it from Cloudinary
-          if(imageUrl) {
-            await deleteCloudinaryImage(imageUrl);
-          }
           setImageUrl(data.url);
+          setImagePublicId(data.public_id);
           toast({ title: 'Photo uploaded successfully!' });
         } else {
           throw new Error(data.error || 'Upload failed');
@@ -316,11 +322,12 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
     };
 
     const handleRemoveImage = async () => {
-        if (!imageUrl) return;
+        if (!imagePublicId) return;
         setIsRemoving(true);
-        const success = await deleteCloudinaryImage(imageUrl);
+        const success = await deleteCloudinaryImage(imagePublicId);
         if (success) {
             setImageUrl('');
+            setImagePublicId('');
         }
         setIsRemoving(false);
     };

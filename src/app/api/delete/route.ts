@@ -4,14 +4,16 @@ import cloudinary from '@/lib/cloudinary';
 
 export async function POST(request: Request) {
   try {
-    const { publicId } = await request.json();
+    const { publicId, resourceType = 'image' } = await request.json();
 
     if (!publicId) {
       return NextResponse.json({ success: false, error: 'No publicId provided' }, { status: 400 });
     }
 
     // Use the Cloudinary admin API to delete the resource
-    const result = await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
 
     if (result.result !== 'ok' && result.result !== 'not found') {
         throw new Error(result.result);

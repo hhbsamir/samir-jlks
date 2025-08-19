@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'jlks-paradip-uploads', 
-          resource_type: resource_type, // Explicitly set the resource type
+          resource_type: resource_type,
         },
         (error, result) => {
           if (error) {
@@ -48,7 +48,11 @@ export async function POST(request: Request) {
       bufferToStream(buffer).pipe(uploadStream);
     });
 
-    return NextResponse.json({ success: true, url: uploadResult.secure_url });
+    return NextResponse.json({ 
+        success: true, 
+        url: uploadResult.secure_url,
+        public_id: uploadResult.public_id,
+    });
 
   } catch (error) {
     console.error('Error uploading to Cloudinary:', error);
