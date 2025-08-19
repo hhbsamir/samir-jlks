@@ -197,7 +197,7 @@ export default function RegistrationsPage() {
                         if (image.dataUrl) {
                             doc.setFontSize(8);
                             doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
-                            doc.addImage(image.dataUrl, 'JPEG', xPos, textHeight, imgWidth, imgHeight);
+                            doc.addImage(image.dataUrl, 'JPEG', xPos, yPos + textHeight, imgWidth, imgHeight);
                         } else {
                             doc.setFontSize(8);
                             doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
@@ -205,7 +205,7 @@ export default function RegistrationsPage() {
                         }
 
                         xPos += imgWidth + gap;
-                        if (xPos + imgWidth > pageWidth - pageMargin) {
+                        if (xPos >= pageWidth - pageMargin) {
                             xPos = pageMargin;
                             yPos += totalItemHeight;
                         }
@@ -313,7 +313,7 @@ export default function RegistrationsPage() {
                                                 <CardHeader className="flex-row items-center justify-between w-full">
                                                     <div className="flex items-center gap-4">
                                                         {schoolInfo?.serialNumber && (
-                                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                                                            <div className="flex items-center justify-center h-8 w-8 rounded-md bg-primary text-primary-foreground font-bold text-sm">
                                                                 {schoolInfo.serialNumber}
                                                             </div>
                                                         )}
@@ -376,5 +376,4 @@ export default function RegistrationsPage() {
             </div>
         </div>
     );
-
-    
+}
