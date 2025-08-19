@@ -132,9 +132,16 @@ export default function RegistrationsPage() {
                     doc.addPage();
                     doc.setFontSize(18);
                     doc.text(`${school.schoolName} - ID Cards`, 14, 22);
-                    let yPos = 30;
 
-                    for (const participant of participantsWithId) {
+                    const pageMargin = 14;
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const contentWidth = pageWidth - (pageMargin * 2);
+                    const gap = 10;
+                    const imgWidth = (contentWidth - gap) / 2;
+                    let yPos = 30;
+                    let xPos = pageMargin;
+
+                    for (const [imgIndex, participant] of participantsWithId.entries()) {
                         if (participant.idCardUrl) {
                             try {
                                 const response = await fetch(participant.idCardUrl);
@@ -148,22 +155,29 @@ export default function RegistrationsPage() {
                                 const img = new Image();
                                 img.src = dataUrl;
                                 await new Promise(resolve => { img.onload = resolve; });
-
-                                doc.setFontSize(12);
-                                doc.text(participant.name, 14, yPos);
-                                yPos += 5;
-
-                                const imgProps = doc.getImageProperties(dataUrl);
-                                const imgWidth = 180;
-                                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
                                 
-                                if (yPos + imgHeight > 280) { // Check if it fits on page
+                                const imgProps = doc.getImageProperties(dataUrl);
+                                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+                                const requiredHeight = imgHeight + 15; // Image + name + padding
+                                if (yPos + requiredHeight > 280) { // Check if it fits on page
                                     doc.addPage();
                                     yPos = 20;
+                                    xPos = pageMargin;
                                 }
-                                doc.addImage(dataUrl, 'JPEG', 14, yPos, imgWidth, imgHeight);
-                                yPos += imgHeight + 10;
 
+                                doc.setFontSize(10);
+                                doc.text(participant.name, xPos, yPos);
+                                doc.addImage(dataUrl, 'JPEG', xPos, yPos + 5, imgWidth, imgHeight);
+
+                                // Move to next position in the grid
+                                if (imgIndex % 2 === 0) { // Left column, move to right
+                                    xPos = pageMargin + imgWidth + gap;
+                                } else { // Right column, move to next row
+                                    xPos = pageMargin;
+                                    yPos += requiredHeight;
+                                }
+                                
                             } catch (e) {
                                 console.error(`Could not load image for ${participant.name}`, e);
                             }
