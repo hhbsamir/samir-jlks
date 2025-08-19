@@ -251,6 +251,14 @@ export default function RegistrationPage() {
     }
   };
 
+  const getDownloadFilename = () => {
+    const remarks = settings?.registrationPdfRemarks?.trim();
+    if (remarks) {
+        return `${remarks}.pdf`;
+    }
+    return settings?.registrationPdfName || 'circular.pdf';
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8 relative">
       <div className="absolute top-4 left-4 z-50">
@@ -266,7 +274,7 @@ export default function RegistrationPage() {
             <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
                  <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
                  <Button asChild>
-                    <a href={settings.registrationPdfUrl} download={settings.registrationPdfName || 'circular.pdf'} target="_blank" rel="noopener noreferrer">
+                    <a href={settings.registrationPdfUrl} download={getDownloadFilename()} target="_blank" rel="noopener noreferrer">
                        <Download className="mr-2 h-4 w-4" />
                        Download Circular
                     </a>

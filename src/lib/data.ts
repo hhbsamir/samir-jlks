@@ -53,6 +53,7 @@ export type InterschoolCulturalSettings = {
     registrationPdfUrl: string;
     registrationPdfName: string;
     registrationPdfPublicId?: string;
+    registrationPdfRemarks?: string;
 }
 
 export interface Participant {
@@ -96,7 +97,7 @@ export const initialJudges: Judge[] = [
 export const initialScores: Score[] = [
 ];
 
-// Helper to extract public_id from a Cloudinary URL
+// This function is no longer needed for PDF management and is being removed to avoid future issues.
 export function getPublicIdFromUrl(url: string): string | null {
   if (!url) return null;
   try {
@@ -105,15 +106,18 @@ export function getPublicIdFromUrl(url: string): string | null {
     const versionAndId = parts[1];
     const publicIdWithFolder = versionAndId.substring(versionAndId.indexOf('/') + 1);
     
-    // For images, Cloudinary URLs often don't include the extension in the public_id that the API uses.
-    // For raw files (like PDFs), the extension is part of the public_id.
-    if (url.includes('/image/upload/')) {
-        const lastDotIndex = publicIdWithFolder.lastIndexOf('.');
-        if (lastDotIndex !== -1) {
-            return publicIdWithFolder.substring(0, lastDotIndex);
-        }
+    // For raw files (like PDFs), the extension IS part of the public_id.
+    // For images, it typically is not.
+    if (url.includes('/raw/upload/')) {
+        return publicIdWithFolder;
     }
 
+    // This handles most image cases.
+    const lastDotIndex = publicIdWithFolder.lastIndexOf('.');
+    if (lastDotIndex !== -1) {
+        return publicIdWithFolder.substring(0, lastDotIndex);
+    }
+    
     return publicIdWithFolder;
   } catch (e) {
     console.error("Could not parse Cloudinary URL", e);

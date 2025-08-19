@@ -10,6 +10,8 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, XCircle, File as FileIcon } from 'lucide-react';
 import type { InterschoolCulturalSettings } from '@/lib/data';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const SETTINGS_DOC_ID = 'interschoolCulturalSettings';
 
@@ -48,7 +50,7 @@ export default function InterschoolCulturalSettingsClient() {
             if (settingsDoc.exists()) {
                 setSettings(settingsDoc.data() as InterschoolCulturalSettings);
             } else {
-                setSettings({ id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '' });
+                setSettings({ id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '', registrationPdfRemarks: '' });
             }
         } catch (error) {
             console.error("Error fetching settings:", error);
@@ -65,7 +67,7 @@ export default function InterschoolCulturalSettingsClient() {
     }, [fetchSettings]);
 
     const handleSettingsUpdate = async (updateData: Partial<InterschoolCulturalSettings>) => {
-        const newSettings = { ...(settings || { id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '' }), ...updateData };
+        const newSettings = { ...(settings || { id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '', registrationPdfRemarks: '' }), ...updateData };
         setSettings(newSettings);
         try {
             const docRef = doc(db, 'settings', SETTINGS_DOC_ID);
@@ -146,7 +148,7 @@ export default function InterschoolCulturalSettingsClient() {
     return (
         <>
             <PageHeader title="Interschool Cultural Settings" />
-            <div className="grid gap-8">
+            <div className="grid gap-8 md:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle>Registration PDF</CardTitle>
@@ -179,6 +181,27 @@ export default function InterschoolCulturalSettingsClient() {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>PDF Remarks</CardTitle>
+                        <CardDescription>
+                            Enter a filename for the circular. This will be the name of the file when users download it. Do not include the .pdf extension.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <div className="space-y-2">
+                            <Label htmlFor="remarks">Download Filename</Label>
+                            <Textarea 
+                                id="remarks"
+                                placeholder="e.g. Interschool Cultural Meet Circular 2024"
+                                value={settings?.registrationPdfRemarks || ''}
+                                onChange={(e) => handleSettingsUpdate({ registrationPdfRemarks: e.target.value })}
+                                rows={3}
+                            />
                         </div>
                     </CardContent>
                 </Card>
