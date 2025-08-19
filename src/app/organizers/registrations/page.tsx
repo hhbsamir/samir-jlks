@@ -142,19 +142,18 @@ export default function RegistrationsPage() {
     return (
         <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <PageHeader title="Registered School Data">
-                    <div className="flex flex-wrap justify-end gap-2">
-                        <Button onClick={handleDownloadAllPdf} variant="outline" disabled={isDownloading || registrations.length === 0}>
-                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4" />} Download All (PDF)
-                        </Button>
-                        <Button onClick={handleDownloadBankPdf} disabled={isDownloading || registrations.length === 0}>
-                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileText className="mr-2 h-4 w-4" />} Bank Details (PDF)
-                        </Button>
-                        <Button onClick={handleDownloadBankExcel} disabled={isDownloading || registrations.length === 0}>
-                            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileSpreadsheet className="mr-2 h-4 w-4" />} Bank Details (Excel)
-                        </Button>
-                    </div>
-                </PageHeader>
+                <PageHeader title="Registered School Data" />
+                <div className="flex flex-wrap justify-start gap-2 mb-8">
+                    <Button onClick={handleDownloadAllPdf} variant="outline" disabled={isDownloading || registrations.length === 0}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4" />} Download All (PDF)
+                    </Button>
+                    <Button onClick={handleDownloadBankPdf} disabled={isDownloading || registrations.length === 0}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileText className="mr-2 h-4 w-4" />} Bank Details (PDF)
+                    </Button>
+                    <Button onClick={handleDownloadBankExcel} disabled={isDownloading || registrations.length === 0}>
+                        {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileSpreadsheet className="mr-2 h-4 w-4" />} Bank Details (Excel)
+                    </Button>
+                </div>
                 <div className="space-y-8">
                      {loading ? (
                         <div className="flex justify-center items-center py-20">
