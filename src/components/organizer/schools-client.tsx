@@ -65,12 +65,19 @@ export default function SchoolsClient() {
 
   const handleSave = async (schoolData: Partial<Omit<School, 'id'>> & { name: string; category: SchoolCategory; }) => {
     try {
+        // Explicitly handle serialNumber to allow clearing it
+        const dataToSave: any = {
+            name: schoolData.name,
+            category: schoolData.category,
+            serialNumber: schoolData.serialNumber ? schoolData.serialNumber : null,
+        };
+
         if (editingSchool) {
             const schoolDoc = doc(db, "schools", editingSchool.id);
-            await updateDoc(schoolDoc, schoolData);
+            await updateDoc(schoolDoc, dataToSave);
             toast({ title: "Success", description: "School updated successfully." });
         } else {
-            await addDoc(collection(db, "schools"), schoolData);
+            await addDoc(collection(db, "schools"), dataToSave);
             toast({ title: "Success", description: "School added successfully." });
         }
         // Data will update via the real-time listener in the layout.
@@ -265,9 +272,9 @@ export default function SchoolsClient() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {categorizedSchools[category].map((school, index) => (
+                                    {categorizedSchools[category].map(school => (
                                         <TableRow key={school.id}>
-                                            <TableCell className="font-medium">{school.serialNumber ?? index + 1}</TableCell>
+                                            <TableCell className="font-medium">{school.serialNumber ?? 'N/A'}</TableCell>
                                             <TableCell className="font-medium">{school.name}</TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="icon" onClick={() => openDialog(school)}>
@@ -340,10 +347,11 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         e.preventDefault();
         if (name && category) {
             setIsSaving(true);
-            const schoolData: Partial<Omit<School, 'id'>> & { name: string; category: SchoolCategory; } = { name, category };
-            if (serialNumber) {
-                schoolData.serialNumber = parseInt(serialNumber, 10);
-            }
+            const schoolData: any = { 
+                name, 
+                category,
+                serialNumber: serialNumber ? parseInt(serialNumber, 10) : null 
+            };
             await onSave(schoolData);
             setIsSaving(false);
         }
@@ -388,3 +396,5 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
+
+    
