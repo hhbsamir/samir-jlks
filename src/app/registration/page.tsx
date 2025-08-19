@@ -32,7 +32,9 @@ const registrationSchema = z.object({
   upiId: z.string().optional(),
   contactName: z.string().min(1, 'Contact name is required.'),
   designation: z.string().min(1, 'Designation is required.'),
-  mobileNumber: z.string().min(10, 'Mobile number must be at least 10 digits.'),
+  mobileNumber: z.string()
+    .startsWith('+91', { message: "Mobile number must start with +91." })
+    .length(13, { message: "Mobile number must be 10 digits long, prefixed with +91 (e.g. +919876543210)."}),
 }).refine(data => data.accountNumber === data.confirmAccountNumber, {
     message: "Account numbers do not match.",
     path: ["confirmAccountNumber"],
@@ -42,20 +44,20 @@ type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
 const indianBankNames = [
     "Axis Bank Ltd.",
-    "BNP Paribas",
     "Bandhan Bank",
     "Bank of Baroda",
     "Bank of India",
     "Bank of Maharashtra",
+    "BNP Paribas",
     "Canara Bank",
     "Catholic Syrian Bank Ltd.",
     "Central Bank of India",
     "Citi Bank",
     "City Union Bank Ltd.",
     "DBS Bank Ltd.",
-    "Dhanlaxmi Bank Ltd.",
-    "Development Credit Bank Ltd.",
     "Deutsche Bank",
+    "Development Credit Bank Ltd.",
+    "Dhanlaxmi Bank Ltd.",
     "Federal Bank Ltd.",
     "HDFC Bank Ltd.",
     "HSBC",
@@ -101,7 +103,7 @@ export default function RegistrationPage() {
       upiId: '',
       contactName: '',
       designation: '',
-      mobileNumber: '',
+      mobileNumber: '+91',
     },
   });
 
