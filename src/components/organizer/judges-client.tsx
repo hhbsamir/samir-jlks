@@ -316,6 +316,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                                     Remove
                                 </Button>
                             )}
+                            <p className="text-xs text-muted-foreground">Max file size: 50 KB.</p>
                           </div>
                         </div>
                     </div>
@@ -354,3 +355,5 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         </Dialog>
     )
 }
+
+    

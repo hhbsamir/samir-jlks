@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, Upload } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
@@ -136,7 +136,7 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
     };
 
     return (
-        <>
+        <div className="flex flex-col gap-2 items-start">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -154,7 +154,8 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
                 {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                 {isUploading ? 'Uploading...' : 'Upload ID Card'}
             </Button>
-        </>
+            <p className="text-xs text-muted-foreground">Max file size: 50 KB.</p>
+        </div>
     );
 }
 
@@ -399,3 +400,5 @@ export default function RegistrationPage() {
     </div>
   );
 }
+
+    
