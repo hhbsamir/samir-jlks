@@ -317,13 +317,21 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
   }
 
   const SuccessScreen = () => {
-      const editUrl = `${window.location.origin}/registration/edit/${newRegistrationId}`;
+      const [editUrl, setEditUrl] = useState('');
       const [copied, setCopied] = useState(false);
+      
+      useEffect(() => {
+          if (newRegistrationId) {
+              setEditUrl(`${window.location.origin}/registration/edit/${newRegistrationId}`);
+          }
+      }, [newRegistrationId]);
 
       const handleCopy = () => {
-          navigator.clipboard.writeText(editUrl);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
+          if (editUrl) {
+            navigator.clipboard.writeText(editUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }
       };
 
       return (
@@ -337,7 +345,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                   <AlertDescription>
                       <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
                           <Input readOnly value={editUrl} className="bg-gray-100" />
-                          <Button onClick={handleCopy} variant="outline" className="w-full sm:w-auto">
+                          <Button onClick={handleCopy} variant="outline" className="w-full sm:w-auto" disabled={!editUrl}>
                               {copied ? <Check className="mr-2"/> : <Copy className="mr-2"/>}
                               {copied ? 'Copied!' : 'Copy'}
                           </Button>
