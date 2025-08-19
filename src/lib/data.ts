@@ -72,6 +72,7 @@ export interface ContactPerson {
     contactName: string;
     designation: string;
     mobileNumber: string;
+    email?: string;
 }
 
 export interface Registration {

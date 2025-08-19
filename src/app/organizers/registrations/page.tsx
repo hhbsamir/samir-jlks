@@ -37,6 +37,7 @@ export default function RegistrationsPage() {
                 "Contact Name": school.contactPerson.contactName,
                 "Designation": school.contactPerson.designation,
                 "Mobile Number": school.contactPerson.mobileNumber,
+                "Email": school.contactPerson.email,
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
@@ -58,7 +59,7 @@ export default function RegistrationsPage() {
             const doc = new jsPDF() as jsPDFWithAutoTable;
             doc.text("School Bank and Contact Details", 14, 15);
             doc.autoTable({
-                head: [['School', 'Account Name', 'Bank', 'Account No', 'IFSC', 'Contact', 'Mobile']],
+                head: [['School', 'Account Name', 'Bank', 'Account No', 'IFSC', 'Contact', 'Mobile', 'Email']],
                 body: registrations.map(s => ([
                     s.schoolName,
                     s.bankDetails.accountHolderName,
@@ -67,6 +68,7 @@ export default function RegistrationsPage() {
                     s.bankDetails.ifscCode,
                     s.contactPerson.contactName,
                     s.contactPerson.mobileNumber,
+                    s.contactPerson.email || 'N/A',
                 ])),
                 styles: { fontSize: 8 },
             });
@@ -99,6 +101,7 @@ export default function RegistrationsPage() {
                         ['Contact Person', school.contactPerson.contactName],
                         ['Designation', school.contactPerson.designation],
                         ['Mobile Number', school.contactPerson.mobileNumber],
+                        ['Email', school.contactPerson.email || 'N/A'],
                     ],
                     theme: 'striped'
                 });
@@ -229,6 +232,7 @@ export default function RegistrationsPage() {
                                             <h4 className="font-semibold text-lg mb-2">Contact Information</h4>
                                             <p><strong>Contact Person:</strong> {school.contactPerson.contactName} ({school.contactPerson.designation})</p>
                                             <p><strong>Mobile:</strong> {school.contactPerson.mobileNumber}</p>
+                                            {school.contactPerson.email && <p><strong>Email:</strong> {school.contactPerson.email}</p>}
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-lg mb-2">Bank Details</h4>

@@ -40,6 +40,7 @@ const registrationSchema = z.object({
   mobileNumber: z.string()
     .startsWith('+91', { message: "Mobile number must start with +91." })
     .length(13, { message: "Mobile number must be 10 digits long, prefixed with +91 (e.g. +919876543210)."}),
+  email: z.string().email("Please enter a valid email address.").optional().or(z.literal('')),
 }).refine(data => data.accountNumber === data.confirmAccountNumber, {
     message: "Account numbers do not match.",
     path: ["confirmAccountNumber"],
@@ -185,6 +186,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
       contactName: '',
       designation: '',
       mobileNumber: '+91',
+      email: '',
     },
   });
 
@@ -228,6 +230,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                       contactName: data.contactPerson.contactName,
                       designation: data.contactPerson.designation,
                       mobileNumber: data.contactPerson.mobileNumber,
+                      email: data.contactPerson.email,
                   });
               } else {
                   toast({ title: "Not Found", description: "The registration you are trying to edit does not exist.", variant: "destructive" });
@@ -271,6 +274,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                 contactName: data.contactName,
                 designation: data.designation,
                 mobileNumber: data.mobileNumber,
+                email: data.email || '',
             },
             updatedAt: serverTimestamp(),
         };
@@ -545,6 +549,9 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                 )} />
                 <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                   <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
+                 <FormField control={form.control} name="email" render={({ field }) => (
+                  <FormItem><FormLabel>Email (Optional)</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </CardContent>
             </Card>
