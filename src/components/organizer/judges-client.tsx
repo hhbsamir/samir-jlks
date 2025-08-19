@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, RefreshCw, Upload, User, Loader2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw, Upload, User, Loader2, XCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
@@ -295,11 +295,19 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                               <User className="h-10 w-10" />
                             </AvatarFallback>
                           </Avatar>
-                          <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
-                          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                            {isUploading ? 'Uploading...' : 'Upload Photo'}
-                          </Button>
+                          <div className="flex flex-col gap-2">
+                            <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                                {isUploading ? 'Uploading...' : 'Upload'}
+                            </Button>
+                            {imageUrl && (
+                                <Button type="button" variant="destructive" size="sm" onClick={() => setImageUrl('')} disabled={isUploading}>
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Remove
+                                </Button>
+                            )}
+                          </div>
                         </div>
                     </div>
                     <div className="space-y-2">
