@@ -290,7 +290,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                         <Label>Judge Photo</Label>
                         <div className="flex items-center gap-4">
                           <Avatar className="h-20 w-20">
-                            <AvatarImage src={imageUrl} alt="Judge photo" />
+                            {imageUrl && <AvatarImage src={imageUrl} alt="Judge photo" />}
                             <AvatarFallback>
                               <User className="h-10 w-10" />
                             </AvatarFallback>
