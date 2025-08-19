@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, PlusCircle, Trash2, Upload, Download, Copy, Check, ArrowLeft } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
-import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, Timestamp } from 'firestore';
+import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
 import type { InterschoolCulturalSettings, Registration } from '@/lib/data';
@@ -360,7 +360,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
         </div>
       );
   }
-
+  
   if (isLoading) {
     return (
      <div className="flex items-center justify-center min-h-screen bg-background">
@@ -561,5 +561,3 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
     </div>
   );
 }
-
-    
