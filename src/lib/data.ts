@@ -104,6 +104,11 @@ export function getPublicIdFromUrl(url: string): string | null {
   try {
     const urlParts = url.split('/');
     const uploadIndex = urlParts.indexOf('upload');
+    
+    // Find resource type - 'image', 'video', etc.
+    const resourceTypeIndex = uploadIndex - 1;
+    const resourceType = urlParts[resourceTypeIndex];
+
     if (uploadIndex === -1 || uploadIndex + 2 >= urlParts.length) {
       return null;
     }
@@ -111,15 +116,12 @@ export function getPublicIdFromUrl(url: string): string | null {
     // The part after the version number is the public_id with extension
     const publicIdWithVersionAndFolder = urlParts.slice(uploadIndex + 2).join('/');
     
-    // Remove the file extension if it's an image, but keep it for other types like PDF
-    const lastDot = publicIdWithVersionAndFolder.lastIndexOf('.');
-    if (lastDot === -1) return publicIdWithVersionAndFolder;
-
-    const extension = publicIdWithVersionAndFolder.substring(lastDot + 1).toLowerCase();
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-    if (imageExtensions.includes(extension)) {
-        return publicIdWithVersionAndFolder.substring(0, lastDot);
+    // For images, we remove the extension. For other types like 'raw' (PDFs), we keep it.
+    if (resourceType === 'image') {
+        const lastDot = publicIdWithVersionAndFolder.lastIndexOf('.');
+        if (lastDot !== -1) {
+            return publicIdWithVersionAndFolder.substring(0, lastDot);
+        }
     }
     
     return publicIdWithVersionAndFolder;
