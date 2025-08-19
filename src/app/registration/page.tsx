@@ -348,7 +348,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                   </AlertDescription>
               </Alert>
 
-              <Button onClick={() => window.close()} className="mt-8" variant="destructive">
+              <Button onClick={() => window.location.href = '/registration'} className="mt-8" variant="destructive">
                   <X className="mr-2" /> Close Page
               </Button>
           </div>
