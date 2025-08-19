@@ -144,49 +144,60 @@ export default function RegistrationsPage() {
                     const pageWidth = doc.internal.pageSize.getWidth();
                     const pageHeight = doc.internal.pageSize.getHeight();
                     const contentWidth = pageWidth - (pageMargin * 2);
-                    const contentHeight = pageHeight - topMargin - bottomMargin;
                     
-                    const numCols = Math.min(4, Math.ceil(Math.sqrt(participantsWithId.length)));
-                    const numRows = Math.ceil(participantsWithId.length / numCols);
+                    // Total height available for images
+                    let totalImageHeight = 0;
+                    const images = [];
 
-                    const textHeight = 5;
-                    const availableImgHeight = (contentHeight - (gap * (numRows - 1)) - (textHeight * numRows)) / numRows;
-                    const imgWidth = (contentWidth - (gap * (numCols - 1))) / numCols;
-                    const imgHeight = Math.min(availableImgHeight, imgWidth * 1.5);
-
-                    let yPos = topMargin;
-                    
-                    for (let row = 0; row < numRows; row++) {
-                        let xPos = pageMargin;
-                        for (let col = 0; col < numCols; col++) {
-                            const imgIndex = row * numCols + col;
-                            if (imgIndex >= participantsWithId.length) break;
-
-                            const participant = participantsWithId[imgIndex];
-                            if (participant.idCardUrl) {
-                                try {
-                                    const response = await fetch(participant.idCardUrl);
-                                    const blob = await response.blob();
-                                    const reader = new FileReader();
-                                    const dataUrl = await new Promise<string>(resolve => {
-                                        reader.onload = (e) => resolve(e.target?.result as string);
-                                        reader.readAsDataURL(blob);
-                                    });
-
-                                    doc.setFontSize(8);
-                                    doc.text(participant.name, xPos, yPos, { maxWidth: imgWidth, align: 'center' });
-                                    doc.addImage(dataUrl, 'JPEG', xPos, yPos + textHeight, imgWidth, imgHeight);
-                                    
-                                } catch (e) {
-                                    console.error(`Could not load image for ${participant.name}`, e);
-                                    doc.setFontSize(8);
-                                    doc.text(participant.name, xPos, yPos);
-                                    doc.text('Image load error', xPos, yPos + 10);
-                                }
+                    // First pass: load images and get dimensions
+                    for (const participant of participantsWithId) {
+                        if (participant.idCardUrl) {
+                            try {
+                                const response = await fetch(participant.idCardUrl);
+                                const blob = await response.blob();
+                                const reader = new FileReader();
+                                const dataUrl = await new Promise<string>(resolve => {
+                                    reader.onload = (e) => resolve(e.target?.result as string);
+                                    reader.readAsDataURL(blob);
+                                });
+                                images.push({ dataUrl, name: participant.name });
+                            } catch (e) {
+                                console.error(`Could not load image for ${participant.name}`, e);
+                                images.push({ dataUrl: null, name: participant.name });
                             }
-                            xPos += imgWidth + gap;
                         }
-                        yPos += imgHeight + textHeight + gap;
+                    }
+
+                    // Calculate layout: Aim for 4 columns
+                    const numCols = 4;
+                    const imgWidth = (contentWidth - (gap * (numCols - 1))) / numCols;
+                    const imgHeight = imgWidth * 1.5; // Assuming a 2:3 aspect ratio for ID cards
+                    const textHeight = 5;
+
+                    let xPos = pageMargin;
+                    let yPos = topMargin;
+
+                    for (const image of images) {
+                        if (yPos + imgHeight + textHeight > pageHeight - bottomMargin) {
+                            // This check is simplified, in a real scenario you might need a new page
+                            console.warn("ID cards might overflow the page. Consider a multi-page layout for large numbers of participants.");
+                        }
+
+                        if (image.dataUrl) {
+                            doc.setFontSize(8);
+                            doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
+                            doc.addImage(image.dataUrl, 'JPEG', xPos, yPos + textHeight, imgWidth, imgHeight);
+                        } else {
+                            doc.setFontSize(8);
+                            doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
+                            doc.text('Image error', xPos, yPos + 10);
+                        }
+
+                        xPos += imgWidth + gap;
+                        if (xPos + imgWidth > pageWidth - pageMargin) {
+                            xPos = pageMargin;
+                            yPos += imgHeight + textHeight + gap;
+                        }
                     }
                 }
             }
@@ -293,3 +304,5 @@ export default function RegistrationsPage() {
         </div>
     );
 }
+
+    
