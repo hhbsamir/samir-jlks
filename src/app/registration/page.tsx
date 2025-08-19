@@ -342,8 +342,8 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                               {copied ? 'Copied!' : 'Copy'}
                           </Button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                          <strong className="text-red-600">Important:</strong> Keep this link safe. It is the only way to access and modify your registration details.
+                      <p className="text-xs mt-2 bg-red-100 text-red-700 font-bold p-2 rounded-md">
+                          Important: Keep this link safe. It is the only way to access and modify your registration details.
                       </p>
                   </AlertDescription>
               </Alert>
@@ -568,3 +568,5 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
     </div>
   );
 }
+
+    
