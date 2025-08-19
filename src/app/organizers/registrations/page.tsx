@@ -240,7 +240,7 @@ export default function RegistrationsPage() {
                             <Loader2 className="h-12 w-12 animate-spin text-primary" />
                         </div>
                     ) : registrations.length > 0 ? (
-                        <Accordion type="multiple" className="w-full space-y-4" defaultValue={registrations.map(r => r.id)}>
+                        <Accordion type="multiple" className="w-full space-y-4">
                             {registrations.map(school => {
                                 const schoolInfo = schools.find(s => s.name.toUpperCase() === school.schoolName.toUpperCase());
                                 return (
@@ -314,3 +314,5 @@ export default function RegistrationsPage() {
         </div>
     );
 }
+
+    
