@@ -3,12 +3,19 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gavel, Crown, MoveRight } from 'lucide-react';
+import { Gavel, Crown, MoveRight, Edit, ClipboardList } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
@@ -32,6 +39,33 @@ export default function Home() {
         <NavButtons showBack={false} showHome={false} />
       </div>
 
+      <header className="absolute top-4 right-4">
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button 
+                    variant="outline"
+                    className="rounded-full font-bold h-12 w-24 text-lg border-2 border-primary shadow-lg hover:bg-primary/10"
+                >
+                    More
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+                <DropdownMenuItem asChild>
+                    <Link href="/judges">
+                        <Gavel className="mr-2 h-4 w-4" />
+                        <span>Judge's Portal</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link href="/organizers">
+                        <Crown className="mr-2 h-4 w-4" />
+                        <span>Organizer's Dashboard</span>
+                    </Link>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
       <div className="text-center mb-12 mt-8">
         <div className="animate-fade-in-down">
            <h1 className="text-4xl md:text-6xl font-extrabold font-headline animated-gradient">
@@ -51,35 +85,38 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         <PortalCard
-          href="/judges"
-          icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16" />}
-          title="Judge's Portal"
-          className="from-yellow-400 to-orange-500 text-white"
+          href="/registration"
+          icon={<Edit className="w-10 h-10" />}
+          title="School Registration"
+          description="Register your school for the competition."
+          className="from-blue-500 to-sky-500 text-white"
         />
         <PortalCard
-          href="/organizers"
-          icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16" />}
-          title="Organizer's Dashboard"
-          className="from-purple-500 to-indigo-600 text-white"
+          href="/organizers/school-data"
+          icon={<ClipboardList className="w-10 h-10" />}
+          title="School Data"
+          description="View and download registered school information."
+          className="from-green-500 to-emerald-500 text-white"
         />
       </div>
     </div>
   );
 }
 
-function PortalCard({ href, icon, title, className }: { href: string; icon: React.ReactNode; title: string; className?: string }) {
+function PortalCard({ href, icon, title, description, className }: { href: string; icon: React.ReactNode; title: string; description: string; className?: string }) {
   return (
     <Card className={cn(`group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-0 overflow-hidden bg-gradient-to-br`, className)}>
       <CardHeader className="items-center text-center p-6 sm:p-8">
         <div className="p-4 bg-white/20 rounded-full mb-4 ring-8 ring-white/10 group-hover:animate-pulse transition-all duration-300">
           {icon}
         </div>
-        <CardTitle className="text-2xl sm:text-3xl md:text-4xl">{title}</CardTitle>
+        <CardTitle className="text-2xl sm:text-3xl">{title}</CardTitle>
+        <CardDescription className="text-white/80 text-sm sm:text-base pt-1">{description}</CardDescription>
       </CardHeader>
       <CardContent className="text-center flex flex-col items-center gap-6 p-6 sm:p-8 pt-0">
         <Button asChild className="rounded-full font-bold bg-background/90 text-foreground hover:bg-background" size="lg">
           <Link href={href}>
-            Enter <MoveRight className="ml-2 transition-transform group-hover:translate-x-1" />
+            Proceed <MoveRight className="ml-2 transition-transform group-hover:translate-x-1" />
           </Link>
         </Button>
       </CardContent>
