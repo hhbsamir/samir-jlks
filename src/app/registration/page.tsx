@@ -164,9 +164,11 @@ export default function RegistrationPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [settings, setSettings] = useState<InterschoolCulturalSettings | null>(null);
+  const [loadingSettings, setLoadingSettings] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
+        setLoadingSettings(true);
         try {
             const settingsDocRef = doc(db, 'settings', 'interschoolCulturalSettings');
             const settingsDoc = await getDoc(settingsDocRef);
@@ -175,10 +177,13 @@ export default function RegistrationPage() {
             }
         } catch (error) {
             console.error("Error fetching settings:", error);
+            toast({ title: "Error", description: "Could not load settings information."});
+        } finally {
+            setLoadingSettings(false);
         }
     };
     fetchSettings();
-  }, []);
+  }, [toast]);
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
@@ -253,9 +258,11 @@ export default function RegistrationPage() {
 
   const getDownloadFilename = () => {
     const originalName = settings?.registrationPdfName;
-    if (originalName) {
+    if (originalName && typeof originalName === 'string') {
+        // Ensure the filename ends with .pdf
         return originalName.toLowerCase().endsWith('.pdf') ? originalName : `${originalName}.pdf`;
     }
+    // Provide a generic fallback name with the correct extension
     return 'circular.pdf';
   }
 
@@ -270,7 +277,12 @@ export default function RegistrationPage() {
             <p className="text-muted-foreground mt-2">Enter your school's details to participate</p>
         </div>
 
-        {settings?.registrationPdfUrl && (
+        {loadingSettings ? (
+            <div className="mb-8 p-4 h-20 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center">
+                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                 <p className="font-semibold text-lg text-primary">Loading circular...</p>
+            </div>
+        ) : settings?.registrationPdfUrl && (
             <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
                  <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
                  <Button asChild>
@@ -439,3 +451,5 @@ export default function RegistrationPage() {
     </div>
   );
 }
+
+    
