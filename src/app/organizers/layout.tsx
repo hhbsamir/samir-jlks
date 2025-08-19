@@ -2,25 +2,30 @@
 "use client";
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import NavLinks from '@/components/organizer/nav-links';
 import { Button } from '@/components/ui/button';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { app, db } from '@/lib/firebase';
-import { Loader2, Menu, Home } from 'lucide-react';
+import { Loader2, Menu, Home, Trophy, School, Users, Shapes, Ticket, ClipboardList, Settings, Landmark, Star, Building, Briefcase } from 'lucide-react';
 import LoginPage from './login/page';
 import { collection, onSnapshot, Timestamp, query, orderBy } from 'firebase/firestore';
-import type { School, CompetitionCategory, Score, Feedback, Judge, Registration } from '@/lib/data';
+import type { School as AppSchool, CompetitionCategory, Score, Feedback, Judge, Registration } from '@/lib/data';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import Link from 'next/link';
 
 // 1. Create a context to hold all our data
 interface CompetitionDataContextType {
-  schools: School[];
+  schools: AppSchool[];
   categories: CompetitionCategory[];
   scores: Score[];
   feedbacks: Feedback[];
@@ -41,7 +46,7 @@ export const useCompetitionData = () => {
 }
 
 function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
-  const [schools, setSchools] = useState<School[]>([]);
+  const [schools, setSchools] = useState<AppSchool[]>([]);
   const [categories, setCategories] = useState<CompetitionCategory[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
@@ -53,7 +58,7 @@ function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
     // Set up listeners for all our collections
     const unsubscribes = [
       onSnapshot(collection(db, 'schools'), (snapshot) => {
-        setSchools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as School)));
+        setSchools(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppSchool)));
         setLoading(false);
       }),
       onSnapshot(collection(db, 'categories'), (snapshot) => {
@@ -144,22 +149,69 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
                           <Menu className="h-6 w-6" />
                       </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
+                  <DropdownMenuContent className="w-56" align="start">
                       <DropdownMenuItem asChild>
                           <Link href="/">
                               <Home className="mr-2 h-4 w-4" />
                               <span>Go to Home Page</span>
                           </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <Landmark className="mr-2 h-4 w-4" />
+                                <span>Aug15/Jan26</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem asChild><Link href="/organizers"><Trophy className="mr-2 h-4 w-4" />Leaderboard</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href="/organizers/schools"><School className="mr-2 h-4 w-4" />Schools</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href="/organizers/judges"><Users className="mr-2 h-4 w-4" />Judges</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href="/organizers/categories"><Shapes className="mr-2 h-4 w-4" />Categories</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href="/organizers/lottery"><Ticket className="mr-2 h-4 w-4" />Lottery</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href="/organizers/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <Star className="mr-2 h-4 w-4" />
+                                <span>Interschool Cultural</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem asChild><Link href="/organizers/registrations"><ClipboardList className="mr-2 h-4 w-4" />Registrations</Link></DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <Building className="mr-2 h-4 w-4" />
+                                <span>CDF</span>
+                            </DropdownMenuSubTrigger>
+                             <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem>nmp</DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                         <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                 <Briefcase className="mr-2 h-4 w-4" />
+                                <span>XYZ</span>
+                            </DropdownMenuSubTrigger>
+                             <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem>abc</DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
                   </DropdownMenuContent>
               </DropdownMenu>
               <div className="flex-1 flex justify-center">
                     <h1 className="font-headline text-2xl sm:text-3xl font-bold">🙏Organizer's Dashboard🙏</h1>
               </div>
               <div className="w-12"></div>
-            </div>
-            <div className="w-full">
-              <NavLinks />
             </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
