@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,12 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Upload } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Upload, Download } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
+import type { InterschoolCulturalSettings } from '@/lib/data';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
@@ -162,6 +163,23 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
 export default function RegistrationPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [settings, setSettings] = useState<InterschoolCulturalSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+        try {
+            const settingsDocRef = doc(db, 'settings', 'interschoolCulturalSettings');
+            const settingsDoc = await getDoc(settingsDocRef);
+            if (settingsDoc.exists()) {
+                setSettings(settingsDoc.data() as InterschoolCulturalSettings);
+            }
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+        }
+    };
+    fetchSettings();
+  }, []);
+
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -243,6 +261,19 @@ export default function RegistrationPage() {
             <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">Registration for Inter-School Cultural Meet</h1>
             <p className="text-muted-foreground mt-2">Enter your school's details to participate</p>
         </div>
+
+        {settings?.registrationPdfUrl && (
+            <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+                 <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
+                 <Button asChild>
+                    <a href={settings.registrationPdfUrl} target="_blank" rel="noopener noreferrer">
+                       <Download className="mr-2 h-4 w-4" />
+                       Download Circular
+                    </a>
+                 </Button>
+            </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Card>
@@ -400,5 +431,3 @@ export default function RegistrationPage() {
     </div>
   );
 }
-
-    
