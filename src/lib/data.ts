@@ -81,6 +81,7 @@ export interface Registration {
     bankDetails: BankDetails;
     contactPerson: ContactPerson;
     createdAt: Timestamp;
+    updatedAt?: Timestamp;
 }
 
 
@@ -98,3 +99,4 @@ export const initialScores: Score[] = [
 
 // This function is no longer needed for PDF management and is being removed to avoid future issues.
 
+    

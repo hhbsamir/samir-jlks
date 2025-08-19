@@ -11,13 +11,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Upload, Download } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Upload, Download, Copy, Check, ArrowLeft } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
-import { addDoc, collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, Timestamp } from 'firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Image from 'next/image';
-import type { InterschoolCulturalSettings } from '@/lib/data';
+import type { InterschoolCulturalSettings, Registration } from '@/lib/data';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Link from 'next/link';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
@@ -160,11 +162,31 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
     );
 }
 
-export default function RegistrationPage() {
+export default function RegistrationPage({ editId }: { editId?: string }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!editId);
   const [settings, setSettings] = useState<InterschoolCulturalSettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [newRegistrationId, setNewRegistrationId] = useState('');
+
+  const form = useForm<RegistrationFormValues>({
+    resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      schoolName: '',
+      participants: [{ name: '', idCardUrl: '' }],
+      accountHolderName: '',
+      bankName: '',
+      accountNumber: '',
+      confirmAccountNumber: '',
+      ifscCode: '',
+      upiId: '',
+      contactName: '',
+      designation: '',
+      mobileNumber: '+91',
+    },
+  });
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -184,23 +206,42 @@ export default function RegistrationPage() {
     };
     fetchSettings();
   }, [toast]);
+  
+  useEffect(() => {
+      const fetchRegistrationData = async () => {
+          if (!editId) return;
+          setIsLoading(true);
+          try {
+              const docRef = doc(db, 'registrations', editId);
+              const docSnap = await getDoc(docRef);
+              if (docSnap.exists()) {
+                  const data = docSnap.data() as Registration;
+                  form.reset({
+                      schoolName: data.schoolName,
+                      participants: data.participants,
+                      accountHolderName: data.bankDetails.accountHolderName,
+                      bankName: data.bankDetails.bankName,
+                      accountNumber: data.bankDetails.accountNumber,
+                      confirmAccountNumber: data.bankDetails.accountNumber, // Pre-fill confirmation
+                      ifscCode: data.bankDetails.ifscCode,
+                      upiId: data.bankDetails.upiId,
+                      contactName: data.contactPerson.contactName,
+                      designation: data.contactPerson.designation,
+                      mobileNumber: data.contactPerson.mobileNumber,
+                  });
+              } else {
+                  toast({ title: "Not Found", description: "The registration you are trying to edit does not exist.", variant: "destructive" });
+              }
+          } catch(e) {
+              toast({ title: "Error", description: "Failed to load registration data.", variant: "destructive" });
+          } finally {
+              setIsLoading(false);
+          }
+      };
 
-  const form = useForm<RegistrationFormValues>({
-    resolver: zodResolver(registrationSchema),
-    defaultValues: {
-      schoolName: '',
-      participants: [{ name: '', idCardUrl: '' }],
-      accountHolderName: '',
-      bankName: '',
-      accountNumber: '',
-      confirmAccountNumber: '',
-      ifscCode: '',
-      upiId: '',
-      contactName: '',
-      designation: '',
-      mobileNumber: '+91',
-    },
-  });
+      fetchRegistrationData();
+  }, [editId, form, toast]);
+
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
@@ -216,7 +257,6 @@ export default function RegistrationPage() {
     setIsSubmitting(true);
     
     try {
-        // Prepare data for Firestore
         const registrationData = {
             schoolName: data.schoolName,
             participants: data.participants,
@@ -232,17 +272,25 @@ export default function RegistrationPage() {
                 designation: data.designation,
                 mobileNumber: data.mobileNumber,
             },
-            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
         };
 
-        // Save to Firestore
-        await addDoc(collection(db, 'registrations'), registrationData);
-        
-        toast({
-          title: 'Registration Submitted!',
-          description: 'Thank you for registering. We will be in touch shortly.',
-        });
-        form.reset();
+        if (editId) {
+            const docRef = doc(db, 'registrations', editId);
+            await updateDoc(docRef, registrationData);
+            toast({
+              title: 'Registration Updated!',
+              description: 'Your changes have been saved successfully.',
+            });
+
+        } else {
+            const docRef = await addDoc(collection(db, 'registrations'), {
+                ...registrationData,
+                createdAt: serverTimestamp(),
+            });
+            setNewRegistrationId(docRef.id);
+            setSubmissionSuccess(true);
+        }
 
     } catch (error) {
         console.error("Error submitting registration: ", error);
@@ -259,11 +307,69 @@ export default function RegistrationPage() {
   const getDownloadFilename = () => {
     const originalName = settings?.registrationPdfName;
     if (originalName && typeof originalName === 'string') {
-        // Ensure the filename ends with .pdf
         return originalName.toLowerCase().endsWith('.pdf') ? originalName : `${originalName}.pdf`;
     }
-    // Provide a generic fallback name with the correct extension
     return 'circular.pdf';
+  }
+
+  const SuccessScreen = () => {
+      const editUrl = `${window.location.origin}/registration/edit/${newRegistrationId}`;
+      const [copied, setCopied] = useState(false);
+
+      const handleCopy = () => {
+          navigator.clipboard.writeText(editUrl);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+      };
+
+      return (
+          <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-green-500 rounded-lg bg-green-50">
+              <Check className="w-16 h-16 text-green-600 bg-white rounded-full p-2 shadow-lg mb-4" />
+              <h2 className="font-headline text-2xl sm:text-3xl font-bold text-green-800">Registration Submitted Successfully!</h2>
+              <p className="mt-2 text-green-700">Thank you for registering. Please save the link below to edit your submission later.</p>
+              
+              <Alert className="mt-6 text-left bg-white">
+                  <AlertTitle className="font-bold">Your Unique Edit Link</AlertTitle>
+                  <AlertDescription>
+                      <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
+                          <Input readOnly value={editUrl} className="bg-gray-100" />
+                          <Button onClick={handleCopy} variant="outline" className="w-full sm:w-auto">
+                              {copied ? <Check className="mr-2"/> : <Copy className="mr-2"/>}
+                              {copied ? 'Copied!' : 'Copy'}
+                          </Button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                          <strong>Important:</strong> Keep this link safe. It is the only way to access and modify your registration details.
+                      </p>
+                  </AlertDescription>
+              </Alert>
+
+              <Button asChild className="mt-8">
+                  <Link href="/registration"><ArrowLeft className="mr-2" /> Submit Another Registration</Link>
+              </Button>
+          </div>
+      );
+  }
+
+  if (submissionSuccess) {
+      return (
+        <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8 flex items-center justify-center">
+             <div className="max-w-4xl mx-auto w-full">
+                <SuccessScreen />
+            </div>
+        </div>
+      );
+  }
+
+  if (isLoading) {
+    return (
+     <div className="flex items-center justify-center min-h-screen bg-background">
+         <div className="text-center">
+             <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+             <p className="mt-4 text-muted-foreground">Loading Registration Form...</p>
+         </div>
+     </div>
+   );
   }
 
   return (
@@ -273,8 +379,12 @@ export default function RegistrationPage() {
       </div>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8 pt-12 sm:pt-0">
-            <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">Registration for Inter-School Cultural Meet</h1>
-            <p className="text-muted-foreground mt-2">Enter your school's details to participate</p>
+            <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
+              {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              {editId ? 'Modify the details below and click update.' : "Enter your school's details to participate"}
+            </p>
         </div>
 
         {loadingSettings ? (
@@ -395,7 +505,7 @@ export default function RegistrationPage() {
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a bank" />
-                              </SelectTrigger>
+                              </Trigger>
                             </FormControl>
                             <SelectContent>
                               {indianBankNames.map((bank) => (
@@ -442,7 +552,7 @@ export default function RegistrationPage() {
             <div className="flex justify-end">
                 <Button type="submit" size="lg" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Submit Registration
+                    {editId ? 'Update Registration' : 'Submit Registration'}
                 </Button>
             </div>
           </form>
