@@ -67,8 +67,7 @@ export default function InterschoolCulturalSettingsClient() {
     }, [fetchSettings]);
 
     const handleSettingsUpdate = async (updateData: Partial<InterschoolCulturalSettings>) => {
-        // Correctly merge new data with existing state to avoid data loss
-        const newSettings = { ...(settings || { id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '', registrationPdfRemarks: '' }), ...updateData };
+        const newSettings = { ...(settings || { id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '', registrationPdfPublicId: '', registrationPdfRemarks: '' }), ...updateData };
         setSettings(newSettings);
         
         try {
@@ -81,7 +80,6 @@ export default function InterschoolCulturalSettingsClient() {
                 description: `Could not save settings. Please try again.`,
                 variant: "destructive"
             });
-            // Revert state on error if needed
             fetchSettings(); 
         }
     };
