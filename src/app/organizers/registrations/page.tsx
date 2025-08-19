@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useCompetitionData } from '@/app/organizers/layout';
@@ -14,6 +14,10 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { collection, getDocs, writeBatch } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -23,6 +27,7 @@ interface jsPDFWithAutoTable extends jsPDF {
 export default function RegistrationsPage() {
     const { registrations, schools, loading } = useCompetitionData();
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const { toast } = useToast();
 
     const handleDownloadBankExcel = () => {
@@ -192,7 +197,7 @@ export default function RegistrationsPage() {
                         if (image.dataUrl) {
                             doc.setFontSize(8);
                             doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
-                            doc.addImage(image.dataUrl, 'JPEG', xPos, yPos + textHeight, imgWidth, imgHeight);
+                            doc.addImage(image.dataUrl, 'JPEG', xPos, textHeight, imgWidth, imgHeight);
                         } else {
                             doc.setFontSize(8);
                             doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
@@ -217,6 +222,38 @@ export default function RegistrationsPage() {
             setIsDownloading(false);
         }
     };
+    
+    const handleDeleteAllRegistrations = async () => {
+        setIsDeleting(true);
+        try {
+            const registrationsSnapshot = await getDocs(collection(db, "registrations"));
+            if (registrationsSnapshot.empty) {
+                toast({ title: "No Registrations Found", description: "There are no registrations to delete." });
+                return;
+            }
+            
+            const batch = writeBatch(db);
+            registrationsSnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+
+            await batch.commit();
+            
+            toast({
+                title: "All Registrations Deleted",
+                description: "All registration records have been successfully removed."
+            });
+        } catch(error) {
+            console.error("Error deleting all registrations: ", error);
+            toast({
+                title: "Deletion Failed",
+                description: "An error occurred while trying to delete all registrations.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
 
     return (
@@ -224,15 +261,41 @@ export default function RegistrationsPage() {
             <div className="max-w-7xl mx-auto">
                 <PageHeader title="Registered School Data" />
                 <div className="flex flex-wrap justify-start gap-2 mb-8">
-                    <Button onClick={handleDownloadAllPdf} variant="outline" disabled={isDownloading || registrations.length === 0}>
+                    <Button onClick={handleDownloadAllPdf} variant="outline" disabled={isDownloading || isDeleting || registrations.length === 0}>
                         {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Download className="mr-2 h-4 w-4" />} Download All (PDF)
                     </Button>
-                    <Button onClick={handleDownloadBankPdf} disabled={isDownloading || registrations.length === 0}>
+                    <Button onClick={handleDownloadBankPdf} disabled={isDownloading || isDeleting || registrations.length === 0}>
                         {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileText className="mr-2 h-4 w-4" />} Bank Details (PDF)
                     </Button>
-                    <Button onClick={handleDownloadBankExcel} disabled={isDownloading || registrations.length === 0}>
+                    <Button onClick={handleDownloadBankExcel} disabled={isDownloading || isDeleting || registrations.length === 0}>
                         {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <FileSpreadsheet className="mr-2 h-4 w-4" />} Bank Details (Excel)
                     </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" disabled={isDeleting || registrations.length === 0}>
+                                {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4" />} Delete All
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete ALL registration data.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleDeleteAllRegistrations}
+                                    disabled={isDeleting}
+                                    className="bg-destructive hover:bg-destructive/90"
+                                >
+                                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                                    Yes, Delete All Registrations
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
                 <div className="space-y-4">
                      {loading ? (
@@ -313,6 +376,5 @@ export default function RegistrationsPage() {
             </div>
         </div>
     );
-}
 
     
