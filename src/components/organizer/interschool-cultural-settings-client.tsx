@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, XCircle, File as FileIcon } from 'lucide-react';
 import type { InterschoolCulturalSettings } from '@/lib/data';
@@ -18,7 +18,7 @@ const SETTINGS_DOC_ID = 'interschoolCulturalSettings';
 async function deleteCloudinaryFile(publicId: string) {
     try {
         if (!publicId) {
-            throw new Error("Could not extract public_id from URL");
+            throw new Error("No public_id provided");
         }
         const response = await fetch('/api/delete', {
             method: 'POST',
@@ -67,11 +67,12 @@ export default function InterschoolCulturalSettingsClient() {
     }, [fetchSettings]);
 
     const handleSettingsUpdate = async (updateData: Partial<InterschoolCulturalSettings>) => {
+        // Correctly merge new data with existing state to avoid data loss
         const newSettings = { ...(settings || { id: SETTINGS_DOC_ID, registrationPdfUrl: '', registrationPdfName: '', registrationPdfRemarks: '' }), ...updateData };
         setSettings(newSettings);
+        
         try {
             const docRef = doc(db, 'settings', SETTINGS_DOC_ID);
-            // Use setDoc with merge:true to create or update the document
             await setDoc(docRef, updateData, { merge: true });
         } catch (error) {
             console.error(`Error saving settings:`, error);
@@ -80,6 +81,8 @@ export default function InterschoolCulturalSettingsClient() {
                 description: `Could not save settings. Please try again.`,
                 variant: "destructive"
             });
+            // Revert state on error if needed
+            fetchSettings(); 
         }
     };
     
@@ -101,7 +104,6 @@ export default function InterschoolCulturalSettingsClient() {
         formData.append('file', file);
 
         try {
-            // If there's an existing PDF, delete it from Cloudinary first.
             if (settings?.registrationPdfPublicId) {
                 await deleteCloudinaryFile(settings.registrationPdfPublicId);
             }
@@ -138,7 +140,7 @@ export default function InterschoolCulturalSettingsClient() {
         setIsRemoving(true);
         const success = await deleteCloudinaryFile(settings.registrationPdfPublicId);
         if (success) {
-            await handleSettingsUpdate({ registrationPdfUrl: '', registrationPdfName: '', registrationPdfPublicId: '' });
+            await handleSettingsUpdate({ registrationPdfUrl: '', registrationPdfName: '', registrationPdfPublicId: '', registrationPdfRemarks: '' });
             toast({ title: 'Success', description: 'PDF removed.' });
         } else {
             toast({ title: 'Error', description: 'Failed to remove PDF.', variant: 'destructive'});
