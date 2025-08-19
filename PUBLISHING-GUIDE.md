@@ -56,6 +56,12 @@ To protect your data, you need to set up Firestore Security Rules. These rules d
           return request.auth != null;
         }
 
+        // Public users can submit a registration, but only organizers can read them.
+        match /registrations/{registrationId} {
+            allow create: if true;
+            allow read, write, delete: if isOrganizer();
+        }
+
         // Schools can be read by anyone, but only created, updated,
         // or deleted by an organizer.
         match /schools/{schoolId} {
