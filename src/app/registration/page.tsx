@@ -422,7 +422,11 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                     <FormItem>
                       <FormLabel>School Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter school name" {...field} />
+                        <Input 
+                            placeholder="Enter school name" 
+                            {...field} 
+                            onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -568,5 +572,3 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
     </div>
   );
 }
-
-    
