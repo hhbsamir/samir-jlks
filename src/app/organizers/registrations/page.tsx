@@ -145,11 +145,14 @@ export default function RegistrationsPage() {
                     const pageHeight = doc.internal.pageSize.getHeight();
                     const contentWidth = pageWidth - (pageMargin * 2);
                     const contentHeight = pageHeight - topMargin - bottomMargin;
-                    const numCols = Math.ceil(Math.sqrt(participantsWithId.length));
+                    
+                    const numCols = Math.min(4, Math.ceil(Math.sqrt(participantsWithId.length)));
                     const numRows = Math.ceil(participantsWithId.length / numCols);
+
                     const textHeight = 5;
-                    const imgWidth = (contentWidth - (gap * (numCols -1))) / numCols;
-                    const imgHeight = (contentHeight - (gap * (numRows - 1)) - (textHeight * numRows)) / numRows;
+                    const availableImgHeight = (contentHeight - (gap * (numRows - 1)) - (textHeight * numRows)) / numRows;
+                    const imgWidth = (contentWidth - (gap * (numCols - 1))) / numCols;
+                    const imgHeight = Math.min(availableImgHeight, imgWidth * 1.5);
 
                     let yPos = topMargin;
                     
@@ -220,9 +223,9 @@ export default function RegistrationsPage() {
                             <Loader2 className="h-12 w-12 animate-spin text-primary" />
                         </div>
                     ) : registrations.length > 0 ? (
-                        <Accordion type="multiple" className="w-full space-y-4">
+                        <Accordion type="multiple" className="w-full space-y-4" defaultValue={registrations.map(r => r.id)}>
                             {registrations.map(school => {
-                                const schoolInfo = schools.find(s => s.name === school.schoolName);
+                                const schoolInfo = schools.find(s => s.name.toUpperCase() === school.schoolName.toUpperCase());
                                 return (
                                     <AccordionItem value={school.id} key={school.id}>
                                         <Card>
