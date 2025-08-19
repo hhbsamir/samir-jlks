@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { db } from '@/lib/firebase';
 import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Loader2, Download } from 'lucide-react';
+import { Trash2, Loader2, Download, Upload, XCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import type { School, CompetitionCategory, Score, Feedback, Judge, SchoolCategory, ReportSettings } from '@/lib/data';
+import type { School, CompetitionCategory, Score, Feedback, Judge, SchoolCategory, ReportSettings, HomePageContent } from '@/lib/data';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
+import { getPublicIdFromUrl } from '@/lib/data';
+import Image from 'next/image';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { User } from 'lucide-react';
 
 // Extend jsPDF with autoTable
 interface jsPDFWithAutoTable extends jsPDF {
@@ -23,6 +27,8 @@ interface jsPDFWithAutoTable extends jsPDF {
 }
 
 const REMARKS_DOC_ID = 'reportSettings';
+const HOME_CONTENT_DOC_ID = 'homePageContent';
+
 
 // Function to remove emojis from a string
 const removeEmojis = (text: string) => {
@@ -31,6 +37,28 @@ const removeEmojis = (text: string) => {
   return text.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
 };
 
+async function deleteCloudinaryImage(imageUrl: string) {
+    try {
+        const publicId = getPublicIdFromUrl(imageUrl);
+        if (!publicId) {
+            throw new Error("Could not extract public_id from URL");
+        }
+        const response = await fetch('/api/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ publicId }),
+        });
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to delete image from Cloudinary.');
+        }
+        return true;
+    } catch (error) {
+        console.error('Error deleting image from Cloudinary:', error);
+        return false;
+    }
+}
+
 
 export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -38,28 +66,114 @@ export default function SettingsPage() {
   const [generatingSummaryReport, setGeneratingSummaryReport] = useState(false);
   const [generatingFeedbackReport, setGeneratingFeedbackReport] = useState(false);
   const [remarks, setRemarks] = useState('');
+  const [homeContent, setHomeContent] = useState<HomePageContent>({ id: HOME_CONTENT_DOC_ID, imageUrl: '', note: '' });
+  const [isUploading, setIsUploading] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
-  const fetchRemarks = useCallback(async () => {
+  const fetchSettings = useCallback(async () => {
     try {
         const remarksDocRef = doc(db, 'settings', REMARKS_DOC_ID);
         const remarksDoc = await getDoc(remarksDocRef);
         if (remarksDoc.exists()) {
             setRemarks(remarksDoc.data().remarks);
         }
+        
+        const homeContentDocRef = doc(db, 'settings', HOME_CONTENT_DOC_ID);
+        const homeContentDoc = await getDoc(homeContentDocRef);
+        if (homeContentDoc.exists()) {
+            setHomeContent(homeContentDoc.data() as HomePageContent);
+        }
+
     } catch (error) {
-        console.error("Error fetching remarks:", error);
+        console.error("Error fetching settings:", error);
         toast({
             title: "Error",
-            description: "Could not load saved remarks.",
+            description: "Could not load saved settings.",
             variant: "destructive"
         });
     }
   }, [toast]);
 
   useEffect(() => {
-    fetchRemarks();
-  }, [fetchRemarks]);
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const handleSettingsUpdate = async (field: keyof HomePageContent, value: string) => {
+    const newContent = { ...homeContent, [field]: value };
+    setHomeContent(newContent);
+     try {
+        const docRef = doc(db, 'settings', HOME_CONTENT_DOC_ID);
+        await setDoc(docRef, { [field]: value }, { merge: true });
+    } catch (error) {
+        console.error(`Error saving ${field}:`, error);
+        toast({
+            title: "Error",
+            description: `Could not save ${field}. Please try again.`,
+            variant: "destructive"
+        });
+    }
+  }
+  
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 100 * 1024) { // 100 KB size limit
+        toast({
+            title: 'File Too Large',
+            description: 'Please upload an image smaller than 100 KB.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        if(homeContent.imageUrl) {
+          await deleteCloudinaryImage(homeContent.imageUrl);
+        }
+        await handleSettingsUpdate('imageUrl', data.url);
+        toast({ title: 'Photo uploaded successfully!' });
+      } else {
+        throw new Error(data.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Could not upload the photo. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!homeContent.imageUrl) return;
+    setIsRemoving(true);
+    const success = await deleteCloudinaryImage(homeContent.imageUrl);
+    if (success) {
+      await handleSettingsUpdate('imageUrl', '');
+      toast({ title: 'Success', description: 'Photo removed.' });
+    } else {
+      toast({ title: 'Error', description: 'Failed to remove photo from Cloudinary.', variant: 'destructive'});
+    }
+    setIsRemoving(false);
+  };
+
 
   const handleRemarksChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newRemarks = e.target.value;
@@ -815,7 +929,54 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" />
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Home Page Content</CardTitle>
+            <CardDescription>
+                Upload a photo and add a note to be displayed on the public home page.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+                <Label>Home Page Photo</Label>
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-24 w-24 border">
+                     {homeContent.imageUrl && <AvatarImage src={homeContent.imageUrl} alt="Home page photo" />}
+                    <AvatarFallback>
+                      <User className="h-12 w-12 text-muted-foreground" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col gap-2">
+                    <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
+                    <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading || isRemoving}>
+                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                        {isUploading ? 'Uploading...' : 'Upload Photo'}
+                    </Button>
+                    {homeContent.imageUrl && (
+                        <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage} disabled={isUploading || isRemoving}>
+                            {isRemoving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
+                            Remove
+                        </Button>
+                    )}
+                    <p className="text-xs text-muted-foreground">Max file size: 100 KB.</p>
+                  </div>
+                </div>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="note">Home Page Note</Label>
+                <Textarea 
+                    id="note"
+                    placeholder="e.g., A warm welcome to all participants..."
+                    value={homeContent.note}
+                    onChange={(e) => handleSettingsUpdate('note', e.target.value)}
+                    rows={4}
+                />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Generate Final Report</CardTitle>
@@ -861,7 +1022,8 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-destructive bg-destructive/10">
+        
+        <Card className="border-destructive bg-destructive/10 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-destructive">Reset Competition Data</CardTitle>
             <CardDescription className="text-destructive/80">

@@ -3,12 +3,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gavel, Crown, MoveRight, Edit, ClipboardList, Menu } from 'lucide-react';
-import { NavButtons } from '@/components/common/NavButtons';
+import { Gavel, Crown, Edit, Menu } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,11 +13,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import Image from 'next/image';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { HomePageContent } from '@/lib/data';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<string | null>(null);
+  const [homePageContent, setHomePageContent] = useState<HomePageContent | null>(null);
+  const [loadingContent, setLoadingContent] = useState(true);
 
   useEffect(() => {
     const now = new Date();
@@ -31,7 +35,20 @@ export default function Home() {
         setCurrentTime(format(new Date(), 'hh:mm:ss a'));
     }, 1000)
 
-    return () => clearInterval(timer);
+    const contentDocRef = doc(db, 'settings', 'homePageContent');
+    const unsubscribe = onSnapshot(contentDocRef, (doc) => {
+        if (doc.exists()) {
+            setHomePageContent(doc.data() as HomePageContent);
+        } else {
+            setHomePageContent(null);
+        }
+        setLoadingContent(false);
+    });
+
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
   }, []);
 
   return (
@@ -88,27 +105,34 @@ export default function Home() {
         </div>
       </div>
 
-    </div>
-  );
-}
+       <div className="flex flex-col items-center gap-6 mt-8 animate-fade-in-up">
+        {loadingContent ? (
+          <>
+            <Skeleton className="h-48 w-48 rounded-full" />
+            <Skeleton className="h-8 w-80 rounded-md" />
+          </>
+        ) : homePageContent && (
+          <>
+            {homePageContent.imageUrl && (
+              <div className="relative h-48 w-48 rounded-full shadow-2xl shadow-primary/20 overflow-hidden ring-4 ring-primary/20">
+                <Image
+                  src={homePageContent.imageUrl}
+                  alt="Special photo"
+                  layout="fill"
+                  objectFit="cover"
+                  className="transform transition-transform duration-500 hover:scale-110"
+                />
+              </div>
+            )}
+            {homePageContent.note && (
+              <div className="bg-background/70 backdrop-blur-sm p-4 rounded-lg border max-w-lg text-center">
+                 <p className="text-lg font-body text-foreground/90">{homePageContent.note}</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
-function PortalCard({ href, icon, title, description, className }: { href: string; icon: React.ReactNode; title: string; description: string; className?: string }) {
-  return (
-    <Card className={cn(`group transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20 border-0 overflow-hidden bg-gradient-to-br`, className)}>
-      <CardHeader className="items-center text-center p-6 sm:p-8">
-        <div className="p-4 bg-white/20 rounded-full mb-4 ring-8 ring-white/10 group-hover:animate-pulse transition-all duration-300">
-          {icon}
-        </div>
-        <CardTitle className="text-2xl sm:text-3xl">{title}</CardTitle>
-        <CardDescription className="text-white/80 text-sm sm:text-base pt-1">{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="text-center flex flex-col items-center gap-6 p-6 sm:p-8 pt-0">
-        <Button asChild className="rounded-full font-bold bg-background/90 text-foreground hover:bg-background" size="lg">
-          <Link href={href}>
-            Proceed <MoveRight className="ml-2 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

@@ -42,6 +42,12 @@ export type ReportSettings = {
     remarks: string;
 }
 
+export type HomePageContent = {
+    id: string;
+    imageUrl: string;
+    note: string;
+}
+
 export interface Participant {
   name: string;
   idCardUrl?: string;
