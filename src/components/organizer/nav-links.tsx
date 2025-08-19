@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const navItems = [
   { href: '/organizers', label: 'Leaderboard', icon: Trophy, color: 'text-yellow-500', bgColor: 'bg-yellow-400/10' },
+  { href: '/organizers/registrations', label: 'Registrations', icon: ClipboardList, color: 'text-indigo-500', bgColor: 'bg-indigo-400/10' },
   { href: '/organizers/schools', label: 'Schools', icon: School, color: 'text-blue-500', bgColor: 'bg-blue-400/10' },
   { href: '/organizers/judges', label: 'Judges', icon: Users, color: 'text-green-500', bgColor: 'bg-green-400/10' },
   { href: '/organizers/categories', label: 'Categories', icon: Shapes, color: 'text-purple-500', bgColor: 'bg-purple-400/10' },
@@ -26,7 +27,7 @@ export default function NavLinks() {
     <TooltipProvider>
       <nav className="flex items-center justify-center gap-1 sm:gap-4 overflow-x-auto p-1">
           {navItems.map(item => (
-              <Tooltip key={item.href}>
+              <Tooltip key={item.label}>
                   <TooltipTrigger asChild>
                       <Button
                           asChild

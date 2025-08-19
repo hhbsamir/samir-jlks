@@ -83,20 +83,13 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-8 w-full max-w-lg">
         <PortalCard
           href="/registration"
           icon={<Edit className="w-10 h-10" />}
           title="School Registration"
           description="Register your school for the competition."
           className="from-blue-500 to-sky-500 text-white"
-        />
-        <PortalCard
-          href="/school-data"
-          icon={<ClipboardList className="w-10 h-10" />}
-          title="School Data"
-          description="View and download registered school information."
-          className="from-green-500 to-emerald-500 text-white"
         />
       </div>
     </div>
