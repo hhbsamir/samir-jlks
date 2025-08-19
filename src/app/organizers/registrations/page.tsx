@@ -248,10 +248,14 @@ export default function RegistrationsPage() {
                                         <Card>
                                             <AccordionTrigger className="w-full p-0 hover:no-underline">
                                                 <CardHeader className="flex-row items-center justify-between w-full">
-                                                    <CardTitle className="flex items-baseline gap-4">
-                                                        {schoolInfo?.serialNumber && <span className="text-sm font-medium text-muted-foreground">(Sl. No: {schoolInfo.serialNumber})</span>}
-                                                        {school.schoolName}
-                                                    </CardTitle>
+                                                    <div className="flex items-center gap-4">
+                                                        {schoolInfo?.serialNumber && (
+                                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+                                                                {schoolInfo.serialNumber}
+                                                            </div>
+                                                        )}
+                                                        <CardTitle>{school.schoolName}</CardTitle>
+                                                    </div>
                                                 </CardHeader>
                                             </AccordionTrigger>
                                             <AccordionContent>
