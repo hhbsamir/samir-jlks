@@ -10,13 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, RefreshCw } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, RefreshCw, Upload, User, Loader2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { useCompetitionData } from '@/app/organizers/layout';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Image from 'next/image';
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -119,6 +121,7 @@ export default function JudgesClient() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Photo</TableHead>
                   <TableHead>Judge Name</TableHead>
                   <TableHead>Mobile Number</TableHead>
                   <TableHead>Password</TableHead>
@@ -128,6 +131,12 @@ export default function JudgesClient() {
               <TableBody>
                 {sortedJudges.map(judge => (
                   <TableRow key={judge.id}>
+                    <TableCell>
+                      <Avatar>
+                          <AvatarImage src={judge.imageUrl} alt={judge.name} />
+                          <AvatarFallback><User /></AvatarFallback>
+                      </Avatar>
+                    </TableCell>
                     <TableCell className="font-medium">
                         {judge.name}
                     </TableCell>
@@ -205,15 +214,53 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
         if(isOpen) {
             setName(judge?.name || '');
             setMobile(judge?.mobile || '');
             setPassword(judge?.password || '');
+            setImageUrl(judge?.imageUrl || '');
         }
     }, [isOpen, judge]);
+
+    const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setImageUrl(data.url);
+          toast({ title: 'Photo uploaded successfully!' });
+        } else {
+          throw new Error(data.error || 'Upload failed');
+        }
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        toast({
+          title: 'Upload Failed',
+          description: 'Could not upload the photo. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -221,7 +268,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         
         setIsSaving(true);
         try {
-            await onSave({ name, mobile, password });
+            await onSave({ name, mobile, password, imageUrl });
         } finally {
             setIsSaving(false);
         }
@@ -239,6 +286,22 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     <DialogTitle className="font-headline text-2xl sm:text-3xl text-primary">{judge ? 'Edit Judge' : 'Add New Judge'}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 py-4">
+                    <div className="space-y-2">
+                        <Label>Judge Photo</Label>
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-20 w-20">
+                            <AvatarImage src={imageUrl} alt="Judge photo" />
+                            <AvatarFallback>
+                              <User className="h-10 w-10" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
+                          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                            {isUploading ? 'Uploading...' : 'Upload Photo'}
+                          </Button>
+                        </div>
+                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Judge Name</Label>
                         <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
@@ -265,9 +328,9 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
-                            <Button type="button" variant="ghost" disabled={isSaving}>Cancel</Button>
+                            <Button type="button" variant="ghost" disabled={isSaving || isUploading}>Cancel</Button>
                          </DialogClose>
-                        <Button type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Judge'}</Button>
+                        <Button type="submit" disabled={isSaving || isUploading}>{isSaving ? 'Saving...' : 'Save Judge'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

@@ -17,7 +17,7 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where, writeBatch, doc, Timestamp } from "firebase/firestore";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 const categoryIcons: { [key: string]: React.ReactNode } = {
@@ -352,6 +352,7 @@ export default function JudgesPage() {
                             )}
                         >
                             <Avatar className="h-full w-full">
+                                <AvatarImage src={judge.imageUrl} alt={judge.name} />
                                 <AvatarFallback className="text-muted-foreground">
                                     <User className="w-16 h-16 sm:w-20 sm:h-20" />
                                 </AvatarFallback>

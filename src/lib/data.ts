@@ -17,6 +17,7 @@ export type Judge = {
   mobile: string;
   password?: string;
   createdAt: number | null;
+  imageUrl?: string;
 };
 
 export type CompetitionCategory = {
