@@ -99,32 +99,25 @@ export const initialScores: Score[] = [
 export function getPublicIdFromUrl(url: string): string | null {
   if (!url) return null;
   
-  // Example URL: http://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
-  // We want to extract "folder/public_id"
+  // Example Image URL: http://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/public_id.jpg
+  // Example Raw URL:   http://res.cloudinary.com/cloud_name/raw/upload/v1234567890/folder/public_id.pdf
   try {
-    const urlParts = url.split('/');
-    const uploadIndex = urlParts.indexOf('upload');
-    
-    // Find resource type - 'image', 'video', etc.
-    const resourceTypeIndex = uploadIndex - 1;
-    const resourceType = urlParts[resourceTypeIndex];
+    const parts = url.split('/upload/');
+    if (parts.length < 2) return null;
 
-    if (uploadIndex === -1 || uploadIndex + 2 >= urlParts.length) {
-      return null;
-    }
-    
-    // The part after the version number is the public_id with extension
-    const publicIdWithVersionAndFolder = urlParts.slice(uploadIndex + 2).join('/');
-    
-    // For images, we remove the extension. For other types like 'raw' (PDFs), we keep it.
-    if (resourceType === 'image') {
-        const lastDot = publicIdWithVersionAndFolder.lastIndexOf('.');
-        if (lastDot !== -1) {
-            return publicIdWithVersionAndFolder.substring(0, lastDot);
+    // Take everything after the version number
+    const publicIdWithVersion = parts[1];
+    const publicId = publicIdWithVersion.substring(publicIdWithVersion.indexOf('/') + 1);
+
+    // For images, we want to remove the extension. For raw files, we keep it.
+    if (url.includes('/image/upload/')) {
+        const lastDotIndex = publicId.lastIndexOf('.');
+        if (lastDotIndex !== -1) {
+            return publicId.substring(0, lastDotIndex);
         }
     }
     
-    return publicIdWithVersionAndFolder;
+    return publicId;
 
   } catch (e) {
     console.error("Could not parse Cloudinary URL", e);
