@@ -111,7 +111,7 @@ export default function RegistrationPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
             <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">Registration for Inter-School Cultural Meet</h1>
-            <p className="text-muted-foreground mt-2">Enter your school's details to participate in the competition.</p>
+            <p className="text-muted-foreground mt-2">Enter your school's details to participate</p>
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
