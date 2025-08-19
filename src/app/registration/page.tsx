@@ -27,11 +27,15 @@ const registrationSchema = z.object({
   accountHolderName: z.string().min(1, 'Account holder name is required.'),
   bankName: z.string().min(1, 'Bank name is required.'),
   accountNumber: z.string().min(1, 'Account number is required.'),
+  confirmAccountNumber: z.string().min(1, 'Please confirm your account number.'),
   ifscCode: z.string().min(1, 'IFSC code is required.'),
   upiId: z.string().optional(),
   contactName: z.string().min(1, 'Contact name is required.'),
   designation: z.string().min(1, 'Designation is required.'),
   mobileNumber: z.string().min(10, 'Mobile number must be at least 10 digits.'),
+}).refine(data => data.accountNumber === data.confirmAccountNumber, {
+    message: "Account numbers do not match.",
+    path: ["confirmAccountNumber"],
 });
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
@@ -92,6 +96,7 @@ export default function RegistrationPage() {
       accountHolderName: '',
       bankName: '',
       accountNumber: '',
+      confirmAccountNumber: '',
       ifscCode: '',
       upiId: '',
       contactName: '',
@@ -262,8 +267,11 @@ export default function RegistrationPage() {
                     <FormField control={form.control} name="accountNumber" render={({ field }) => (
                         <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
+                    <FormField control={form.control} name="confirmAccountNumber" render={({ field }) => (
+                        <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
                     <FormField control={form.control} name="ifscCode" render={({ field }) => (
-                        <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="upiId" render={({ field }) => (
                         <FormItem><FormLabel>UPI ID (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
