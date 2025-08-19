@@ -270,7 +270,7 @@ export default function RegistrationPage() {
                             name={`participants.${index}.name`}
                             render={({ field: nameField }) => (
                                 <FormItem>
-                                    <FormLabel>Participant Name</FormLabel>
+                                    <FormLabel>Participant #{index + 1} Name</FormLabel>
                                     <FormControl>
                                         <Input placeholder="Enter participant's name" {...nameField} />
                                     </FormControl>
