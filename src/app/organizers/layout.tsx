@@ -3,14 +3,20 @@
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import NavLinks from '@/components/organizer/nav-links';
-import { NavButtons } from '@/components/common/NavButtons';
 import { Button } from '@/components/ui/button';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { app, db } from '@/lib/firebase';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Menu, Home } from 'lucide-react';
 import LoginPage from './login/page';
 import { collection, onSnapshot, Timestamp, query, orderBy } from 'firebase/firestore';
 import type { School, CompetitionCategory, Score, Feedback, Judge, Registration } from '@/lib/data';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import Link from 'next/link';
 
 // 1. Create a context to hold all our data
 interface CompetitionDataContextType {
@@ -128,11 +134,29 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
       <div className="flex flex-col min-h-screen">
         <header className="sticky top-0 z-30 flex flex-col items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between w-full">
-              <NavButtons showBack={false} />
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button 
+                          variant="outline"
+                          size="icon"
+                          className="rounded-full h-12 w-12 border-2 border-primary shadow-lg hover:bg-primary/10"
+                      >
+                          <Menu className="h-6 w-6" />
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56">
+                      <DropdownMenuItem asChild>
+                          <Link href="/">
+                              <Home className="mr-2 h-4 w-4" />
+                              <span>Go to Home Page</span>
+                          </Link>
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+              </DropdownMenu>
               <div className="flex-1 flex justify-center">
                     <h1 className="font-headline text-2xl sm:text-3xl font-bold">🙏Organizer's Dashboard🙏</h1>
               </div>
-              <div className="w-10"></div>
+              <div className="w-12"></div>
             </div>
             <div className="w-full">
               <NavLinks />
