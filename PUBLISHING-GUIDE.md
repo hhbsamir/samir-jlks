@@ -81,9 +81,10 @@ To protect your data, you need to set up Firestore Security Rules. These rules d
           allow write: if isOrganizer();
         }
         
-        // Settings can only be managed by an organizer
+        // Settings can be read by anyone, but only written by an organizer
         match /settings/{settingId} {
-            allow read, write: if isOrganizer();
+            allow read: if true;
+            allow write: if isOrganizer();
         }
 
         // Scores and Feedback can be written by anyone (judges),
