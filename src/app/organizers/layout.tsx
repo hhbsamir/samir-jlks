@@ -181,6 +181,7 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem asChild><Link href="/organizers/registrations"><ClipboardList className="mr-2 h-4 w-4" />Registrations</Link></DropdownMenuItem>
+                                    <DropdownMenuItem asChild><Link href="/organizers/interschool-cultural/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>
                                 </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
