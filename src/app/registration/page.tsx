@@ -252,16 +252,10 @@ export default function RegistrationPage() {
   };
 
   const getDownloadFilename = () => {
-    const remarks = settings?.registrationPdfRemarks?.trim();
-    if (remarks) {
-        return remarks.toLowerCase().endsWith('.pdf') ? remarks : `${remarks}.pdf`;
-    }
-
     const originalName = settings?.registrationPdfName;
     if (originalName) {
         return originalName.toLowerCase().endsWith('.pdf') ? originalName : `${originalName}.pdf`;
     }
-    
     return 'circular.pdf';
   }
 

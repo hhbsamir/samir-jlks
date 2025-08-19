@@ -53,7 +53,6 @@ export type InterschoolCulturalSettings = {
     registrationPdfUrl: string;
     registrationPdfName: string;
     registrationPdfPublicId?: string;
-    registrationPdfRemarks?: string;
 }
 
 export interface Participant {
