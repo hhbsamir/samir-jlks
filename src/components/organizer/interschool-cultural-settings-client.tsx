@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, XCircle, File as FileIcon } from 'lucide-react';
 import type { InterschoolCulturalSettings } from '@/lib/data';
@@ -71,6 +71,7 @@ export default function InterschoolCulturalSettingsClient() {
         setSettings(newSettings);
         try {
             const docRef = doc(db, 'settings', SETTINGS_DOC_ID);
+            // Use setDoc with merge:true to create or update the document
             await setDoc(docRef, updateData, { merge: true });
         } catch (error) {
             console.error(`Error saving settings:`, error);
