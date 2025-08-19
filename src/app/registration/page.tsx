@@ -266,7 +266,7 @@ export default function RegistrationPage() {
             <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
                  <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
                  <Button asChild>
-                    <a href={settings.registrationPdfUrl} target="_blank" rel="noopener noreferrer">
+                    <a href={settings.registrationPdfUrl} download={settings.registrationPdfName || 'circular.pdf'} target="_blank" rel="noopener noreferrer">
                        <Download className="mr-2 h-4 w-4" />
                        Download Circular
                     </a>
@@ -431,3 +431,5 @@ export default function RegistrationPage() {
     </div>
   );
 }
+
+    
