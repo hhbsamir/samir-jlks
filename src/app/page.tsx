@@ -92,7 +92,7 @@ export default function Home() {
           className="from-blue-500 to-sky-500 text-white"
         />
         <PortalCard
-          href="/organizers/school-data"
+          href="/school-data"
           icon={<ClipboardList className="w-10 h-10" />}
           title="School Data"
           description="View and download registered school information."

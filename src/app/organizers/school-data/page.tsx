@@ -9,40 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 // This is mock data. In a real app, you would fetch this from your database.
-const registeredSchools = [
-    {
-        id: '1',
-        schoolName: 'Maple Leaf International School',
-        contactName: 'Mr. John Doe',
-        mobileNumber: '9876543210',
-        bankDetails: {
-            accountHolderName: 'Maple Leaf School',
-            bankName: 'Global Bank',
-            accountNumber: '1234567890',
-            ifscCode: 'GBLB0001234',
-            upiId: 'mapleleaf@upi'
-        },
-        participants: [
-            { name: 'Alice Smith', idCardUrl: '#' },
-            { name: 'Bob Johnson', idCardUrl: '#' },
-        ]
-    },
-    {
-        id: '2',
-        schoolName: 'Oakridge Public School',
-        contactName: 'Ms. Jane Smith',
-        mobileNumber: '8765432109',
-        bankDetails: {
-            accountHolderName: 'Oakridge School Trust',
-            bankName: 'National Bank',
-            accountNumber: '0987654321',
-            ifscCode: 'NATB0005678',
-            upiId: ''
-        },
-        participants: [
-            { name: 'Charlie Brown', idCardUrl: '#' },
-        ]
-    }
+const registeredSchools: any[] = [
 ];
 
 export default function SchoolDataPage() {
@@ -108,7 +75,7 @@ export default function SchoolDataPage() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {school.participants.map((p, index) => (
+                                            {school.participants.map((p: any, index: number) => (
                                                 <TableRow key={index}>
                                                     <TableCell>{p.name}</TableCell>
                                                     <TableCell className="text-right">
@@ -125,6 +92,13 @@ export default function SchoolDataPage() {
                         </CardContent>
                     </Card>
                 ))}
+                 {registeredSchools.length === 0 && (
+                    <Card>
+                        <CardContent className="pt-6">
+                            <p className="text-center text-muted-foreground">No schools have registered yet.</p>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </>
     );
