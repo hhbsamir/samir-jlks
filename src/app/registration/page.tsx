@@ -350,7 +350,7 @@ export default function RegistrationPage() {
                         <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="confirmAccountNumber" render={({ field }) => (
-                        <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
+                        <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="ifscCode" render={({ field }) => (
                         <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>
