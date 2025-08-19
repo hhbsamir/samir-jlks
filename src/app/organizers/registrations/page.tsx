@@ -145,8 +145,6 @@ export default function RegistrationsPage() {
                     const pageHeight = doc.internal.pageSize.getHeight();
                     const contentWidth = pageWidth - (pageMargin * 2);
                     
-                    // Total height available for images
-                    let totalImageHeight = 0;
                     const images = [];
 
                     // First pass: load images and get dimensions
@@ -168,19 +166,27 @@ export default function RegistrationsPage() {
                         }
                     }
 
-                    // Calculate layout: Aim for 4 columns
-                    const numCols = 4;
+                    // Calculate layout dynamically
+                    const numImages = images.length;
+                    let numCols = 4;
+                    if (numImages <= 3) numCols = numImages;
+                    else if (numImages <= 8) numCols = 4;
+                    else if (numImages <= 15) numCols = 5;
+                    else numCols = 6; // Max 6 columns for very large groups
+                    
                     const imgWidth = (contentWidth - (gap * (numCols - 1))) / numCols;
                     const imgHeight = imgWidth * 1.5; // Assuming a 2:3 aspect ratio for ID cards
                     const textHeight = 5;
+                    const totalItemHeight = imgHeight + textHeight + gap;
 
                     let xPos = pageMargin;
                     let yPos = topMargin;
 
                     for (const image of images) {
-                        if (yPos + imgHeight + textHeight > pageHeight - bottomMargin) {
-                            // This check is simplified, in a real scenario you might need a new page
-                            console.warn("ID cards might overflow the page. Consider a multi-page layout for large numbers of participants.");
+                        if (yPos + totalItemHeight > pageHeight - bottomMargin) {
+                            // This would ideally create a new page, for now we just log a warning
+                             console.warn("ID cards might overflow the page. Consider a multi-page layout for large numbers of participants.");
+                             break; // Stop adding more images to this page
                         }
 
                         if (image.dataUrl) {
@@ -196,7 +202,7 @@ export default function RegistrationsPage() {
                         xPos += imgWidth + gap;
                         if (xPos + imgWidth > pageWidth - pageMargin) {
                             xPos = pageMargin;
-                            yPos += imgHeight + textHeight + gap;
+                            yPos += totalItemHeight;
                         }
                     }
                 }
@@ -243,8 +249,8 @@ export default function RegistrationsPage() {
                                             <AccordionTrigger className="w-full p-0 hover:no-underline">
                                                 <CardHeader className="flex-row items-center justify-between w-full">
                                                     <CardTitle className="flex items-baseline gap-4">
-                                                        {school.schoolName}
                                                         {schoolInfo?.serialNumber && <span className="text-sm font-medium text-muted-foreground">(Sl. No: {schoolInfo.serialNumber})</span>}
+                                                        {school.schoolName}
                                                     </CardTitle>
                                                 </CardHeader>
                                             </AccordionTrigger>
@@ -304,5 +310,3 @@ export default function RegistrationsPage() {
         </div>
     );
 }
-
-    
