@@ -172,7 +172,7 @@ export default function JudgesClient() {
                   <TableRow key={judge.id}>
                     <TableCell>
                       <Avatar>
-                          <AvatarImage src={judge.imageUrl} alt={judge.name} />
+                          {judge.imageUrl && <AvatarImage src={judge.imageUrl} alt={judge.name} />}
                           <AvatarFallback><User /></AvatarFallback>
                       </Avatar>
                     </TableCell>
@@ -353,7 +353,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                         <Label>Judge Photo</Label>
                         <div className="flex items-center gap-4">
                           <Avatar className="h-20 w-20">
-                             <AvatarImage src={imageUrl || undefined} alt="Judge photo" />
+                             {imageUrl && <AvatarImage src={imageUrl} alt="Judge photo" />}
                             <AvatarFallback>
                               <User className="h-10 w-10" />
                             </AvatarFallback>
