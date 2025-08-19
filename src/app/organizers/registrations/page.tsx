@@ -80,12 +80,12 @@ export default function RegistrationsPage() {
         }
     };
     
-    const handleDownloadAllPdf = () => {
+    const handleDownloadAllPdf = async () => {
         setIsDownloading(true);
         try {
             const doc = new jsPDF() as jsPDFWithAutoTable;
 
-            registrations.forEach((school, index) => {
+            for (const [index, school] of registrations.entries()) {
                 if (index > 0) doc.addPage();
                 
                 doc.setFontSize(18);
@@ -126,7 +126,51 @@ export default function RegistrationsPage() {
                     body: school.participants.map((p, i) => [i + 1, p.name]),
                      headStyles: { fillColor: [37, 99, 235] },
                 });
-            });
+
+                const participantsWithId = school.participants.filter(p => p.idCardUrl);
+                if (participantsWithId.length > 0) {
+                    doc.addPage();
+                    doc.setFontSize(18);
+                    doc.text(`${school.schoolName} - ID Cards`, 14, 22);
+                    let yPos = 30;
+
+                    for (const participant of participantsWithId) {
+                        if (participant.idCardUrl) {
+                            try {
+                                const response = await fetch(participant.idCardUrl);
+                                const blob = await response.blob();
+                                const reader = new FileReader();
+                                const dataUrl = await new Promise<string>(resolve => {
+                                    reader.onload = (e) => resolve(e.target?.result as string);
+                                    reader.readAsDataURL(blob);
+                                });
+
+                                const img = new Image();
+                                img.src = dataUrl;
+                                await new Promise(resolve => { img.onload = resolve; });
+
+                                doc.setFontSize(12);
+                                doc.text(participant.name, 14, yPos);
+                                yPos += 5;
+
+                                const imgProps = doc.getImageProperties(dataUrl);
+                                const imgWidth = 180;
+                                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+                                
+                                if (yPos + imgHeight > 280) { // Check if it fits on page
+                                    doc.addPage();
+                                    yPos = 20;
+                                }
+                                doc.addImage(dataUrl, 'JPEG', 14, yPos, imgWidth, imgHeight);
+                                yPos += imgHeight + 10;
+
+                            } catch (e) {
+                                console.error(`Could not load image for ${participant.name}`, e);
+                            }
+                        }
+                    }
+                }
+            }
 
             doc.save("All_School_Registrations.pdf");
             toast({ title: "Download Successful", description: "Full registration PDF is being downloaded." });
