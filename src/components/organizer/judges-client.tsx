@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/page-header';
 import type { Judge } from '@/lib/data';
+import { getPublicIdFromUrl } from '@/lib/data';
 import { PlusCircle, Edit, Trash2, RefreshCw, Upload, User, Loader2, XCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
@@ -36,6 +37,39 @@ const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
   </svg>
 );
+
+// Function to call the delete API
+async function deleteCloudinaryImage(imageUrl: string) {
+    try {
+        const publicId = getPublicIdFromUrl(imageUrl);
+        if (!publicId) {
+            throw new Error("Could not extract public_id from URL");
+        }
+
+        const response = await fetch('/api/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ publicId }),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to delete image from Cloudinary.');
+        }
+
+        toast({ title: 'Success', description: 'Image deleted from Cloudinary.' });
+        return true;
+    } catch (error) {
+        console.error('Error deleting image from Cloudinary:', error);
+        toast({
+            title: 'Deletion Failed',
+            description: `Could not delete image from Cloudinary. Reason: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            variant: 'destructive',
+        });
+        return false;
+    }
+}
 
 
 export default function JudgesClient() {
@@ -88,9 +122,14 @@ export default function JudgesClient() {
     }
   };
   
-  const handleDelete = async (judgeId: string) => {
+  const handleDelete = async (judge: Judge) => {
     try {
-        await deleteDoc(doc(db, "judges", judgeId));
+        // If judge has a photo, delete it from Cloudinary first
+        if (judge.imageUrl) {
+            await deleteCloudinaryImage(judge.imageUrl);
+        }
+        // Then delete the judge document from Firestore
+        await deleteDoc(doc(db, "judges", judge.id));
         toast({ title: "Success", description: "Judge deleted successfully." });
     } catch(error) {
         console.error("Error deleting judge: ", error);
@@ -175,12 +214,12 @@ export default function JudgesClient() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the judge and all associated scores.
+                              This action cannot be undone. This will permanently delete the judge and their photo from Cloudinary.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(judge.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            <AlertDialogAction onClick={() => handleDelete(judge)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -217,6 +256,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
     const [imageUrl, setImageUrl] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isRemoving, setIsRemoving] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     React.useEffect(() => {
@@ -254,6 +294,10 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         const data = await response.json();
 
         if (data.success) {
+          // If there was an old image, delete it from Cloudinary
+          if(imageUrl) {
+            await deleteCloudinaryImage(imageUrl);
+          }
           setImageUrl(data.url);
           toast({ title: 'Photo uploaded successfully!' });
         } else {
@@ -269,6 +313,16 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
       } finally {
         setIsUploading(false);
       }
+    };
+
+    const handleRemoveImage = async () => {
+        if (!imageUrl) return;
+        setIsRemoving(true);
+        const success = await deleteCloudinaryImage(imageUrl);
+        if (success) {
+            setImageUrl('');
+        }
+        setIsRemoving(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -299,20 +353,20 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                         <Label>Judge Photo</Label>
                         <div className="flex items-center gap-4">
                           <Avatar className="h-20 w-20">
-                            {imageUrl ? <AvatarImage src={imageUrl} alt="Judge photo" /> : <AvatarImage src={undefined} alt="Judge photo" />}
+                             <AvatarImage src={imageUrl || undefined} alt="Judge photo" />
                             <AvatarFallback>
                               <User className="h-10 w-10" />
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex flex-col gap-2">
                             <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} className="hidden" accept="image/*" />
-                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading || isRemoving}>
                                 {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                                 {isUploading ? 'Uploading...' : 'Upload'}
                             </Button>
                             {imageUrl && (
-                                <Button type="button" variant="destructive" size="sm" onClick={() => setImageUrl('')} disabled={isUploading}>
-                                    <XCircle className="mr-2 h-4 w-4" />
+                                <Button type="button" variant="destructive" size="sm" onClick={handleRemoveImage} disabled={isUploading || isRemoving}>
+                                    {isRemoving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
                                     Remove
                                 </Button>
                             )}
@@ -346,14 +400,12 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>
-                            <Button type="button" variant="ghost" disabled={isSaving || isUploading}>Cancel</Button>
+                            <Button type="button" variant="ghost" disabled={isSaving || isUploading || isRemoving}>Cancel</Button>
                          </DialogClose>
-                        <Button type="submit" disabled={isSaving || isUploading}>{isSaving ? 'Saving...' : 'Save Judge'}</Button>
+                        <Button type="submit" disabled={isSaving || isUploading || isRemoving}>{isSaving ? 'Saving...' : 'Save Judge'}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     )
 }
-
-    
