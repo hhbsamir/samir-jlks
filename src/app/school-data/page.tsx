@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import type { Registration, Participant } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
@@ -28,27 +28,26 @@ export default function SchoolDataPage() {
     const { toast } = useToast();
 
     useEffect(() => {
-        const fetchRegistrations = async () => {
-            setLoading(true);
-            try {
-                const registrationsCollection = collection(db, 'registrations');
-                const q = query(registrationsCollection, orderBy("createdAt", "desc"));
-                const querySnapshot = await getDocs(q);
-                const schoolsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
-                setRegisteredSchools(schoolsList);
-            } catch (error) {
-                console.error("Error fetching registrations: ", error);
-                toast({
-                    title: "Error Loading Data",
-                    description: "Could not fetch school registration data.",
-                    variant: "destructive"
-                });
-            } finally {
-                setLoading(false);
-            }
-        };
+        setLoading(true);
+        const registrationsCollection = collection(db, 'registrations');
+        const q = query(registrationsCollection, orderBy("createdAt", "desc"));
+        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const schoolsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
+            setRegisteredSchools(schoolsList);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching registrations: ", error);
+            toast({
+                title: "Error Loading Data",
+                description: "Could not fetch school registration data.",
+                variant: "destructive"
+            });
+            setLoading(false);
+        });
 
-        fetchRegistrations();
+        // Cleanup subscription on component unmount
+        return () => unsubscribe();
     }, [toast]);
 
     const handleDownloadBankExcel = () => {
