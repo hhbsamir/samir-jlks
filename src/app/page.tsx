@@ -14,6 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 
 
@@ -48,6 +49,13 @@ export default function Home() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
                 <DropdownMenuItem asChild>
+                    <Link href="/registration">
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>School Registration</span>
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
                     <Link href="/judges">
                         <Gavel className="mr-2 h-4 w-4" />
                         <span>Judge's Portal</span>
@@ -80,15 +88,6 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-8 w-full max-w-lg">
-        <PortalCard
-          href="/registration"
-          icon={<Edit className="w-10 h-10" />}
-          title="School Registration"
-          description="Register your school for the competition."
-          className="from-blue-500 to-sky-500 text-white"
-        />
-      </div>
     </div>
   );
 }
