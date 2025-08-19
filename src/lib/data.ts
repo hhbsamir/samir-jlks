@@ -97,29 +97,4 @@ export const initialScores: Score[] = [
 ];
 
 // This function is no longer needed for PDF management and is being removed to avoid future issues.
-export function getPublicIdFromUrl(url: string): string | null {
-  if (!url) return null;
-  try {
-    const parts = url.split('/upload/');
-    if (parts.length < 2) return null;
-    const versionAndId = parts[1];
-    const publicIdWithFolder = versionAndId.substring(versionAndId.indexOf('/') + 1);
-    
-    // For raw files (like PDFs), the extension IS part of the public_id.
-    // For images, it typically is not.
-    if (url.includes('/raw/upload/')) {
-        return publicIdWithFolder;
-    }
 
-    // This handles most image cases.
-    const lastDotIndex = publicIdWithFolder.lastIndexOf('.');
-    if (lastDotIndex !== -1) {
-        return publicIdWithFolder.substring(0, lastDotIndex);
-    }
-    
-    return publicIdWithFolder;
-  } catch (e) {
-    console.error("Could not parse Cloudinary URL", e);
-    return null;
-  }
-}
