@@ -51,7 +51,7 @@ export default function Home() {
                 <DropdownMenuItem asChild>
                     <Link href="/registration">
                         <Edit className="mr-2 h-4 w-4" />
-                        <span>School Registration</span>
+                        <span>Registration for Inter-School Cultural Meet</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
