@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Gavel, Crown, MoveRight, Edit, ClipboardList } from 'lucide-react';
+import { Gavel, Crown, MoveRight, Edit, ClipboardList, Menu } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -35,18 +35,15 @@ export default function Home() {
 
   return (
     <div className="flex flex-col flex-grow items-center justify-center p-4 sm:p-8 bg-background min-h-screen">
-      <div className="absolute top-4 left-4">
-        <NavButtons showBack={false} showHome={false} />
-      </div>
-
-      <header className="absolute top-4 right-4">
+      <header className="absolute top-4 left-4">
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button 
                     variant="outline"
-                    className="rounded-full font-bold h-12 w-24 text-lg border-2 border-primary shadow-lg hover:bg-primary/10"
+                    size="icon"
+                    className="rounded-full h-12 w-12 border-2 border-primary shadow-lg hover:bg-primary/10"
                 >
-                    More
+                    <Menu className="h-6 w-6" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
