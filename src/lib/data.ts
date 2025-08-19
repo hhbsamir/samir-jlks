@@ -1,5 +1,4 @@
 
-
 import { Timestamp } from "firebase/firestore";
 
 export type SchoolCategory = "Sub-Junior" | "Junior" | "Senior";
@@ -45,6 +44,7 @@ export type ReportSettings = {
 
 export interface Participant {
   name: string;
+  idCardUrl?: string;
 }
 
 export interface BankDetails {

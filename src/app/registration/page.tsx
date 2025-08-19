@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,14 +11,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Upload } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Image from 'next/image';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
+  idCardUrl: z.string().optional(),
 });
 
 const registrationSchema = z.object({
@@ -87,6 +89,66 @@ const indianBankNames = [
 ].sort((a,b) => a.localeCompare(b));
 
 
+function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUploadSuccess: (index: number, url: string) => void }) {
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { toast } = useToast();
+
+    const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            if (data.success) {
+                onUploadSuccess(index, data.url);
+                toast({ title: 'ID Card uploaded successfully!' });
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            toast({
+                title: 'Upload Failed',
+                description: 'Could not upload the ID card. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return (
+        <>
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePhotoUpload}
+                className="hidden"
+                accept="image/*"
+            />
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+            >
+                {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {isUploading ? 'Uploading...' : 'Upload ID Card'}
+            </Button>
+        </>
+    );
+}
+
 export default function RegistrationPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,7 +156,7 @@ export default function RegistrationPage() {
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       schoolName: '',
-      participants: [{ name: '' }],
+      participants: [{ name: '', idCardUrl: '' }],
       accountHolderName: '',
       bankName: '',
       accountNumber: '',
@@ -107,10 +169,15 @@ export default function RegistrationPage() {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: 'participants',
   });
+
+  const handleIdCardUpload = (index: number, url: string) => {
+    const currentParticipant = form.getValues('participants')[index];
+    update(index, { ...currentParticipant, idCardUrl: url });
+  };
 
   const onSubmit = async (data: RegistrationFormValues) => {
     setIsSubmitting(true);
@@ -192,25 +259,38 @@ export default function RegistrationPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Participants</CardTitle>
-                <CardDescription>Add participant details.</CardDescription>
+                <CardDescription>Add participant details and upload their ID cards.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex flex-col sm:flex-row gap-4 items-start p-4 border rounded-md">
                     <div className="flex-grow space-y-4 w-full">
                         <FormField
-                        control={form.control}
-                        name={`participants.${index}.name`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Participant Name</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter participant's name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
+                            control={form.control}
+                            name={`participants.${index}.name`}
+                            render={({ field: nameField }) => (
+                                <FormItem>
+                                    <FormLabel>Participant Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Enter participant's name" {...nameField} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
+                        <div className="flex items-center gap-4">
+                            <ParticipantIdUploader index={index} onUploadSuccess={handleIdCardUpload} />
+                             {form.getValues('participants')[index]?.idCardUrl && (
+                                <div className="relative h-16 w-24 rounded-md overflow-hidden">
+                                    <Image
+                                        src={form.getValues('participants')[index].idCardUrl!}
+                                        alt="ID card preview"
+                                        layout="fill"
+                                        objectFit="cover"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                     {fields.length > 1 && (
                       <Button
@@ -228,7 +308,7 @@ export default function RegistrationPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => append({ name: '' })}
+                  onClick={() => append({ name: '', idCardUrl: '' })}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Participant
@@ -270,7 +350,7 @@ export default function RegistrationPage() {
                         <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                     <FormField control={form.control} name="confirmAccountNumber" render={({ field }) => (
-                        <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
                     )} />
                     <FormField control={form.control} name="ifscCode" render={({ field }) => (
                         <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>
