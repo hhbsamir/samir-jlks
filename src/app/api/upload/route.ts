@@ -27,12 +27,15 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Determine the resource type. For PDFs, it's 'raw'. Otherwise, 'auto' is fine.
+    const resource_type = file.type === 'application/pdf' ? 'raw' : 'auto';
+
     // Upload to Cloudinary
     const uploadResult: any = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: 'jlks-paradip-uploads', // Optional: organize uploads into a folder
-          resource_type: 'auto',
+          folder: 'jlks-paradip-uploads', 
+          resource_type: resource_type, // Explicitly set the resource type
         },
         (error, result) => {
           if (error) {
