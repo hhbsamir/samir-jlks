@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Upload, Download, Copy, Check, ArrowLeft } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Upload, Download, Copy, Check, ArrowLeft, X } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
@@ -343,13 +343,13 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
                           </Button>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">
-                          <strong>Important:</strong> Keep this link safe. It is the only way to access and modify your registration details.
+                          <strong className="text-red-600">Important:</strong> Keep this link safe. It is the only way to access and modify your registration details.
                       </p>
                   </AlertDescription>
               </Alert>
 
-              <Button asChild className="mt-8">
-                  <Link href="/registration"><ArrowLeft className="mr-2" /> Submit Another Registration</Link>
+              <Button onClick={() => window.close()} className="mt-8" variant="destructive">
+                  <X className="mr-2" /> Close Page
               </Button>
           </div>
       );
