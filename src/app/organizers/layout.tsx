@@ -9,8 +9,8 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { app, db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 import LoginPage from './login/page';
-import { collection, onSnapshot, Timestamp } from 'firebase/firestore';
-import type { School, CompetitionCategory, Score, Feedback, Judge } from '@/lib/data';
+import { collection, onSnapshot, Timestamp, query, orderBy } from 'firebase/firestore';
+import type { School, CompetitionCategory, Score, Feedback, Judge, Registration } from '@/lib/data';
 
 // 1. Create a context to hold all our data
 interface CompetitionDataContextType {
@@ -19,6 +19,7 @@ interface CompetitionDataContextType {
   scores: Score[];
   feedbacks: Feedback[];
   judges: Judge[];
+  registrations: Registration[];
   loading: boolean;
 }
 
@@ -39,6 +40,7 @@ function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
   const [scores, setScores] = useState<Score[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [judges, setJudges] = useState<Judge[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,13 +72,16 @@ function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
         });
         setJudges(judgesList);
       }),
+      onSnapshot(query(collection(db, 'registrations'), orderBy("createdAt", "desc")), (snapshot) => {
+        setRegistrations(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration)));
+      }),
     ];
 
     // Cleanup listeners on component unmount
     return () => unsubscribes.forEach(unsub => unsub());
   }, []);
 
-  const value = { schools, categories, scores, feedbacks, judges, loading };
+  const value = { schools, categories, scores, feedbacks, judges, registrations, loading };
 
   return (
     <CompetitionDataContext.Provider value={value}>

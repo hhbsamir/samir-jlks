@@ -83,9 +83,3 @@ export const initialJudges: Judge[] = [
 
 export const initialScores: Score[] = [
 ];
-
-    
-
-    
-
-
