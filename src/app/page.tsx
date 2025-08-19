@@ -14,10 +14,9 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import Image from 'next/image';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import type { HomePageContent } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getHomePageContent } from './actions';
 
 
 export default function Home() {
@@ -35,19 +34,17 @@ export default function Home() {
         setCurrentTime(format(new Date(), 'hh:mm:ss a'));
     }, 1000)
 
-    const contentDocRef = doc(db, 'settings', 'homePageContent');
-    const unsubscribe = onSnapshot(contentDocRef, (doc) => {
-        if (doc.exists()) {
-            setHomePageContent(doc.data() as HomePageContent);
-        } else {
-            setHomePageContent(null);
-        }
-        setLoadingContent(false);
-    });
+    const fetchContent = async () => {
+      setLoadingContent(true);
+      const content = await getHomePageContent();
+      setHomePageContent(content);
+      setLoadingContent(false);
+    }
+    
+    fetchContent();
 
     return () => {
       clearInterval(timer);
-      unsubscribe();
     };
   }, []);
 
