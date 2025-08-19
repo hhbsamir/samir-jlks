@@ -98,6 +98,15 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
         const file = event.target.files?.[0];
         if (!file) return;
 
+        if (file.size > 50 * 1024) { // 50 KB size limit
+            toast({
+                title: 'File Too Large',
+                description: 'Please upload an image smaller than 50 KB.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
         setIsUploading(true);
         const formData = new FormData();
         formData.append('file', file);

@@ -232,6 +232,15 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
       const file = event.target.files?.[0];
       if (!file) return;
 
+      if (file.size > 50 * 1024) { // 50 KB size limit
+          toast({
+              title: 'File Too Large',
+              description: 'Please upload an image smaller than 50 KB.',
+              variant: 'destructive',
+          });
+          return;
+      }
+
       setIsUploading(true);
       const formData = new FormData();
       formData.append('file', file);
@@ -290,7 +299,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                         <Label>Judge Photo</Label>
                         <div className="flex items-center gap-4">
                           <Avatar className="h-20 w-20">
-                            {imageUrl && <AvatarImage src={imageUrl} alt="Judge photo" />}
+                            {imageUrl ? <AvatarImage src={imageUrl} alt="Judge photo" /> : <AvatarImage src={undefined} alt="Judge photo" />}
                             <AvatarFallback>
                               <User className="h-10 w-10" />
                             </AvatarFallback>
