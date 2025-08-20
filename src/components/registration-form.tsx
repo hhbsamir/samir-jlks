@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -38,8 +39,7 @@ const registrationSchema = z.object({
   contactName: z.string().min(1, 'Contact name is required.'),
   designation: z.string().min(1, 'Designation is required.'),
   mobileNumber: z.string()
-    .startsWith('+91', { message: "Mobile number must start with +91." })
-    .length(13, { message: "Mobile number must be 10 digits long, prefixed with +91 (e.g. +919876543210)."}),
+    .min(10, { message: "Mobile number must be at least 10 digits long."}),
   email: z.string().email("Please enter a valid email address.").optional().or(z.literal('')),
 }).refine(data => data.accountNumber === data.confirmAccountNumber, {
     message: "Account numbers do not match.",
@@ -188,7 +188,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
       upiId: '',
       contactName: '',
       designation: '',
-      mobileNumber: '+91',
+      mobileNumber: '',
       email: '',
     },
   });
@@ -405,15 +405,15 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
                              {isLoading ? (
-                                <React.Fragment>
+                                <>
                                     <Loader2 className="mr-2 animate-spin" />
                                     <span>Loading...</span>
-                                </React.Fragment>
+                                </>
                             ) : (
-                                <React.Fragment>
+                                <>
                                     <Search className="mr-2" />
                                     <span>Find Registration</span>
-                                </React.Fragment>
+                                </>
                             )}
                         </Button>
                     </form>
@@ -464,13 +464,13 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
               <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
                 {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}
               </h1>
-              {!editId && (
+              { !editId && 
                 <Button asChild variant="outline">
                     <Link href="/registration/edit">
                         <Edit className="mr-2 h-4 w-4"/> Edit Registration
                     </Link>
                 </Button>
-              )}
+              }
           </div>
           <p className="text-muted-foreground mt-2">
             {editId ? 'Modify the details below and click update.' : "Enter your school's details to participate"}
@@ -658,3 +658,5 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
     </div>
   );
 }
+
+    
