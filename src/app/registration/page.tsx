@@ -371,10 +371,10 @@ export default function RegistrationPage({ editId, initialData }: { editId?: str
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8 flex items-center justify-center">
-      <div className="max-w-4xl mx-auto w-full relative">
-        <div className="absolute top-0 left-0 sm:-left-20 z-50">
-          <NavButtons />
-        </div>
+      <div className="fixed top-4 left-4 z-50">
+        <NavButtons />
+      </div>
+      <div className="max-w-4xl mx-auto w-full">
         <div className="text-center mb-8 pt-12 sm:pt-0">
           <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
             {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}

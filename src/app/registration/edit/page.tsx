@@ -67,7 +67,7 @@ export default function EditRegistrationController() {
     // Otherwise, show the search form
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
-            <div className="absolute top-4 left-4 z-50">
+            <div className="fixed top-4 left-4 z-50">
                 <NavButtons />
             </div>
             <Card className="w-full max-w-md mx-4">
