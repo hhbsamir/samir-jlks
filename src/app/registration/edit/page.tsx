@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,23 +12,33 @@ import RegistrationPage from '@/app/registration/page';
 import { NavButtons } from '@/components/common/NavButtons';
 
 export default function EditRegistrationSearchPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
-    const [registrationId, setRegistrationId] = useState('');
+    const [registrationIdInput, setRegistrationIdInput] = useState('');
     
-    // We get the ID from the URL search params on initial load or from the user's search.
-    const [searchedId, setSearchedId] = useState<string | null>(searchParams.get('id'));
+    // The ID is stored in the component's state. It can be set from the URL or the search input.
+    const [editId, setEditId] = useState<string | null>(searchParams.get('id'));
+
+    // This effect ensures that if the user pastes a URL with an ID, it's used.
+    useEffect(() => {
+        const idFromUrl = searchParams.get('id');
+        if (idFromUrl) {
+            setEditId(idFromUrl);
+        }
+    }, [searchParams]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (registrationId) {
-            // Update the state to trigger re-render with the RegistrationPage
-            setSearchedId(registrationId);
+        if (registrationIdInput) {
+            // Update the URL and the state to trigger the edit view
+            router.push(`/registration/edit?id=${registrationIdInput}`, { scroll: false });
+            setEditId(registrationIdInput);
         }
     };
 
-    // If an ID has been searched for (or was in the URL), show the main registration page in edit mode.
-    if (searchedId) {
-        return <RegistrationPage editId={searchedId} />;
+    // If an ID is present (from URL or search), show the main registration page in edit mode.
+    if (editId) {
+        return <RegistrationPage editId={editId} />;
     }
 
     // Otherwise, show the search form.
@@ -50,8 +60,8 @@ export default function EditRegistrationSearchPage() {
                                 id="registrationId"
                                 type="text"
                                 placeholder="Paste your ID here"
-                                value={registrationId}
-                                onChange={(e) => setRegistrationId(e.target.value)}
+                                value={registrationIdInput}
+                                onChange={(e) => setRegistrationIdInput(e.target.value)}
                                 required
                             />
                         </div>
