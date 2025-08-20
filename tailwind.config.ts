@@ -11,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-body)', 'serif'],
-        headline: ['Arial', 'sans-serif'], 
+        body: ['var(--font-body)'],
+        headline: ['var(--font-headline)'],
       },
       colors: {
         background: 'hsl(var(--background))',
