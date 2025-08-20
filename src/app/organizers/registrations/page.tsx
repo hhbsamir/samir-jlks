@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, FileSpreadsheet, Loader2, Trash2 } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Loader2, Trash2, Edit, Copy, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useCompetitionData } from '@/app/organizers/layout';
@@ -13,10 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { collection, getDocs, writeBatch } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import Link from 'next/link';
 
 
 // Extend jsPDF with autoTable
@@ -25,10 +25,18 @@ interface jsPDFWithAutoTable extends jsPDF {
 }
 
 export default function RegistrationsPage() {
-    const { registrations, schools, loading } = useCompetitionData();
+    const { registrations, loading } = useCompetitionData();
     const [isDownloading, setIsDownloading] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
     const { toast } = useToast();
+
+    const handleCopyId = (id: string) => {
+        navigator.clipboard.writeText(id);
+        setCopiedId(id);
+        toast({ title: "Copied!", description: "Registration ID copied to clipboard."});
+        setTimeout(() => setCopiedId(null), 2000);
+    }
 
     const handleDownloadBankExcel = () => {
         setIsDownloading(true);
@@ -223,6 +231,16 @@ export default function RegistrationsPage() {
         }
     };
     
+    const handleDeleteRegistration = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "registrations", id));
+            toast({ title: "Registration Deleted", description: "The registration has been successfully removed." });
+        } catch(error) {
+            console.error("Error deleting registration:", error);
+            toast({ title: "Deletion Failed", description: "An error occurred.", variant: "destructive" });
+        }
+    };
+    
     const handleDeleteAllRegistrations = async () => {
         setIsDeleting(true);
         try {
@@ -297,85 +315,76 @@ export default function RegistrationsPage() {
                         </AlertDialogContent>
                     </AlertDialog>
                 </div>
-                <div className="space-y-4">
+                <Card>
+                  <CardContent className="pt-6">
                      {loading ? (
                         <div className="flex justify-center items-center py-20">
                             <Loader2 className="h-12 w-12 animate-spin text-primary" />
                         </div>
                     ) : registrations.length > 0 ? (
-                        <Accordion type="multiple" className="w-full space-y-4">
-                            {registrations.map(school => {
-                                const schoolInfo = schools.find(s => s.name.toUpperCase() === school.schoolName.toUpperCase());
-                                return (
-                                    <AccordionItem value={school.id} key={school.id}>
-                                        <Card>
-                                            <AccordionTrigger className="w-full p-0 hover:no-underline">
-                                                <CardHeader className="flex-row items-center justify-between w-full">
-                                                    <div className="flex items-center gap-4">
-                                                        {schoolInfo?.serialNumber && (
-                                                            <div className="flex items-center justify-center h-8 w-8 rounded-md bg-primary text-primary-foreground font-bold text-sm">
-                                                                {schoolInfo.serialNumber}
-                                                            </div>
-                                                        )}
-                                                        <CardTitle>{school.schoolName}</CardTitle>
-                                                    </div>
-                                                </CardHeader>
-                                            </AccordionTrigger>
-                                            <AccordionContent>
-                                                <CardContent>
-                                                    <div className="space-y-6">
-                                                        <div>
-                                                            <h4 className="font-semibold text-lg mb-2">Contact Information</h4>
-                                                            <p><strong>Contact Person:</strong> {school.contactPerson.contactName} ({school.contactPerson.designation})</p>
-                                                            <p><strong>Mobile:</strong> {school.contactPerson.mobileNumber}</p>
-                                                            {school.contactPerson.email && <p><strong>Email:</strong> {school.contactPerson.email}</p>}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-semibold text-lg mb-2">Bank Details</h4>
-                                                            <p><strong>Account Name:</strong> {school.bankDetails.accountHolderName}</p>
-                                                            <p><strong>Bank:</strong> {school.bankDetails.bankName}</p>
-                                                            <p><strong>Account No:</strong> {school.bankDetails.accountNumber}</p>
-                                                            <p><strong>IFSC:</strong> {school.bankDetails.ifscCode}</p>
-                                                            {school.bankDetails.upiId && <p><strong>UPI ID:</strong> {school.bankDetails.upiId}</p>}
-                                                        </div>
-                                                        <div>
-                                                            <h4 className="font-semibold text-lg mb-2">Participants</h4>
-                                                            <Table>
-                                                                <TableHeader>
-                                                                    <TableRow>
-                                                                        <TableHead>#</TableHead>
-                                                                        <TableHead>Participant Name</TableHead>
-                                                                    </TableRow>
-                                                                </TableHeader>
-                                                                <TableBody>
-                                                                    {school.participants.map((p: Participant, index: number) => (
-                                                                        <TableRow key={index}>
-                                                                            <TableCell>{index + 1}</TableCell>
-                                                                            <TableCell>{p.name}</TableCell>
-                                                                        </TableRow>
-                                                                    ))}
-                                                                </TableBody>
-                                                            </Table>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </AccordionContent>
-                                        </Card>
-                                    </AccordionItem>
-                                )}
-                            )}
-                        </Accordion>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Sl. No.</TableHead>
+                              <TableHead>School Name</TableHead>
+                              <TableHead>Edit ID</TableHead>
+                              <TableHead className="text-center">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {registrations.map((school, index) => (
+                              <TableRow key={school.id}>
+                                <TableCell>{index + 1}</TableCell>
+                                <TableCell className="font-medium">{school.schoolName}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-xs">{school.id}</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopyId(school.id)}>
+                                        {copiedId === school.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Button asChild variant="outline" size="sm">
+                                    <Link href={`/registration/edit?id=${school.id}`}>
+                                      <Edit className="mr-2 h-4 w-4" /> Edit
+                                    </Link>
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete {school.schoolName}?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This will permanently delete this registration. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDeleteRegistration(school.id)}
+                                          className="bg-destructive hover:bg-destructive/90"
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                     ) : (
-                        <Card>
-                            <CardContent className="pt-6">
-                                <p className="text-center text-muted-foreground py-12">No schools have registered yet.</p>
-                            </CardContent>
-                        </Card>
+                        <p className="text-center text-muted-foreground py-12">No schools have registered yet.</p>
                     )}
-                </div>
+                  </CardContent>
+                </Card>
             </div>
         </div>
     );
 }
-
-    
