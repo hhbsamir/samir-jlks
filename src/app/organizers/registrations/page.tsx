@@ -183,7 +183,10 @@ export default function RegistrationsPage() {
       
       const addImagesToTable = (data: any) => {
         if (data.column.index === 2 && data.cell.section === 'body') {
-            const participantName = data.table.body[data.row.index][1].content;
+            const participant = school.participants[data.row.index];
+            if (!participant) return;
+
+            const participantName = participant.name;
             const imgData = idImages.find(img => img?.name === participantName);
             
             if (imgData) {
