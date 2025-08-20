@@ -403,8 +403,17 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Search className="mr-2" />}
-                            {isLoading ? 'Loading...' : 'Find Registration'}
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 animate-spin" />
+                                    <span>Loading...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Search className="mr-2" />
+                                    <span>Find Registration</span>
+                                </>
+                            )}
                         </Button>
                     </form>
                 </CardContent>
