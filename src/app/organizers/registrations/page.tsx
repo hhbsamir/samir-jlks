@@ -98,8 +98,7 @@ export default function RegistrationsPage() {
         }
     };
 
-    const generatePdfForSchool = async (school: Registration) => {
-      const doc = new jsPDF() as jsPDFWithAutoTable;
+    const generatePdfForSchool = async (doc: jsPDFWithAutoTable, school: Registration) => {
       const primaryColor = '#16a34a'; // A nice green
       const accentColor = '#4f46e5'; // A nice purple
       const pageMargin = 15;
@@ -183,10 +182,10 @@ export default function RegistrationsPage() {
       });
       
       const addImagesToTable = (data: any) => {
-        // `data.table.body` gives rows on all pages, `data.pageNumber` tells us current page
-        // `data.cursor.y` tells us where the table started on the page
         data.table.body.slice(data.row.index).forEach((row: any, rowIndexOnPage: number) => {
             const absoluteRowIndex = data.row.index + rowIndexOnPage;
+            if (!participantBody[absoluteRowIndex]) return;
+
             const participantName = participantBody[absoluteRowIndex][1].content;
             const imgData = idImages.find(img => img?.name === participantName);
             
@@ -228,19 +227,8 @@ export default function RegistrationsPage() {
                 if (index > 0) {
                     masterPdf.addPage();
                 }
-                const schoolPdf = await generatePdfForSchool(school);
-                const schoolPdfDataUri = schoolPdf.output('datauristring');
-                
-                const tempImg = new window.Image();
-                tempImg.src = schoolPdfDataUri;
-                
-                // This is a workaround to get the content onto the master PDF.
-                // It renders the page as an image. A more complex solution
-                // would be to copy page objects, but that's very brittle.
-                masterPdf.addImage(schoolPdfDataUri, 'JPEG', 0, 0, masterPdf.internal.pageSize.width, masterPdf.internal.pageSize.height);
+                await generatePdfForSchool(masterPdf, school);
             }
-            
-            masterPdf.deletePage(masterPdf.internal.pages.length); // Delete the extra blank page at the end
             
             masterPdf.save("All_School_Registrations.pdf");
 
@@ -256,7 +244,8 @@ export default function RegistrationsPage() {
     const handleDownloadSinglePdf = async (school: Registration) => {
         setIsDownloading(true);
         try {
-            const doc = await generatePdfForSchool(school);
+            const doc = new jsPDF() as jsPDFWithAutoTable;
+            await generatePdfForSchool(doc, school);
             doc.save(`${school.schoolName}_Registration.pdf`);
             toast({ title: "Download Successful", description: `PDF for ${school.schoolName} is downloading.` });
         } catch (e) {
@@ -476,3 +465,5 @@ export default function RegistrationsPage() {
         </div>
     );
 }
+
+    
