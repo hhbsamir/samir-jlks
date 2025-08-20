@@ -182,20 +182,24 @@ export default function RegistrationsPage() {
           ]);
       });
       
-      const addImagesToTable = () => {
-          participantBody.forEach((row, rowIndex) => {
-              const participantName = row[1].content;
-              const imgData = idImages.find(img => img?.name === participantName);
-              if (imgData) {
-                  const cell = (doc as any).lastAutoTable.body[rowIndex].cells[2];
-                  if (cell) {
-                      const imageSize = 10;
-                      const x = cell.x + (cell.width - imageSize) / 2;
-                      const y = cell.y + (cell.height - imageSize) / 2;
-                      doc.addImage(imgData.dataUrl, imgData.type, x, y, imageSize, imageSize);
-                  }
-              }
-          });
+      const addImagesToTable = (data: any) => {
+        // `data.table.body` gives rows on all pages, `data.pageNumber` tells us current page
+        // `data.cursor.y` tells us where the table started on the page
+        data.table.body.slice(data.row.index).forEach((row: any, rowIndexOnPage: number) => {
+            const absoluteRowIndex = data.row.index + rowIndexOnPage;
+            const participantName = participantBody[absoluteRowIndex][1].content;
+            const imgData = idImages.find(img => img?.name === participantName);
+            
+            if (imgData) {
+                const cell = data.table.body[absoluteRowIndex].cells[2];
+                if (cell) {
+                    const imageSize = 10;
+                    const x = cell.x + (cell.width - imageSize) / 2;
+                    const y = cell.y + (cell.height - imageSize) / 2;
+                    doc.addImage(imgData.dataUrl, imgData.type, x, y, imageSize, imageSize);
+                }
+            }
+        });
       };
 
       doc.autoTable({
@@ -208,7 +212,7 @@ export default function RegistrationsPage() {
               0: { halign: 'center', cellWidth: 15 },
               2: { halign: 'center', cellWidth: 30 }
           },
-          didDrawPage: addImagesToTable,
+          didDrawCell: addImagesToTable,
           margin: { left: pageMargin, right: pageMargin }
       });
       
