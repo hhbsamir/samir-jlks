@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, PlusCircle, Trash2, Upload, Download, Copy, Check, ArrowLeft, X } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Upload, Download, Copy, Check, ArrowLeft, X, Edit } from 'lucide-react';
 import { NavButtons } from '@/components/common/NavButtons';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, serverTimestamp, doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
@@ -242,7 +242,9 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
           }
       };
 
-      fetchRegistrationData();
+      if (editId) {
+        fetchRegistrationData();
+      }
   }, [editId, form, toast]);
 
 
@@ -317,18 +319,11 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
   }
 
   const SuccessScreen = () => {
-      const [editUrl, setEditUrl] = useState('');
       const [copied, setCopied] = useState(false);
       
-      useEffect(() => {
-          if (newRegistrationId) {
-              setEditUrl(`${window.location.origin}/registration/edit/${newRegistrationId}`);
-          }
-      }, [newRegistrationId]);
-
       const handleCopy = () => {
-          if (editUrl) {
-            navigator.clipboard.writeText(editUrl);
+          if (newRegistrationId) {
+            navigator.clipboard.writeText(newRegistrationId);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           }
@@ -338,20 +333,27 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
           <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-green-500 rounded-lg bg-green-50">
               <Check className="w-16 h-16 text-green-600 bg-white rounded-full p-2 shadow-lg mb-4" />
               <h2 className="font-headline text-2xl sm:text-3xl font-bold text-green-800">Registration Submitted Successfully!</h2>
-              <p className="mt-2 text-green-700">Thank you for registering. Please save the link below to edit your submission later.</p>
+              <p className="mt-2 text-green-700">Please save your Registration ID. You will need it to edit your submission later.</p>
               
               <Alert className="mt-6 text-left bg-white">
-                  <AlertTitle className="font-bold">Your Unique Edit Link</AlertTitle>
+                  <AlertTitle className="font-bold">Your Unique Registration ID</AlertTitle>
                   <AlertDescription>
                       <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
-                          <Input readOnly value={editUrl} className="bg-gray-100" />
-                          <Button onClick={handleCopy} variant="outline" className="w-full sm:w-auto" disabled={!editUrl}>
+                          <Input readOnly value={newRegistrationId} className="bg-gray-100 font-mono text-center" />
+                          <Button onClick={handleCopy} variant="outline" className="w-full sm:w-auto" disabled={!newRegistrationId}>
                               {copied ? <Check className="mr-2"/> : <Copy className="mr-2"/>}
-                              {copied ? 'Copied!' : 'Copy'}
+                              {copied ? 'Copied!' : 'Copy ID'}
                           </Button>
                       </div>
-                      <p className="text-xs mt-2 bg-red-100 text-red-700 font-bold p-2 rounded-md">
-                          Important: Keep this link safe. It is the only way to access and modify your registration details.
+                      <div className="text-center mt-4">
+                        <Button asChild>
+                            <Link href="/registration/edit">
+                                <Edit className="mr-2 h-4 w-4"/> Go to Edit Page
+                            </Link>
+                        </Button>
+                      </div>
+                      <p className="text-xs mt-4 bg-red-100 text-red-700 font-bold p-2 rounded-md">
+                          Important: Keep this ID safe. It is the only way to access and modify your registration details.
                       </p>
                   </AlertDescription>
               </Alert>
@@ -363,7 +365,7 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
       );
   }
 
-  if (isLoading) {
+  if (isLoading && !editId) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
@@ -580,3 +582,4 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
     </div>
   );
 }
+

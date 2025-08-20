@@ -1,0 +1,62 @@
+
+"use client";
+
+import React, { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, Search } from 'lucide-react';
+import RegistrationPage from '@/app/registration/page';
+import { NavButtons } from '@/components/common/NavButtons';
+
+export default function EditRegistrationPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [registrationId, setRegistrationId] = useState('');
+    const [searchedId, setSearchedId] = useState<string | null>(searchParams.get('id'));
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (registrationId) {
+            setSearchedId(registrationId);
+        }
+    };
+
+    if (searchedId) {
+        return <RegistrationPage editId={searchedId} />;
+    }
+
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-background p-4">
+             <div className="absolute top-4 left-4 z-50">
+                <NavButtons />
+            </div>
+            <Card className="w-full max-w-md mx-4">
+                <CardHeader className="text-center">
+                    <CardTitle className="font-headline text-3xl text-primary">Edit Registration</CardTitle>
+                    <CardDescription>Enter your Registration ID to find and edit your submission.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSearch} className="space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="registrationId">Registration ID</Label>
+                            <Input
+                                id="registrationId"
+                                type="text"
+                                placeholder="Paste your ID here"
+                                value={registrationId}
+                                onChange={(e) => setRegistrationId(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <Button type="submit" className="w-full">
+                           <Search className="mr-2" /> Find Registration
+                       </Button>
+                    </form>
+                </CardContent>
+            </Card>
+        </div>
+    );
+}
