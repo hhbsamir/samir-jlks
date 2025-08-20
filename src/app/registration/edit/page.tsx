@@ -1,6 +1,6 @@
 "use client";
 
-import React, 'react';
+import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import RegistrationForm from '@/components/registration-form';
 
