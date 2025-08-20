@@ -4,8 +4,6 @@ import React from 'react';
 import { useSearchParams } from 'next/navigation';
 import RegistrationForm from '@/components/registration-form';
 
-export const dynamic = 'force-dynamic';
-
 export default function EditRegistrationPage() {
     const searchParams = useSearchParams();
     const editId = searchParams.get('id');
