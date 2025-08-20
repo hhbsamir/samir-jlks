@@ -463,7 +463,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             <p className="font-semibold text-lg text-primary">Loading circular...</p>
           </div>
-        ) : settings?.registrationPdfUrl && (
+        ) : settings?.registrationPdfUrl && !editId && (
           <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center">
             <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
             <div className="flex flex-col items-center gap-2">
@@ -607,7 +607,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                   <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="ifscCode" render={({ field }) => (
-                  <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormMessage>
                 )} />
                 <FormField control={form.control} name="upiId" render={({ field }) => (
                   <FormItem><FormLabel>UPI ID (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -627,7 +627,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                   <FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                  <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormMessage>
                 )} />
                  <FormField control={form.control} name="email" render={({ field }) => (
                   <FormItem><FormLabel>Email (Optional)</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
