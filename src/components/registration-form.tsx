@@ -329,6 +329,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
           if (newRegistrationId) {
             navigator.clipboard.writeText(newRegistrationId);
             setCopied(true);
+            toast({ title: "Copied!", description: "Registration ID copied to clipboard." });
             setTimeout(() => setCopied(false), 2000);
           }
       };
@@ -403,16 +404,16 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? (
-                                <>
+                           {isLoading ? (
+                                <React.Fragment>
                                     <Loader2 className="mr-2 animate-spin" />
                                     <span>Loading...</span>
-                                </>
+                                </React.Fragment>
                             ) : (
-                                <>
+                                <React.Fragment>
                                     <Search className="mr-2" />
                                     <span>Find Registration</span>
-                                </>
+                                </React.Fragment>
                             )}
                         </Button>
                     </form>
@@ -605,10 +606,10 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                   <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="confirmAccountNumber" render={({ field }) => (
-                  <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
+                  <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="ifscCode" render={({ field }) => (
-                  <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormMessage>
+                  <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="upiId" render={({ field }) => (
                   <FormItem><FormLabel>UPI ID (Optional)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -625,10 +626,10 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                   <FormItem><FormLabel>Contact Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="designation" render={({ field }) => (
-                  <FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
+                  <FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                  <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormMessage>
+                  <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                  <FormField control={form.control} name="email" render={({ field }) => (
                   <FormItem><FormLabel>Email (Optional)</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
