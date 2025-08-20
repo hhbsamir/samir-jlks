@@ -4,9 +4,8 @@
 import React, { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, FileSpreadsheet, Loader2, Trash2, Edit, Copy, Check } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Download, FileText, FileSpreadsheet, Loader2, Trash2, Edit, Copy, Check, Users, Banknote, UserSquare, VenetianMask } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useCompetitionData } from '@/app/organizers/layout';
 import type { Registration, Participant } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -17,6 +16,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { collection, getDocs, writeBatch, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
 
 
 // Extend jsPDF with autoTable
@@ -199,7 +201,7 @@ export default function RegistrationsPage() {
                 if (image.dataUrl) {
                     doc.setFontSize(8);
                     doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
-                    doc.addImage(image.dataUrl, 'JPEG', xPos, textHeight, imgWidth, imgHeight);
+                    doc.addImage(image.dataUrl, 'JPEG', xPos, yPos + textHeight, imgWidth, imgHeight);
                 } else {
                     doc.setFontSize(8);
                     doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
@@ -221,8 +223,18 @@ export default function RegistrationsPage() {
         try {
             const doc = new jsPDF() as jsPDFWithAutoTable;
             for (const [index, school] of registrations.entries()) {
-                if (index > 0) doc.addPage();
-                await generatePdfForSchool(school); // Re-use single school generation
+                const schoolPdf = await generatePdfForSchool(school);
+                const pages = schoolPdf.internal.pages;
+                 for (let j = 1; j < pages.length; j++) {
+                     if (index > 0 || j > 1) doc.addPage();
+                     const page = schoolPdf.internal.getPage(j);
+                     doc.internal.pageSize.width = page.width;
+                     doc.internal.pageSize.height = page.height;
+                     doc.addPage(page.width, page.height);
+                     doc.internal.write("q"); 
+                     doc.internal.getFormObject(doc.internal.pages[doc.internal.pages.length-1][1]).doForm(page.forms);
+                     doc.internal.write("Q");
+                }
             }
             doc.save("All_School_Registrations.pdf");
             toast({ title: "Download Successful", description: "Full registration PDF is being downloaded." });
@@ -333,80 +345,127 @@ export default function RegistrationsPage() {
                     </AlertDialog>
                 </div>
                 <Card>
-                  <CardContent className="pt-6">
-                     {loading ? (
-                        <div className="flex justify-center items-center py-20">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        </div>
-                    ) : registrations.length > 0 ? (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Sl. No.</TableHead>
-                              <TableHead>School Name</TableHead>
-                              <TableHead>Edit ID</TableHead>
-                              <TableHead className="text-center">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {registrations.map((school, index) => (
-                              <TableRow key={school.id}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell className="font-medium">{school.schoolName}</TableCell>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-mono text-xs">{school.id}</span>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopyId(school.id)}>
-                                        {copiedId === school.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                                    </Button>
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                  <Button asChild variant="outline" size="sm">
-                                    <Link href={`/registration/edit?id=${school.id}`}>
-                                      <Edit className="mr-2 h-4 w-4" /> Edit
-                                    </Link>
-                                  </Button>
-                                  <Button variant="ghost" size="icon" onClick={() => handleDownloadSinglePdf(school)} disabled={isDownloading}>
-                                    <Download className="h-4 w-4 text-primary" />
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon">
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete {school.schoolName}?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          This will permanently delete this registration. This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => handleDeleteRegistration(school.id)}
-                                          className="bg-destructive hover:bg-destructive/90"
-                                        >
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                    ) : (
-                        <p className="text-center text-muted-foreground py-12">No schools have registered yet.</p>
-                    )}
-                  </CardContent>
+                    <CardContent className="pt-6">
+                        {loading ? (
+                            <div className="flex justify-center items-center py-20">
+                                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                            </div>
+                        ) : registrations.length > 0 ? (
+                            <Accordion type="multiple" className="w-full space-y-4">
+                                {registrations.map((school, index) => (
+                                    <AccordionItem value={school.id} key={school.id} className="border rounded-lg overflow-hidden">
+                                        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/50 data-[state=open]:bg-muted/50">
+                                            <div className="flex justify-between items-center w-full">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold">{index + 1}</span>
+                                                    <h3 className="font-headline text-lg md:text-xl text-left">{school.schoolName}</h3>
+                                                </div>
+                                            </div>
+                                        </AccordionTrigger>
+                                        <AccordionContent className="bg-muted/20">
+                                            <div className="p-6 space-y-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                    
+                                                    <Card>
+                                                        <CardHeader>
+                                                            <CardTitle className="flex items-center gap-2 text-lg"><Users />Participants</CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent>
+                                                            <ul className="space-y-2">
+                                                                {school.participants.map((p, i) => (
+                                                                    <li key={i} className="flex items-center justify-between">
+                                                                        <span className="text-sm">{i+1}. {p.name}</span>
+                                                                        {p.idCardUrl && (
+                                                                             <div className="relative h-10 w-16 rounded-md overflow-hidden border">
+                                                                                <Image src={p.idCardUrl} alt={`ID for ${p.name}`} layout="fill" objectFit="cover" />
+                                                                             </div>
+                                                                        )}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </CardContent>
+                                                    </Card>
+                                                    
+                                                    <Card>
+                                                        <CardHeader>
+                                                            <CardTitle className="flex items-center gap-2 text-lg"><Banknote />Bank Details</CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent className="space-y-1 text-sm">
+                                                            <p><strong>Holder:</strong> {school.bankDetails.accountHolderName}</p>
+                                                            <p><strong>Bank:</strong> {school.bankDetails.bankName}</p>
+                                                            <p><strong>Account:</strong> {school.bankDetails.accountNumber}</p>
+                                                            <p><strong>IFSC:</strong> {school.bankDetails.ifscCode}</p>
+                                                            {school.bankDetails.upiId && <p><strong>UPI:</strong> {school.bankDetails.upiId}</p>}
+                                                        </CardContent>
+                                                    </Card>
+
+                                                    <Card>
+                                                        <CardHeader>
+                                                            <CardTitle className="flex items-center gap-2 text-lg"><UserSquare />Contact Person</CardTitle>
+                                                        </CardHeader>
+                                                        <CardContent className="space-y-1 text-sm">
+                                                            <p><strong>Name:</strong> {school.contactPerson.contactName}</p>
+                                                            <p><strong>Designation:</strong> {school.contactPerson.designation}</p>
+                                                            <p><strong>Mobile:</strong> {school.contactPerson.mobileNumber}</p>
+                                                            {school.contactPerson.email && <p><strong>Email:</strong> {school.contactPerson.email}</p>}
+                                                        </CardContent>
+                                                    </Card>
+
+                                                </div>
+                                                <Separator />
+                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono text-xs text-muted-foreground bg-muted p-1 rounded">ID: {school.id}</span>
+                                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyId(school.id)}>
+                                                            {copiedId === school.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                                                        </Button>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Button asChild variant="outline" size="sm">
+                                                            <Link href={`/registration/edit?id=${school.id}`}>
+                                                                <Edit className="mr-2 h-4 w-4" /> Edit
+                                                            </Link>
+                                                        </Button>
+                                                        <Button variant="outline" size="sm" onClick={() => handleDownloadSinglePdf(school)} disabled={isDownloading}>
+                                                            <Download className="h-4 w-4 mr-2" /> Download PDF
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                            <Button variant="destructive" size="sm">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Delete {school.schoolName}?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                This will permanently delete this registration. This action cannot be undone.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction
+                                                                onClick={() => handleDeleteRegistration(school.id)}
+                                                                className="bg-destructive hover:bg-destructive/90"
+                                                                >
+                                                                Delete
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
+                        ) : (
+                            <p className="text-center text-muted-foreground py-12">No schools have registered yet.</p>
+                        )}
+                    </CardContent>
                 </Card>
             </div>
         </div>
     );
 }
-
-    
