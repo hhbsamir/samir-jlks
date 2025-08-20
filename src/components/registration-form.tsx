@@ -403,9 +403,9 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                           {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Search className="mr-2" />}
-                           {isLoading ? 'Loading...' : 'Find Registration'}
-                       </Button>
+                            {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Search className="mr-2" />}
+                            {isLoading ? 'Loading...' : 'Find Registration'}
+                        </Button>
                     </form>
                 </CardContent>
             </Card>
@@ -466,20 +466,12 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
         ) : settings?.registrationPdfUrl && !editId && (
           <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center">
             <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
-            <div className="flex flex-col items-center gap-2">
               <Button asChild>
-                <a href={settings.registrationPdfUrl} download={getDownloadFilename()} target="_blank" rel="noopener noreferrer">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Circular
-                </a>
+                  <a href={settings.registrationPdfUrl} download={getDownloadFilename()} target="_blank" rel="noopener noreferrer">
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Circular
+                  </a>
               </Button>
-              <Button asChild variant="secondary">
-                  <Link href="/registration/edit">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Registration
-                  </Link>
-              </Button>
-            </div>
           </div>
         )}
 
@@ -604,7 +596,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                   <FormItem><FormLabel>Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="confirmAccountNumber" render={({ field }) => (
-                  <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Confirm Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
                 )} />
                 <FormField control={form.control} name="ifscCode" render={({ field }) => (
                   <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} /></FormControl><FormMessage /></FormMessage>
@@ -624,7 +616,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                   <FormItem><FormLabel>Contact Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="designation" render={({ field }) => (
-                  <FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Designation</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
                 )} />
                 <FormField control={form.control} name="mobileNumber" render={({ field }) => (
                   <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormMessage>
