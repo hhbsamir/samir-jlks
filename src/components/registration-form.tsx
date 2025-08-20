@@ -349,22 +349,22 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                               {copied ? 'Copied!' : 'Copy ID'}
                           </Button>
                       </div>
-                      <div className="text-center mt-4">
-                        <Button asChild>
-                            <Link href="/registration/edit">
-                                <Edit className="mr-2 h-4 w-4"/> Go to Edit Page
-                            </Link>
-                        </Button>
-                      </div>
                       <p className="text-xs mt-4 bg-red-100 text-red-700 font-bold p-2 rounded-md">
                           Important: Keep this ID safe. It is the only way to access and modify your registration details.
                       </p>
                   </AlertDescription>
               </Alert>
 
-              <Button onClick={() => window.location.href = '/registration'} className="mt-8" variant="destructive">
-                  <X className="mr-2" /> Close Page
-              </Button>
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                  <Button asChild>
+                      <Link href={`/registration/edit?id=${newRegistrationId}`}>
+                          <Edit className="mr-2 h-4 w-4"/> Go to Edit Page
+                      </Link>
+                  </Button>
+                   <Button onClick={() => window.location.href = '/registration'} variant="outline">
+                      <PlusCircle className="mr-2" /> Start New Registration
+                  </Button>
+              </div>
           </div>
       );
   }
