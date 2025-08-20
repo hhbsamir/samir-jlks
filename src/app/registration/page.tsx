@@ -163,7 +163,7 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
     );
 }
 
-export default function RegistrationPage({ editId }: { editId?: string }) {
+export default function RegistrationPage({ editId, initialData }: { editId?: string; initialData?: Registration | null }) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(!!editId);
@@ -210,42 +210,23 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
   }, [toast]);
   
   useEffect(() => {
-      const fetchRegistrationData = async () => {
-          if (!editId) return;
-          setIsLoading(true);
-          try {
-              const docRef = doc(db, 'registrations', editId);
-              const docSnap = await getDoc(docRef);
-              if (docSnap.exists()) {
-                  const data = docSnap.data() as Registration;
-                  form.reset({
-                      schoolName: data.schoolName,
-                      participants: data.participants,
-                      accountHolderName: data.bankDetails.accountHolderName,
-                      bankName: data.bankDetails.bankName,
-                      accountNumber: data.bankDetails.accountNumber,
-                      confirmAccountNumber: data.bankDetails.accountNumber, // Pre-fill confirmation
-                      ifscCode: data.bankDetails.ifscCode,
-                      upiId: data.bankDetails.upiId,
-                      contactName: data.contactPerson.contactName,
-                      designation: data.contactPerson.designation,
-                      mobileNumber: data.contactPerson.mobileNumber,
-                      email: data.contactPerson.email,
-                  });
-              } else {
-                  toast({ title: "Not Found", description: "The registration you are trying to edit does not exist.", variant: "destructive" });
-              }
-          } catch(e) {
-              toast({ title: "Error", description: "Failed to load registration data.", variant: "destructive" });
-          } finally {
-              setIsLoading(false);
-          }
-      };
-
-      if (editId) {
-        fetchRegistrationData();
+      if (editId && initialData) {
+          form.reset({
+              schoolName: initialData.schoolName,
+              participants: initialData.participants,
+              accountHolderName: initialData.bankDetails.accountHolderName,
+              bankName: initialData.bankDetails.bankName,
+              accountNumber: initialData.bankDetails.accountNumber,
+              confirmAccountNumber: initialData.bankDetails.accountNumber, // Pre-fill confirmation
+              ifscCode: initialData.bankDetails.ifscCode,
+              upiId: initialData.bankDetails.upiId,
+              contactName: initialData.contactPerson.contactName,
+              designation: initialData.contactPerson.designation,
+              mobileNumber: initialData.contactPerson.mobileNumber,
+              email: initialData.contactPerson.email,
+          });
       }
-  }, [editId, form, toast]);
+  }, [editId, initialData, form]);
 
 
   const { fields, append, remove, update } = useFieldArray({
@@ -592,6 +573,3 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
     </div>
   );
 }
-
-
-    

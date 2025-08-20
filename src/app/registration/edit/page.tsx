@@ -7,44 +7,67 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import RegistrationPage from '@/app/registration/page';
 import { NavButtons } from '@/components/common/NavButtons';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
+import type { Registration } from '@/lib/data';
 
-export default function EditRegistrationSearchPage() {
+export default function EditRegistrationController() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { toast } = useToast();
+
     const [registrationIdInput, setRegistrationIdInput] = useState('');
-    
-    // The ID is stored in the component's state. It can be set from the URL or the search input.
-    const [editId, setEditId] = useState<string | null>(searchParams.get('id'));
+    const [registrationData, setRegistrationData] = useState<Registration | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchedId, setSearchedId] = useState<string | null>(searchParams.get('id'));
 
-    // This effect ensures that if the user pastes a URL with an ID, it's used.
+    // This effect runs if an ID is in the URL when the page loads
     useEffect(() => {
-        const idFromUrl = searchParams.get('id');
-        if (idFromUrl) {
-            setEditId(idFromUrl);
-        }
-    }, [searchParams]);
+        const fetchInitialData = async () => {
+            if (searchedId && !registrationData) {
+                setIsLoading(true);
+                try {
+                    const docRef = doc(db, 'registrations', searchedId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        setRegistrationData({ id: docSnap.id, ...docSnap.data() } as Registration);
+                    } else {
+                        toast({ title: "Not Found", description: "The registration you are trying to edit does not exist.", variant: "destructive" });
+                        setSearchedId(null); // Clear invalid ID
+                    }
+                } catch (e) {
+                    toast({ title: "Error", description: "Failed to load registration data.", variant: "destructive" });
+                    setSearchedId(null); // Clear invalid ID
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        };
+        fetchInitialData();
+    }, [searchedId, registrationData, toast]);
 
-    const handleSearch = (e: React.FormEvent) => {
+
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
         if (registrationIdInput) {
-            // Update the URL and the state to trigger the edit view
             router.push(`/registration/edit?id=${registrationIdInput}`, { scroll: false });
-            setEditId(registrationIdInput);
+            setSearchedId(registrationIdInput);
         }
     };
 
-    // If an ID is present (from URL or search), show the main registration page in edit mode.
-    if (editId) {
-        return <RegistrationPage editId={editId} />;
+    // If we have registration data, show the form in edit mode
+    if (registrationData && searchedId) {
+        return <RegistrationPage editId={searchedId} initialData={registrationData} />;
     }
 
-    // Otherwise, show the search form.
+    // Otherwise, show the search form
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
-             <div className="absolute top-4 left-4 z-50">
+            <div className="absolute top-4 left-4 z-50">
                 <NavButtons />
             </div>
             <Card className="w-full max-w-md mx-4">
@@ -65,8 +88,9 @@ export default function EditRegistrationSearchPage() {
                                 required
                             />
                         </div>
-                        <Button type="submit" className="w-full">
-                           <Search className="mr-2" /> Find Registration
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                           {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Search className="mr-2" />}
+                           {isLoading ? 'Loading...' : 'Find Registration'}
                        </Button>
                     </form>
                 </CardContent>
