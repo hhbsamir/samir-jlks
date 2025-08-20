@@ -26,8 +26,8 @@ export default function OrganizersPage() {
 
   return (
     <div className="flex flex-col items-center justify-center text-center p-4 h-full">
-        <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold mb-4 animated-gradient">
-            Welcome to the Organizer's Dashboard
+        <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+            <span className="animated-gradient">Welcome</span> to the Organizer's Dashboard
         </h1>
         <p className="text-muted-foreground mb-8">
             Select an option from the menu to manage the competition.
