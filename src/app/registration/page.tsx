@@ -409,14 +409,22 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
             <p className="font-semibold text-lg text-primary">Loading circular...</p>
           </div>
         ) : settings?.registrationPdfUrl && (
-          <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+          <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center">
             <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
-            <Button asChild>
-              <a href={settings.registrationPdfUrl} download={getDownloadFilename()} target="_blank" rel="noopener noreferrer">
-                <Download className="mr-2 h-4 w-4" />
-                Download Circular
-              </a>
-            </Button>
+            <div className="flex flex-col items-center gap-2">
+              <Button asChild>
+                <a href={settings.registrationPdfUrl} download={getDownloadFilename()} target="_blank" rel="noopener noreferrer">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Circular
+                </a>
+              </Button>
+              <Button asChild variant="secondary">
+                  <Link href="/registration/edit">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Registration
+                  </Link>
+              </Button>
+            </div>
           </div>
         )}
 
@@ -585,3 +593,5 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
   );
 }
 
+
+    
