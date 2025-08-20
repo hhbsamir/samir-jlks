@@ -99,144 +99,147 @@ export default function RegistrationsPage() {
     };
 
     const generatePdfForSchool = async (school: Registration) => {
-        const doc = new jsPDF() as jsPDFWithAutoTable;
+      const doc = new jsPDF() as jsPDFWithAutoTable;
+      const primaryColor = '#16a34a'; // A nice green
+      const accentColor = '#4f46e5'; // A nice purple
+      const pageMargin = 15;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let lastY = 0;
 
-        doc.setFontSize(18);
-        doc.text(school.schoolName, 14, 22);
-        doc.setFontSize(11);
-        
-        doc.autoTable({
-            startY: 30,
-            head: [['Details', 'Information']],
-            body: [
-                ['Contact Person', school.contactPerson.contactName],
-                ['Designation', school.contactPerson.designation],
-                ['Mobile Number', school.contactPerson.mobileNumber],
-                ['Email', school.contactPerson.email || 'N/A'],
-            ],
-            theme: 'striped'
-        });
+      // --- PDF Header ---
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(primaryColor);
+      doc.text('Interschool Cultural Meet Registration', pageWidth / 2, 20, { align: 'center' });
 
-        let finalY = (doc as any).lastAutoTable.finalY;
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(accentColor);
+      doc.text(school.schoolName, pageWidth / 2, 30, { align: 'center' });
+      lastY = 35;
 
-        doc.autoTable({
-            startY: finalY + 10,
-            head: [['Bank Details', '']],
-            body: [
-                ['Account Holder', school.bankDetails.accountHolderName],
-                ['Bank', school.bankDetails.bankName],
-                ['Account No', school.bankDetails.accountNumber],
-                ['IFSC Code', school.bankDetails.ifscCode],
-                ['UPI ID', school.bankDetails.upiId || 'N/A'],
-            ],
-                headStyles: { fillColor: [22, 163, 74] },
-        });
-        
-        finalY = (doc as any).lastAutoTable.finalY;
+      // --- Contact Person Details ---
+      doc.autoTable({
+          startY: lastY + 10,
+          head: [['Contact Information', '']],
+          body: [
+              ['Contact Person', school.contactPerson.contactName],
+              ['Designation', school.contactPerson.designation],
+              ['Mobile Number', school.contactPerson.mobileNumber],
+              ['Email', school.contactPerson.email || 'N/A'],
+          ],
+          theme: 'striped',
+          headStyles: { fillColor: primaryColor, textColor: 255, fontStyle: 'bold', fontSize: 12 },
+          columnStyles: { 0: { fontStyle: 'bold' } },
+          margin: { left: pageMargin, right: pageMargin }
+      });
+      lastY = (doc as any).lastAutoTable.finalY;
 
-        doc.autoTable({
-            startY: finalY + 10,
-            head: [['#', 'Participant Name']],
-            body: school.participants.map((p, i) => [i + 1, p.name]),
-                headStyles: { fillColor: [37, 99, 235] },
-        });
+      // --- Bank Details ---
+      doc.autoTable({
+          startY: lastY + 10,
+          head: [['Bank Details', '']],
+          body: [
+              ['Account Holder', school.bankDetails.accountHolderName],
+              ['Bank', school.bankDetails.bankName],
+              ['Account Number', school.bankDetails.accountNumber],
+              ['IFSC Code', school.bankDetails.ifscCode],
+              ['UPI ID', school.bankDetails.upiId || 'N/A'],
+          ],
+          theme: 'striped',
+          headStyles: { fillColor: accentColor, textColor: 255, fontStyle: 'bold', fontSize: 12 },
+          columnStyles: { 0: { fontStyle: 'bold' } },
+          margin: { left: pageMargin, right: pageMargin }
+      });
+      lastY = (doc as any).lastAutoTable.finalY;
+      
+      // --- Participants Table ---
+      const participantBody: any[] = [];
+      const idImagePromises = school.participants.map(p => {
+          if (!p.idCardUrl) return Promise.resolve(null);
+          return new Promise(async (resolve) => {
+              try {
+                  const response = await fetch(p.idCardUrl);
+                  const blob = await response.blob();
+                  const reader = new FileReader();
+                  reader.onload = (e) => resolve({ name: p.name, dataUrl: e.target?.result as string, type: blob.type.split('/')[1].toUpperCase() });
+                  reader.onerror = () => resolve(null);
+                  reader.readAsDataURL(blob);
+              } catch (e) {
+                  console.error("Image fetch error:", e);
+                  resolve(null);
+              }
+          });
+      });
 
-        const participantsWithId = school.participants.filter(p => p.idCardUrl);
-        if (participantsWithId.length > 0) {
-            doc.addPage();
-            doc.setFontSize(18);
-            doc.text(`${school.schoolName} - ID Cards`, 14, 22);
+      const idImages = (await Promise.all(idImagePromises)).filter(Boolean);
 
-            const pageMargin = 10;
-            const topMargin = 30;
-            const bottomMargin = 10;
-            const gap = 4;
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const contentWidth = pageWidth - (pageMargin * 2);
-            
-            const images = [];
+      school.participants.forEach((p, index) => {
+          participantBody.push([
+              { content: index + 1, styles: { halign: 'center', valign: 'middle' } },
+              { content: p.name, styles: { valign: 'middle' } },
+              { content: '', styles: { minCellHeight: 12, halign: 'center', valign: 'middle' } } // Placeholder for image
+          ]);
+      });
+      
+      const addImagesToTable = () => {
+          participantBody.forEach((row, rowIndex) => {
+              const participantName = row[1].content;
+              const imgData = idImages.find(img => img?.name === participantName);
+              if (imgData) {
+                  const cell = (doc as any).lastAutoTable.body[rowIndex].cells[2];
+                  if (cell) {
+                      const imageSize = 10;
+                      const x = cell.x + (cell.width - imageSize) / 2;
+                      const y = cell.y + (cell.height - imageSize) / 2;
+                      doc.addImage(imgData.dataUrl, imgData.type, x, y, imageSize, imageSize);
+                  }
+              }
+          });
+      };
 
-            // First pass: load images and get dimensions
-            for (const participant of participantsWithId) {
-                if (participant.idCardUrl) {
-                    try {
-                        const response = await fetch(participant.idCardUrl);
-                        const blob = await response.blob();
-                        const reader = new FileReader();
-                        const dataUrl = await new Promise<string>(resolve => {
-                            reader.onload = (e) => resolve(e.target?.result as string);
-                            reader.readAsDataURL(blob);
-                        });
-                        images.push({ dataUrl, name: participant.name });
-                    } catch (e) {
-                        console.error(`Could not load image for ${participant.name}`, e);
-                        images.push({ dataUrl: null, name: participant.name });
-                    }
-                }
-            }
-
-            // Calculate layout dynamically
-            const numImages = images.length;
-            let numCols = 4;
-            if (numImages <= 3) numCols = numImages;
-            else if (numImages <= 8) numCols = 4;
-            else if (numImages <= 15) numCols = 5;
-            else numCols = 6; // Max 6 columns for very large groups
-            
-            const imgWidth = (contentWidth - (gap * (numCols - 1))) / numCols;
-            const imgHeight = imgWidth * 1.5; // Assuming a 2:3 aspect ratio for ID cards
-            const textHeight = 5;
-            const totalItemHeight = imgHeight + textHeight + gap;
-
-            let xPos = pageMargin;
-            let yPos = topMargin;
-
-            for (const image of images) {
-                if (yPos + totalItemHeight > pageHeight - bottomMargin) {
-                    console.warn("ID cards might overflow the page. Consider a multi-page layout for large numbers of participants.");
-                    break;
-                }
-
-                if (image.dataUrl) {
-                    doc.setFontSize(8);
-                    doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
-                    doc.addImage(image.dataUrl, 'JPEG', xPos, yPos + textHeight, imgWidth, imgHeight);
-                } else {
-                    doc.setFontSize(8);
-                    doc.text(image.name, xPos + imgWidth / 2, yPos, { maxWidth: imgWidth, align: 'center' });
-                    doc.text('Image error', xPos, yPos + 10);
-                }
-
-                xPos += imgWidth + gap;
-                if (xPos >= pageWidth - pageMargin) {
-                    xPos = pageMargin;
-                    yPos += totalItemHeight;
-                }
-            }
-        }
-        return doc;
+      doc.autoTable({
+          startY: lastY + 10,
+          head: [['#', 'Participant Name', 'ID Card Photo']],
+          body: participantBody,
+          theme: 'grid',
+          headStyles: { fillColor: primaryColor, textColor: 255, fontStyle: 'bold', fontSize: 12 },
+          columnStyles: { 
+              0: { halign: 'center', cellWidth: 15 },
+              2: { halign: 'center', cellWidth: 30 }
+          },
+          didDrawPage: addImagesToTable,
+          margin: { left: pageMargin, right: pageMargin }
+      });
+      
+      return doc;
     };
     
     const handleDownloadAllPdf = async () => {
         setIsDownloading(true);
         try {
-            const doc = new jsPDF() as jsPDFWithAutoTable;
+            const masterPdf = new jsPDF() as jsPDFWithAutoTable;
+            
             for (const [index, school] of registrations.entries()) {
-                const schoolPdf = await generatePdfForSchool(school);
-                const pages = schoolPdf.internal.pages;
-                 for (let j = 1; j < pages.length; j++) {
-                     if (index > 0 || j > 1) doc.addPage();
-                     const page = schoolPdf.internal.getPage(j);
-                     doc.internal.pageSize.width = page.width;
-                     doc.internal.pageSize.height = page.height;
-                     doc.addPage(page.width, page.height);
-                     doc.internal.write("q"); 
-                     doc.internal.getFormObject(doc.internal.pages[doc.internal.pages.length-1][1]).doForm(page.forms);
-                     doc.internal.write("Q");
+                if (index > 0) {
+                    masterPdf.addPage();
                 }
+                const schoolPdf = await generatePdfForSchool(school);
+                const schoolPdfDataUri = schoolPdf.output('datauristring');
+                
+                const tempImg = new window.Image();
+                tempImg.src = schoolPdfDataUri;
+                
+                // This is a workaround to get the content onto the master PDF.
+                // It renders the page as an image. A more complex solution
+                // would be to copy page objects, but that's very brittle.
+                masterPdf.addImage(schoolPdfDataUri, 'JPEG', 0, 0, masterPdf.internal.pageSize.width, masterPdf.internal.pageSize.height);
             }
-            doc.save("All_School_Registrations.pdf");
+            
+            masterPdf.deletePage(masterPdf.internal.pages.length); // Delete the extra blank page at the end
+            
+            masterPdf.save("All_School_Registrations.pdf");
+
             toast({ title: "Download Successful", description: "Full registration PDF is being downloaded." });
         } catch (e) {
             console.error(e);
