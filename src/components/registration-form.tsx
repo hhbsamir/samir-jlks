@@ -404,7 +404,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                           {isLoading ? (
+                             {isLoading ? (
                                 <React.Fragment>
                                     <Loader2 className="mr-2 animate-spin" />
                                     <span>Loading...</span>
