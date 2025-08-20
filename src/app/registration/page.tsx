@@ -20,6 +20,7 @@ import Image from 'next/image';
 import type { InterschoolCulturalSettings, Registration } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
@@ -165,6 +166,7 @@ function ParticipantIdUploader({ index, onUploadSuccess }: { index: number; onUp
 
 export default function RegistrationPage({ editId, initialData }: { editId?: string; initialData?: Registration | null }) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(!!editId);
   const [settings, setSettings] = useState<InterschoolCulturalSettings | null>(null);
@@ -269,9 +271,7 @@ export default function RegistrationPage({ editId, initialData }: { editId?: str
               title: 'Registration Updated!',
               description: 'Your changes have been saved successfully.',
             });
-            // Consider redirecting or providing a link back
-            window.location.href = `/registration/edit?id=${editId}`;
-
+            router.refresh();
         } else {
             const docRef = await addDoc(collection(db, 'registrations'), {
                 ...registrationData,
