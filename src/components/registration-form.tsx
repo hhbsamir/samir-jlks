@@ -460,9 +460,18 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
       </div>
       <div className="max-w-4xl mx-auto w-full">
         <div className="text-center mb-8 pt-12 sm:pt-0">
-          <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
-            {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}
-          </h1>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
+                {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}
+              </h1>
+              {!editId && (
+                <Button asChild variant="outline">
+                    <Link href="/registration/edit">
+                        <Edit className="mr-2 h-4 w-4"/> Edit Registration
+                    </Link>
+                </Button>
+              )}
+          </div>
           <p className="text-muted-foreground mt-2">
             {editId ? 'Modify the details below and click update.' : "Enter your school's details to participate"}
           </p>
