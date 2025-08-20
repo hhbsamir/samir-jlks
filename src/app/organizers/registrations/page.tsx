@@ -182,23 +182,18 @@ export default function RegistrationsPage() {
       });
       
       const addImagesToTable = (data: any) => {
-        data.table.body.slice(data.row.index).forEach((row: any, rowIndexOnPage: number) => {
-            const absoluteRowIndex = data.row.index + rowIndexOnPage;
-            if (!participantBody[absoluteRowIndex]) return;
-
-            const participantName = participantBody[absoluteRowIndex][1].content;
+        if (data.column.index === 2 && data.cell.section === 'body') {
+            const participantName = data.table.body[data.row.index][1].content;
             const imgData = idImages.find(img => img?.name === participantName);
             
             if (imgData) {
-                const cell = data.table.body[absoluteRowIndex].cells[2];
-                if (cell) {
-                    const imageSize = 10;
-                    const x = cell.x + (cell.width - imageSize) / 2;
-                    const y = cell.y + (cell.height - imageSize) / 2;
-                    doc.addImage(imgData.dataUrl, imgData.type, x, y, imageSize, imageSize);
-                }
+                const cell = data.cell;
+                const imageSize = 10;
+                const x = cell.x + (cell.width - imageSize) / 2;
+                const y = cell.y + (cell.height - imageSize) / 2;
+                doc.addImage(imgData.dataUrl, imgData.type, x, y, imageSize, imageSize);
             }
-        });
+        }
       };
 
       doc.autoTable({
@@ -465,5 +460,3 @@ export default function RegistrationsPage() {
         </div>
     );
 }
-
-    
