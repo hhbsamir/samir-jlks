@@ -288,6 +288,8 @@ export default function RegistrationPage({ editId }: { editId?: string }) {
               title: 'Registration Updated!',
               description: 'Your changes have been saved successfully.',
             });
+            // Consider redirecting or providing a link back
+            window.location.href = `/registration/edit?id=${editId}`;
 
         } else {
             const docRef = await addDoc(collection(db, 'registrations'), {

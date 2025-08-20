@@ -2,32 +2,36 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import RegistrationPage from '@/app/registration/page';
 import { NavButtons } from '@/components/common/NavButtons';
 
-export default function EditRegistrationPage() {
-    const router = useRouter();
+export default function EditRegistrationSearchPage() {
     const searchParams = useSearchParams();
     const [registrationId, setRegistrationId] = useState('');
+    
+    // We get the ID from the URL search params on initial load or from the user's search.
     const [searchedId, setSearchedId] = useState<string | null>(searchParams.get('id'));
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (registrationId) {
+            // Update the state to trigger re-render with the RegistrationPage
             setSearchedId(registrationId);
         }
     };
 
+    // If an ID has been searched for (or was in the URL), show the main registration page in edit mode.
     if (searchedId) {
         return <RegistrationPage editId={searchedId} />;
     }
 
+    // Otherwise, show the search form.
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
              <div className="absolute top-4 left-4 z-50">
