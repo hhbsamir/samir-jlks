@@ -15,6 +15,8 @@ import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { Registration } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export default function EditRegistrationController() {
     const router = useRouter();
     const searchParams = useSearchParams();
