@@ -456,6 +456,13 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
               <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
                 {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}
               </h1>
+              {!editId && (
+                <Button asChild variant="outline">
+                    <Link href="/registration/edit">
+                        <Edit className="mr-2 h-4 w-4"/> Edit Registration
+                    </Link>
+                </Button>
+              )}
           </div>
           <p className="text-muted-foreground mt-2">
             {editId ? 'Modify the details below and click update.' : "Enter your school's details to participate"}
@@ -467,7 +474,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             <p className="font-semibold text-lg text-primary">Loading circular...</p>
           </div>
-        ) : settings?.registrationPdfUrl && !editId && (
+        ) : settings?.registrationPdfUrl && (
             <Accordion type="single" collapsible className="w-full mb-8">
               <AccordionItem value="item-1">
                 <AccordionTrigger className="p-4 border-2 border-dashed border-primary/50 rounded-lg font-semibold text-lg text-primary">
@@ -650,5 +657,3 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
     </div>
   );
 }
-
-    
