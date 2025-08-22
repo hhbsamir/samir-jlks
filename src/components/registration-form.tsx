@@ -169,8 +169,6 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(!!editId);
-  const [settings, setSettings] = useState<InterschoolCulturalSettings | null>(null);
-  const [loadingSettings, setLoadingSettings] = useState(true);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [newRegistrationId, setNewRegistrationId] = useState('');
   const [initialData, setInitialData] = useState<Registration | null>(null);
@@ -193,25 +191,6 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
       email: '',
     },
   });
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-        setLoadingSettings(true);
-        try {
-            const settingsDocRef = doc(db, 'settings', 'interschoolCulturalSettings');
-            const settingsDoc = await getDoc(settingsDocRef);
-            if (settingsDoc.exists()) {
-                setSettings(settingsDoc.data() as InterschoolCulturalSettings);
-            }
-        } catch (error) {
-            console.error("Error fetching settings:", error);
-            toast({ title: "Error", description: "Could not load settings information."});
-        } finally {
-            setLoadingSettings(false);
-        }
-    };
-    fetchSettings();
-  }, [toast]);
   
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -469,30 +448,6 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
           </p>
         </div>
 
-        {loadingSettings ? (
-          <div className="mb-8 p-4 h-20 border-2 border-dashed border-primary/50 rounded-lg flex items-center justify-center">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            <p className="font-semibold text-lg text-primary">Loading circular...</p>
-          </div>
-        ) : settings?.registrationPdfUrl && (
-            <Accordion type="single" collapsible className="w-full mb-8">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="p-4 border-2 border-dashed border-primary/50 rounded-lg font-semibold text-lg text-primary">
-                  Please review the event circular before registering. (Click to view)
-                </AccordionTrigger>
-                <AccordionContent>
-                    <div className="aspect-[3/4] sm:aspect-video mt-2">
-                        <iframe
-                            src={settings.registrationPdfUrl}
-                            title="Event Circular"
-                            className="w-full h-full border rounded-md"
-                        />
-                    </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-        )}
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <Card>
@@ -657,3 +612,5 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
     </div>
   );
 }
+
+    
