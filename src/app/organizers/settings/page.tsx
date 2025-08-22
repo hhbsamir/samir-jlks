@@ -64,7 +64,7 @@ export default function SettingsPage() {
   const [generatingSummaryReport, setGeneratingSummaryReport] = useState(false);
   const [generatingFeedbackReport, setGeneratingFeedbackReport] = useState(false);
   const [remarks, setRemarks] = useState('');
-  const [homeContent, setHomeContent] = useState<HomePageContent>({ id: HOME_CONTENT_DOC_ID, imageUrl: '', note: '' });
+  const [homeContent, setHomeContent] = useState<HomePageContent>({ id: HOME_CONTENT_DOC_ID, imageUrl: '', publicId: '', note: '' });
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
 
@@ -99,30 +99,30 @@ export default function SettingsPage() {
     fetchSettings();
   }, [fetchSettings]);
 
-  const handleSettingsUpdate = async (field: keyof HomePageContent, value: string) => {
-    const newContent = { ...homeContent, [field]: value };
+  const handleSettingsUpdate = async (updateData: Partial<HomePageContent>) => {
+    const newContent = { ...homeContent, ...updateData };
     setHomeContent(newContent);
-     try {
+    try {
         const docRef = doc(db, 'settings', HOME_CONTENT_DOC_ID);
-        await setDoc(docRef, { [field]: value }, { merge: true });
+        await setDoc(docRef, updateData, { merge: true });
     } catch (error) {
-        console.error(`Error saving ${field}:`, error);
+        console.error(`Error saving settings:`, error);
         toast({
             title: "Error",
-            description: `Could not save ${field}. Please try again.`,
+            description: `Could not save settings. Please try again.`,
             variant: "destructive"
         });
     }
-  }
+  };
   
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 100 * 1024) { // 100 KB size limit
+    if (file.size > 500 * 1024) { // 500 KB size limit
         toast({
             title: 'File Too Large',
-            description: 'Please upload an image smaller than 100 KB.',
+            description: 'Please upload an image smaller than 500 KB.',
             variant: 'destructive',
         });
         return;
@@ -133,17 +133,18 @@ export default function SettingsPage() {
     formData.append('file', file);
 
     try {
+      // If an image already exists, remove it from Cloudinary first
+      if (homeContent.publicId) {
+          await deleteCloudinaryImage(homeContent.publicId);
+      }
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
       const data = await response.json();
       if (data.success) {
-        if(homeContent.imageUrl) {
-          // This assumes the public_id is part of the homeContent object, which it isn't yet.
-          // Let's assume the upload logic needs to be robust enough to handle overwrites or we add it.
-        }
-        await handleSettingsUpdate('imageUrl', data.url);
+        await handleSettingsUpdate({ imageUrl: data.url, publicId: data.public_id });
         toast({ title: 'Photo uploaded successfully!' });
       } else {
         throw new Error(data.error || 'Upload failed');
@@ -161,9 +162,23 @@ export default function SettingsPage() {
   };
 
   const handleRemoveImage = async () => {
-    // This part of the code is problematic because we don't store the public_id.
-    // I will disable it for now to prevent errors, as the user did not ask to fix it.
-    toast({ title: 'Info', description: 'Image removal functionality is temporarily disabled.' });
+      if (!homeContent.publicId) return;
+
+      setIsRemoving(true);
+      try {
+        const success = await deleteCloudinaryImage(homeContent.publicId);
+        if (success) {
+            await handleSettingsUpdate({ imageUrl: '', publicId: '' });
+            toast({ title: 'Success!', description: 'Photo removed successfully.' });
+        } else {
+            throw new Error('Cloudinary deletion failed.');
+        }
+      } catch (error) {
+          console.error("Error removing image:", error);
+          toast({ title: 'Error', description: 'Could not remove the photo.', variant: 'destructive'});
+      } finally {
+        setIsRemoving(false);
+      }
   };
 
 
@@ -952,7 +967,7 @@ export default function SettingsPage() {
                             Remove
                         </Button>
                     )}
-                    <p className="text-xs text-muted-foreground">Max file size: 100 KB.</p>
+                    <p className="text-xs text-muted-foreground">Max file size: 500 KB.</p>
                   </div>
                 </div>
             </div>
@@ -962,7 +977,7 @@ export default function SettingsPage() {
                     id="note"
                     placeholder="e.g., A warm welcome to all participants..."
                     value={homeContent.note}
-                    onChange={(e) => handleSettingsUpdate('note', e.target.value)}
+                    onChange={(e) => handleSettingsUpdate({ note: e.target.value })}
                     rows={4}
                 />
             </div>

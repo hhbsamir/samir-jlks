@@ -45,6 +45,7 @@ export type ReportSettings = {
 export type HomePageContent = {
     id: string;
     imageUrl: string;
+    publicId?: string;
     note: string;
 }
 
