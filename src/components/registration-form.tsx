@@ -21,6 +21,7 @@ import type { InterschoolCulturalSettings, Registration } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const participantSchema = z.object({
   name: z.string().min(1, 'Participant name is required.'),
@@ -292,7 +293,6 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
               title: 'Registration Updated!',
               description: 'Your changes have been saved successfully.',
             });
-            router.push('/organizers/registrations');
         } else {
             const docRef = await addDoc(collection(db, 'registrations'), {
                 ...registrationData,
@@ -456,13 +456,6 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
               <h1 className="font-headline text-4xl sm:text-5xl font-bold text-primary">
                 {editId ? 'Edit Registration' : 'Registration for Inter-School Cultural Meet'}
               </h1>
-              { !editId && 
-                <Button asChild variant="outline">
-                    <Link href="/registration/edit">
-                        <Edit className="mr-2 h-4 w-4"/> Edit Registration
-                    </Link>
-                </Button>
-              }
           </div>
           <p className="text-muted-foreground mt-2">
             {editId ? 'Modify the details below and click update.' : "Enter your school's details to participate"}
@@ -475,15 +468,22 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
             <p className="font-semibold text-lg text-primary">Loading circular...</p>
           </div>
         ) : settings?.registrationPdfUrl && !editId && (
-          <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center">
-            <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
-              <Button asChild>
-                  <a href={settings.registrationPdfUrl} target="_blank" rel="noopener noreferrer">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Circular
-                  </a>
-              </Button>
-          </div>
+            <Accordion type="single" collapsible className="w-full mb-8">
+              <AccordionItem value="item-1">
+                <AccordionTrigger className="p-4 border-2 border-dashed border-primary/50 rounded-lg font-semibold text-lg text-primary">
+                  Please review the event circular before registering. (Click to view)
+                </AccordionTrigger>
+                <AccordionContent>
+                    <div className="aspect-[3/4] sm:aspect-video mt-2">
+                        <iframe
+                            src={settings.registrationPdfUrl}
+                            title="Event Circular"
+                            className="w-full h-full border rounded-md"
+                        />
+                    </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
         )}
 
         <Form {...form}>
@@ -650,3 +650,5 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
     </div>
   );
 }
+
+    
