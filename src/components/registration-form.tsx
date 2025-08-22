@@ -314,14 +314,6 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
     }
   };
 
-  const getDownloadFilename = () => {
-    const originalName = settings?.registrationPdfName;
-    if (originalName && typeof originalName === 'string') {
-        return originalName.toLowerCase().endsWith('.pdf') ? originalName : `${originalName}.pdf`;
-    }
-    return 'circular.pdf';
-  }
-
   const SuccessScreen = () => {
       const [copied, setCopied] = useState(false);
       
@@ -486,7 +478,7 @@ export default function RegistrationForm({ editId }: { editId?: string | null })
           <div className="mb-8 p-4 border-2 border-dashed border-primary/50 rounded-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-center">
             <p className="font-semibold text-lg text-primary">Please review the event circular before registering.</p>
               <Button asChild>
-                  <a href={settings.registrationPdfUrl} download={getDownloadFilename()} target="_blank" rel="noopener noreferrer">
+                  <a href={settings.registrationPdfUrl} target="_blank" rel="noopener noreferrer">
                       <Download className="mr-2 h-4 w-4" />
                       Download Circular
                   </a>
