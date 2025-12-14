@@ -74,13 +74,6 @@ export default function Home() {
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
                 <DropdownMenuItem asChild>
-                    <Link href="/registration">
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Registration for Inter-School Cultural Meet</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
                     <Link href="/judges">
                         <Gavel className="mr-2 h-4 w-4" />
                         <span>Judge's Portal</span>
