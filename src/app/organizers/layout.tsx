@@ -55,24 +55,27 @@ const navLinks = [
 function MainNav({ className }: { className?: string }) {
     const pathname = usePathname();
     return (
-        <nav className={cn("grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4", className)}>
+        <nav className={cn("flex flex-wrap items-center justify-center gap-6 md:gap-8", className)}>
             {navLinks.map((link) => (
                 <Link
                     key={link.href}
                     href={link.href}
-                    className="block"
+                    className="flex flex-col items-center gap-2 group"
                 >
-                    <Card className={cn(
-                        "text-center hover:bg-primary/5 hover:shadow-lg transition-all",
-                        pathname === link.href ? "bg-primary/10 border-primary" : ""
+                    <div className={cn(
+                        "flex items-center justify-center w-24 h-24 rounded-full border-4 shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:shadow-xl",
+                        pathname === link.href 
+                            ? "bg-primary/10 border-primary text-primary" 
+                            : "bg-card border-border text-muted-foreground group-hover:border-primary/50 group-hover:text-primary"
                     )}>
-                        <CardHeader>
-                            <div className="mx-auto text-primary">
-                                {link.icon}
-                            </div>
-                            <CardTitle className="text-base font-medium mt-2">{link.label}</CardTitle>
-                        </CardHeader>
-                    </Card>
+                        {link.icon}
+                    </div>
+                    <span className={cn(
+                        "text-sm font-medium transition-colors",
+                         pathname === link.href ? "text-primary" : "text-muted-foreground group-hover:text-primary"
+                    )}>
+                        {link.label}
+                    </span>
                 </Link>
             ))}
         </nav>
@@ -212,12 +215,12 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
   return (
     <CompetitionDataProvider>
       <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
+        <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
             <div className="flex w-full items-center gap-4">
                 <div className="md:hidden">
                     <MobileNav />
                 </div>
-                 <h1 className="font-headline text-2xl font-bold text-primary whitespace-nowrap">Organizer's Dashboard</h1>
+                 <h1 className="font-headline text-3xl font-bold text-primary whitespace-nowrap">Organizer's Dashboard</h1>
                  <Button asChild variant="outline" size="sm" className="ml-auto">
                     <Link href="/">
                         <Home className="mr-2 h-4 w-4" /> Go to Home
@@ -235,5 +238,3 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
     </CompetitionDataProvider>
   );
 }
-
-    
