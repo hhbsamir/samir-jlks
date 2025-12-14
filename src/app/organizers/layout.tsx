@@ -9,19 +9,15 @@ import { Loader2, Menu, Home, Trophy, School, Users, Shapes, Ticket, ClipboardLi
 import LoginPage from './login/page';
 import { collection, onSnapshot, Timestamp, query, orderBy } from 'firebase/firestore';
 import type { School as AppSchool, CompetitionCategory, Score, Feedback, Judge, Registration } from '@/lib/data';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuGroup,
-} from "@/components/ui/dropdown-menu"
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+
 
 // 1. Create a context to hold all our data
 interface CompetitionDataContextType {
@@ -43,6 +39,74 @@ export const useCompetitionData = () => {
     throw new Error("useCompetitionData must be used within an OrganizersLayout");
   }
   return context;
+}
+
+const navLinks = [
+    { href: "/organizers", label: "Leaderboard", icon: <Trophy /> },
+    { href: "/organizers/schools", label: "Schools", icon: <School /> },
+    { href: "/organizers/judges", label: "Judges", icon: <Users /> },
+    { href: "/organizers/categories", label: "Categories", icon: <Shapes /> },
+    { href: "/organizers/lottery", label: "Lottery", icon: <Ticket /> },
+    { href: "/organizers/registrations", label: "Registrations", icon: <ClipboardList /> },
+    { href: "/organizers/settings", label: "Settings", icon: <Settings /> },
+];
+
+function MainNav({ className }: { className?: string }) {
+    const pathname = usePathname();
+    return (
+        <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)}>
+            {navLinks.map((link) => (
+                <Link
+                    key={link.href}
+                    href={link.href}
+                    className={cn(
+                        "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                        pathname === link.href ? "text-primary" : "text-muted-foreground"
+                    )}
+                >
+                    <div className="hidden sm:block">{link.icon}</div>
+                    <span>{link.label}</span>
+                </Link>
+            ))}
+        </nav>
+    );
+}
+
+function MobileNav() {
+    const [open, setOpen] = React.useState(false);
+    return (
+         <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 md:hidden"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <nav className="grid gap-6 text-lg font-medium">
+                <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-primary">
+                    <Home />
+                    <span>Go to Home Page</span>
+                </Link>
+                <hr/>
+                {navLinks.map(link => (
+                    <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                    >
+                        {link.label}
+                    </Link>
+                ))}
+              </nav>
+            </SheetContent>
+        </Sheet>
+    )
 }
 
 function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
@@ -137,41 +201,18 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
   return (
     <CompetitionDataProvider>
       <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-30 flex flex-col items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between w-full">
-              <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                      <Button 
-                          variant="outline"
-                          size="icon"
-                          className="rounded-full h-12 w-12 border-2 border-primary shadow-lg hover:bg-primary/10"
-                      >
-                          <Menu className="h-6 w-6" />
-                      </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="start">
-                      <DropdownMenuItem asChild>
-                          <Link href="/">
-                              <Home className="mr-2 h-4 w-4" />
-                              <span>Go to Home Page</span>
-                          </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuGroup>
-                        <DropdownMenuItem asChild><Link href="/organizers"><Trophy className="mr-2 h-4 w-4" />Leaderboard</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href="/organizers/schools"><School className="mr-2 h-4 w-4" />Schools</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href="/organizers/judges"><Users className="mr-2 h-4 w-4" />Judges</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href="/organizers/categories"><Shapes className="mr-2 h-4 w-4" />Categories</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href="/organizers/lottery"><Ticket className="mr-2 h-4 w-4" />Lottery</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href="/organizers/registrations"><ClipboardList className="mr-2 h-4 w-4" />Registrations</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href="/organizers/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>
-                      </DropdownMenuGroup>
-                  </DropdownMenuContent>
-              </DropdownMenu>
-              <div className="flex-1 flex justify-center">
-                    <h1 className="font-headline text-2xl sm:text-3xl font-bold">🙏Organizer's Dashboard🙏</h1>
-              </div>
-              <div className="w-12"></div>
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+            <div className="flex w-full items-center gap-4">
+                <MobileNav />
+                 <h1 className="hidden md:block font-headline text-2xl font-bold text-primary whitespace-nowrap">Organizer's Dashboard</h1>
+                 <div className="hidden md:flex md:w-full md:items-center md:gap-6 text-sm">
+                    <MainNav className="mx-auto" />
+                 </div>
+                 <Button asChild variant="outline" size="sm" className="ml-auto">
+                    <Link href="/">
+                        <Home className="mr-2 h-4 w-4" /> Go to Home
+                    </Link>
+                 </Button>
             </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
