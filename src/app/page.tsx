@@ -18,6 +18,17 @@ import type { HomePageContent } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getHomePageContent } from './actions';
 
+const PortalCard = ({ href, icon, title, className }: { href: string, icon: React.ReactNode, title: string, className: string }) => (
+    <Link href={href} className="w-full">
+        <div className={`relative flex flex-col items-center justify-center p-8 sm:p-12 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 group bg-gradient-to-br ${className}`}>
+            <div className="z-10 flex flex-col items-center text-center">
+                {icon}
+                <h2 className="mt-4 text-2xl sm:text-3xl font-bold font-headline">{title}</h2>
+            </div>
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
+        </div>
+    </Link>
+);
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState<string | null>(null);
@@ -101,33 +112,20 @@ export default function Home() {
             ) : <div className="h-[76px] mt-4" />}
         </div>
       </div>
-
-       <div className="flex flex-col items-center gap-6 mt-8 animate-fade-in-up">
-        {loadingContent ? (
-          <>
-            <Skeleton className="h-48 w-48 rounded-full" />
-            <Skeleton className="h-8 w-80 rounded-md" />
-          </>
-        ) : homePageContent && (
-          <>
-            {homePageContent.imageUrl && (
-              <div className="relative h-48 w-48 rounded-full shadow-2xl shadow-primary/20 overflow-hidden ring-4 ring-primary/20">
-                <Image
-                  src={homePageContent.imageUrl}
-                  alt="Special photo"
-                  layout="fill"
-                  objectFit="cover"
-                  className="transform transition-transform duration-500 hover:scale-110"
-                />
-              </div>
-            )}
-            {homePageContent.note && (
-              <div className="bg-background/70 backdrop-blur-sm p-4 rounded-lg border max-w-lg text-center">
-                 <p className="text-lg font-body text-foreground/90">{homePageContent.note}</p>
-              </div>
-            )}
-          </>
-        )}
+      
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <PortalCard
+          href="/judges"
+          icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16" />}
+          title="Judge's Portal"
+          className="from-teal-400 to-green-500 text-white"
+        />
+        <PortalCard
+          href="/organizers"
+          icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16" />}
+          title="Organizer's Dashboard"
+          className="from-pink-500 to-red-500 text-white"
+        />
       </div>
 
     </div>
