@@ -157,22 +157,15 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
                           </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <Landmark className="mr-2 h-4 w-4" />
-                                <span>Aug15/Jan26</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem asChild><Link href="/organizers"><Trophy className="mr-2 h-4 w-4" />Leaderboard</Link></DropdownMenuItem>
-                                    <DropdownMenuItem asChild><Link href="/organizers/schools"><School className="mr-2 h-4 w-4" />Schools</Link></DropdownMenuItem>
-                                    <DropdownMenuItem asChild><Link href="/organizers/judges"><Users className="mr-2 h-4 w-4" />Judges</Link></DropdownMenuItem>
-                                    <DropdownMenuItem asChild><Link href="/organizers/categories"><Shapes className="mr-2 h-4 w-4" />Categories</Link></DropdownMenuItem>
-                                    <DropdownMenuItem asChild><Link href="/organizers/lottery"><Ticket className="mr-2 h-4 w-4" />Lottery</Link></DropdownMenuItem>
-                                    <DropdownMenuItem asChild><Link href="/organizers/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem asChild><Link href="/organizers"><Trophy className="mr-2 h-4 w-4" />Leaderboard</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/organizers/schools"><School className="mr-2 h-4 w-4" />Schools</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/organizers/judges"><Users className="mr-2 h-4 w-4" />Judges</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/organizers/categories"><Shapes className="mr-2 h-4 w-4" />Categories</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/organizers/lottery"><Ticket className="mr-2 h-4 w-4" />Lottery</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/organizers/registrations"><ClipboardList className="mr-2 h-4 w-4" />Registrations</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild><Link href="/organizers/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>
+                      </DropdownMenuGroup>
                   </DropdownMenuContent>
               </DropdownMenu>
               <div className="flex-1 flex justify-center">
