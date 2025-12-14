@@ -17,6 +17,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 
 // 1. Create a context to hold all our data
@@ -42,30 +43,36 @@ export const useCompetitionData = () => {
 }
 
 const navLinks = [
-    { href: "/organizers", label: "Leaderboard", icon: <Trophy /> },
-    { href: "/organizers/schools", label: "Schools", icon: <School /> },
-    { href: "/organizers/judges", label: "Judges", icon: <Users /> },
-    { href: "/organizers/categories", label: "Categories", icon: <Shapes /> },
-    { href: "/organizers/lottery", label: "Lottery", icon: <Ticket /> },
-    { href: "/organizers/registrations", label: "Registrations", icon: <ClipboardList /> },
-    { href: "/organizers/settings", label: "Settings", icon: <Settings /> },
+    { href: "/organizers", label: "Leaderboard", icon: <Trophy className="w-8 h-8" /> },
+    { href: "/organizers/schools", label: "Schools", icon: <School className="w-8 h-8" /> },
+    { href: "/organizers/judges", label: "Judges", icon: <Users className="w-8 h-8" /> },
+    { href: "/organizers/categories", label: "Categories", icon: <Shapes className="w-8 h-8" /> },
+    { href: "/organizers/lottery", label: "Lottery", icon: <Ticket className="w-8 h-8" /> },
+    { href: "/organizers/registrations", label: "Registrations", icon: <ClipboardList className="w-8 h-8" /> },
+    { href: "/organizers/settings", label: "Settings", icon: <Settings className="w-8 h-8" /> },
 ];
 
 function MainNav({ className }: { className?: string }) {
     const pathname = usePathname();
     return (
-        <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)}>
+        <nav className={cn("grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4", className)}>
             {navLinks.map((link) => (
                 <Link
                     key={link.href}
                     href={link.href}
-                    className={cn(
-                        "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
-                        pathname === link.href ? "text-primary" : "text-muted-foreground"
-                    )}
+                    className="block"
                 >
-                    <div className="hidden sm:block">{link.icon}</div>
-                    <span>{link.label}</span>
+                    <Card className={cn(
+                        "text-center hover:bg-primary/5 hover:shadow-lg transition-all",
+                        pathname === link.href ? "bg-primary/10 border-primary" : ""
+                    )}>
+                        <CardHeader>
+                            <div className="mx-auto text-primary">
+                                {link.icon}
+                            </div>
+                            <CardTitle className="text-base font-medium mt-2">{link.label}</CardTitle>
+                        </CardHeader>
+                    </Card>
                 </Link>
             ))}
         </nav>
@@ -80,7 +87,7 @@ function MobileNav() {
               <Button
                 variant="outline"
                 size="icon"
-                className="shrink-0 md:hidden"
+                className="shrink-0"
               >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
@@ -98,8 +105,9 @@ function MobileNav() {
                         key={link.href}
                         href={link.href}
                         onClick={() => setOpen(false)}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="text-muted-foreground hover:text-foreground flex items-center gap-2"
                     >
+                         {React.cloneElement(link.icon, { className: "w-5 h-5" })}
                         {link.label}
                     </Link>
                 ))}
@@ -175,6 +183,7 @@ function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
 export default function OrganizersLayout({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const pathname = usePathname();
   
   useEffect(() => {
     const auth = getAuth(app);
@@ -198,16 +207,17 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
     return <LoginPage />;
   }
 
+  const isDashboardHome = pathname === '/organizers';
+
   return (
     <CompetitionDataProvider>
       <div className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
             <div className="flex w-full items-center gap-4">
-                <MobileNav />
-                 <h1 className="hidden md:block font-headline text-2xl font-bold text-primary whitespace-nowrap">Organizer's Dashboard</h1>
-                 <div className="hidden md:flex md:w-full md:items-center md:gap-6 text-sm">
-                    <MainNav className="mx-auto" />
-                 </div>
+                <div className="md:hidden">
+                    <MobileNav />
+                </div>
+                 <h1 className="font-headline text-2xl font-bold text-primary whitespace-nowrap">Organizer's Dashboard</h1>
                  <Button asChild variant="outline" size="sm" className="ml-auto">
                     <Link href="/">
                         <Home className="mr-2 h-4 w-4" /> Go to Home
@@ -216,9 +226,14 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
             </div>
         </header>
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
+            <div className="mb-8 hidden md:block">
+                <MainNav />
+            </div>
             {children}
         </main>
       </div>
     </CompetitionDataProvider>
   );
 }
+
+    
