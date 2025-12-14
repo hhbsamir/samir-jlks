@@ -48,7 +48,6 @@ const navLinks = [
     { href: "/organizers/judges", label: "Judges", icon: <Users className="w-8 h-8" /> },
     { href: "/organizers/categories", label: "Categories", icon: <Shapes className="w-8 h-8" /> },
     { href: "/organizers/lottery", label: "Lottery", icon: <Ticket className="w-8 h-8" /> },
-    { href: "/organizers/registrations", label: "Registrations", icon: <ClipboardList className="w-8 h-8" /> },
     { href: "/organizers/settings", label: "Settings", icon: <Settings className="w-8 h-8" /> },
 ];
 
