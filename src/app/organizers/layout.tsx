@@ -173,40 +173,6 @@ export default function OrganizersLayout({ children }: { children: React.ReactNo
                                 </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <Star className="mr-2 h-4 w-4" />
-                                <span>Interschool Cultural</span>
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem asChild><Link href="/organizers/registrations"><ClipboardList className="mr-2 h-4 w-4" />Registrations</Link></DropdownMenuItem>
-                                    <DropdownMenuItem asChild><Link href="/organizers/interschool-cultural/settings"><Settings className="mr-2 h-4 w-4" />Settings</Link></DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                <Building className="mr-2 h-4 w-4" />
-                                <span>CDF</span>
-                            </DropdownMenuSubTrigger>
-                             <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem>nmp</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                 <Briefcase className="mr-2 h-4 w-4" />
-                                <span>XYZ</span>
-                            </DropdownMenuSubTrigger>
-                             <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem>abc</DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
                   </DropdownMenuContent>
               </DropdownMenu>
               <div className="flex-1 flex justify-center">
