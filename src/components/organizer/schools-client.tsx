@@ -11,16 +11,24 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageHeader } from '@/components/page-header';
 import type { School, SchoolCategory } from '@/lib/data';
-import { PlusCircle, Edit, Trash2, Upload, Loader2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Upload, Loader2, Download } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, writeBatch, getDocs } from 'firebase/firestore';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import { useRouter } from 'next/navigation';
 import { useCompetitionData } from '@/app/organizers/layout';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { format } from 'date-fns';
 
 const validCategories: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
+
+// Extend jsPDF with autoTable for TS support
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDFWithAutoTable;
+}
 
 export default function SchoolsClient() {
   const { schools: initialSchools } = useCompetitionData();
@@ -202,10 +210,90 @@ export default function SchoolsClient() {
     reader.readAsArrayBuffer(file);
   };
 
+  const handleDownloadPdf = () => {
+    try {
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const pageMargin = 15;
+        const primaryColor = '#16a34a'; // Green from theme
+        const accentColor = '#4f46e5'; // Purple from theme
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Title
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(primaryColor);
+        doc.text('List of Participating Schools', pageWidth / 2, 20, { align: 'center' });
+
+        // Date
+        const reportDate = format(new Date(), 'do MMMM yyyy');
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 28, { align: 'center' });
+
+        let lastY = 40;
+
+        validCategories.forEach(category => {
+            const schoolsInCategory = categorizedSchools[category];
+            if (schoolsInCategory && schoolsInCategory.length > 0) {
+                
+                const tableHeight = (schoolsInCategory.length * 10) + 20; // Approximation
+                if (lastY + tableHeight > 270 && lastY > 40) {
+                    doc.addPage();
+                    lastY = 20;
+                }
+
+                // Category Title
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(accentColor);
+                doc.text(`${category} Schools`, pageMargin, lastY);
+                
+                const head = [['Serial Number', 'School Name']];
+                const body = schoolsInCategory.map(school => [
+                    school.serialNumber ?? 'N/A',
+                    school.name,
+                ]);
+
+                doc.autoTable({
+                    startY: lastY + 5,
+                    head,
+                    body,
+                    theme: 'striped',
+                    headStyles: { fillColor: primaryColor, textColor: 255 },
+                    styles: { fontSize: 12, cellPadding: 3 },
+                    margin: { left: pageMargin, right: pageMargin },
+                });
+
+                lastY = (doc as any).lastAutoTable.finalY + 15;
+            }
+        });
+
+        doc.save("School_List.pdf");
+
+        toast({
+            title: "Download Started",
+            description: "The school list is being downloaded as a PDF file."
+        });
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+        toast({
+            title: "PDF Generation Failed",
+            description: "There was an error creating the PDF.",
+            variant: "destructive"
+        });
+    }
+  };
+
+
   return (
     <>
       <PageHeader title="Manage Schools">
         <div className="flex flex-wrap justify-end gap-2">
+            <Button onClick={handleDownloadPdf} variant="outline" disabled={schools.length === 0}>
+                <Download className="mr-2 h-4 w-4" />
+                Download as PDF
+            </Button>
             <input 
                 type="file" 
                 ref={fileInputRef}
