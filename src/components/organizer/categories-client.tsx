@@ -34,12 +34,17 @@ export default function CategoriesClient() {
 
   const handleSave = async (categoryData: Omit<CompetitionCategory, 'id'>) => {
     try {
+      const dataToSave: any = { ...categoryData };
+      if (categoryData.totalMarks === undefined) {
+        dataToSave.totalMarks = null;
+      }
+
       if (editingCategory) {
         const categoryDoc = doc(db, "categories", editingCategory.id);
-        await updateDoc(categoryDoc, categoryData);
+        await updateDoc(categoryDoc, dataToSave);
         toast({ title: "Success", description: "Category updated successfully." });
       } else {
-        await addDoc(collection(db, "categories"), categoryData);
+        await addDoc(collection(db, "categories"), dataToSave);
         toast({ title: "Success", description: "Category added successfully." });
       }
       closeDialog();
@@ -73,6 +78,7 @@ export default function CategoriesClient() {
             <TableHeader>
               <TableRow>
                 <TableHead>Category Name</TableHead>
+                <TableHead>Total Marks</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -80,6 +86,7 @@ export default function CategoriesClient() {
               {categories.map(category => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
+                  <TableCell>{category.totalMarks ?? 10}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openDialog(category)}>
                       <Edit className="h-4 w-4 text-accent" />
@@ -130,11 +137,13 @@ type CategoryFormDialogProps = {
 
 function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormDialogProps) {
     const [name, setName] = useState('');
+    const [totalMarks, setTotalMarks] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
             setName(category?.name || '');
+            setTotalMarks(category?.totalMarks?.toString() || '10');
         }
     }, [isOpen, category]);
 
@@ -142,7 +151,7 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
         e.preventDefault();
         if (name) {
             setIsSaving(true);
-            await onSave({ name });
+            await onSave({ name, totalMarks: totalMarks ? parseInt(totalMarks, 10) : undefined });
             setIsSaving(false);
         }
     };
@@ -157,6 +166,10 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Category Name</Label>
                         <Input id="name" value={name} onChange={e => setName(e.target.value)} required/>
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="totalMarks" className="text-lg">Total Marks</Label>
+                        <Input id="totalMarks" type="number" value={totalMarks} onChange={e => setTotalMarks(e.target.value)} placeholder="e.g., 10" required />
                     </div>
                      <DialogFooter>
                          <DialogClose asChild>

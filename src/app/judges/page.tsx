@@ -454,7 +454,7 @@ export default function JudgesPage() {
                                                         <SelectValue placeholder="Score" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        {Array.from({ length: 11 }, (_, i) => (
+                                                        {Array.from({ length: (category.totalMarks ?? 10) + 1 }, (_, i) => (
                                                             <SelectItem key={i} value={i.toString()}>{i}</SelectItem>
                                                         ))}
                                                     </SelectContent>

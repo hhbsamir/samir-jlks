@@ -23,6 +23,7 @@ export type Judge = {
 export type CompetitionCategory = {
   id:string;
   name: string;
+  totalMarks?: number;
 };
 
 export type Score = {
