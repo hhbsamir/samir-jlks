@@ -32,6 +32,7 @@ interface jsPDFWithAutoTable extends jsPDF {
 
 export default function SchoolsClient() {
   const { schools: initialSchools } = useCompetitionData();
+  const { toast } = useToast();
   const [schools, setSchools] = useState<School[]>(initialSchools);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSchool, setEditingSchool] = useState<School | null>(null);
@@ -484,5 +485,3 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
-
-    
