@@ -18,9 +18,24 @@ import { toast } from '@/hooks/use-toast';
 import { useCompetitionData } from '@/app/organizers/layout';
 
 export default function CategoriesClient() {
-  const { categories } = useCompetitionData();
+  const { categories: unsortedCategories } = useCompetitionData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CompetitionCategory | null>(null);
+
+  const categories = React.useMemo(() => [...unsortedCategories].sort((a, b) => {
+    const aSerial = a.serialNumber;
+    const bSerial = b.serialNumber;
+    if (aSerial != null && bSerial != null) {
+        if (aSerial !== bSerial) {
+            return aSerial - bSerial;
+        }
+    } else if (aSerial != null) {
+        return -1;
+    } else if (bSerial != null) {
+        return 1;
+    }
+    return a.name.localeCompare(b.name);
+  }), [unsortedCategories]);
 
   const openDialog = (category: CompetitionCategory | null = null) => {
     setEditingCategory(category);
@@ -37,6 +52,9 @@ export default function CategoriesClient() {
       const dataToSave: any = { ...categoryData };
       if (categoryData.totalMarks === undefined) {
         dataToSave.totalMarks = null;
+      }
+      if (categoryData.serialNumber === undefined) {
+        dataToSave.serialNumber = null;
       }
 
       if (editingCategory) {
@@ -78,6 +96,7 @@ export default function CategoriesClient() {
             <TableHeader>
               <TableRow>
                 <TableHead>Category Name</TableHead>
+                <TableHead>Serial No.</TableHead>
                 <TableHead>Total Marks</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -86,6 +105,7 @@ export default function CategoriesClient() {
               {categories.map(category => (
                 <TableRow key={category.id}>
                   <TableCell className="font-medium">{category.name}</TableCell>
+                  <TableCell>{category.serialNumber ?? 'N/A'}</TableCell>
                   <TableCell>{category.totalMarks ?? 10}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openDialog(category)}>
@@ -138,12 +158,14 @@ type CategoryFormDialogProps = {
 function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormDialogProps) {
     const [name, setName] = useState('');
     const [totalMarks, setTotalMarks] = useState('');
+    const [serialNumber, setSerialNumber] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     React.useEffect(() => {
         if(isOpen) {
             setName(category?.name || '');
             setTotalMarks(category?.totalMarks?.toString() || '10');
+            setSerialNumber(category?.serialNumber?.toString() || '');
         }
     }, [isOpen, category]);
 
@@ -151,7 +173,11 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
         e.preventDefault();
         if (name) {
             setIsSaving(true);
-            await onSave({ name, totalMarks: totalMarks ? parseInt(totalMarks, 10) : undefined });
+            await onSave({ 
+                name, 
+                totalMarks: totalMarks ? parseInt(totalMarks, 10) : undefined,
+                serialNumber: serialNumber ? parseInt(serialNumber, 10) : undefined,
+            });
             setIsSaving(false);
         }
     };
@@ -166,6 +192,10 @@ function CategoryFormDialog({ isOpen, onClose, onSave, category }: CategoryFormD
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Category Name</Label>
                         <Input id="name" value={name} onChange={e => setName(e.target.value)} required/>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="serialNumber" className="text-lg">Serial Number</Label>
+                        <Input id="serialNumber" type="number" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="Optional, for ordering" />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="totalMarks" className="text-lg">Total Marks</Label>

@@ -49,7 +49,11 @@ type CategoryWinner = {
 }
 
 export default function LeaderboardClient() {
-  const { schools, categories, scores, feedbacks, judges, loading } = useCompetitionData();
+  const { schools, categories: unsortedCategories, scores, feedbacks, judges, loading } = useCompetitionData();
+
+  const categories = useMemo(() => {
+    return [...unsortedCategories].sort((a, b) => (a.serialNumber ?? Infinity) - (b.serialNumber ?? Infinity) || a.name.localeCompare(b.name));
+  }, [unsortedCategories]);
 
   const schoolCategories: SchoolCategory[] = ["Senior", "Junior", "Sub-Junior"];
   const themeCategory = useMemo(() => categories.find(c => c.name.toLowerCase() === 'theme'), [categories]);

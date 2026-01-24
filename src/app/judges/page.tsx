@@ -68,7 +68,8 @@ export default function JudgesPage() {
 
         const categoriesCollection = collection(db, 'categories');
         const categoriesSnapshot = await getDocs(categoriesCollection);
-        const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory));
+        const categoriesList = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CompetitionCategory))
+          .sort((a,b) => (a.serialNumber ?? Infinity) - (b.serialNumber ?? Infinity) || a.name.localeCompare(b.name));
         setCategories(categoriesList);
 
         const judgesCollection = collection(db, 'judges');

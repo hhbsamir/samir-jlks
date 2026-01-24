@@ -24,6 +24,7 @@ export type CompetitionCategory = {
   id:string;
   name: string;
   totalMarks?: number;
+  serialNumber?: number;
 };
 
 export type Score = {
