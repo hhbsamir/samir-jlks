@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -105,6 +104,29 @@ export default function Home() {
             ) : <div className="h-[76px] mt-4" />}
         </div>
       </div>
+
+      {loadingContent ? (
+        <div className="w-full max-w-4xl mb-12 space-y-4">
+            <Skeleton className="aspect-video w-full rounded-xl" />
+            <Skeleton className="h-8 w-3/4 mx-auto" />
+        </div>
+      ) : homePageContent?.imageUrl && (
+        <div className="mb-12 w-full max-w-4xl text-center animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl mb-4 border-4 border-primary/20">
+                <Image
+                    src={homePageContent.imageUrl}
+                    alt="JLKS Paradip Event"
+                    layout="fill"
+                    objectFit="cover"
+                />
+            </div>
+            {homePageContent.note && (
+                <p className="text-lg text-foreground/80 italic">
+                    {homePageContent.note}
+                </p>
+            )}
+        </div>
+      )}
       
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         <PortalCard
