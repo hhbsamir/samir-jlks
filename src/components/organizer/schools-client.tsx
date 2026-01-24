@@ -21,7 +21,6 @@ import { useRouter } from 'next/navigation';
 import { useCompetitionData } from '@/app/organizers/layout';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { format } from 'date-fns';
 
 const validCategories: SchoolCategory[] = ["Sub-Junior", "Junior", "Senior"];
 
@@ -213,43 +212,34 @@ export default function SchoolsClient() {
 
   const handleDownloadPdf = () => {
     try {
-        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'legal' }) as jsPDFWithAutoTable;
         const pageMargin = 15;
-        const primaryColor = '#16a34a'; // Green from theme
-        const accentColor = '#4f46e5'; // Purple from theme
+        const primaryColor = '#16a34a';
+        const accentColor = '#4f46e5';
         const pageWidth = doc.internal.pageSize.getWidth();
 
         // Title
-        doc.setFontSize(24);
+        doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(primaryColor);
         doc.text('List of Participating Schools', pageWidth / 2, 20, { align: 'center' });
 
-        // Date
-        const reportDate = format(new Date(), 'do MMMM yyyy');
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100);
-        doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 28, { align: 'center' });
-
-        let lastY = 40;
+        let lastY = 30;
         
-        // Add home page note if it exists
         if (homePageContent?.note) {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(80, 80, 80);
             const noteLines = doc.splitTextToSize(homePageContent.note, pageWidth - (pageMargin * 2));
             doc.text(noteLines, pageWidth / 2, lastY, { align: 'center' });
-            lastY += (noteLines.length * 4) + 8;
+            lastY += (noteLines.length * 4) + 5;
         }
 
         validCategories.forEach(category => {
             const schoolsInCategory = categorizedSchools[category];
             if (schoolsInCategory && schoolsInCategory.length > 0) {
                 
-                // Category Title
-                doc.setFontSize(18);
+                doc.setFontSize(16);
                 doc.setFont('helvetica', 'bold');
                 doc.setTextColor(accentColor);
                 doc.text(`${category} Schools`, pageMargin, lastY);
@@ -265,12 +255,12 @@ export default function SchoolsClient() {
                     head,
                     body,
                     theme: 'striped',
-                    headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10 },
-                    styles: { fontSize: 9, cellPadding: 2 },
+                    headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 9 },
+                    styles: { fontSize: 8, cellPadding: 2 },
                     margin: { left: pageMargin, right: pageMargin },
                 });
 
-                lastY = (doc as any).lastAutoTable.finalY + 15;
+                lastY = (doc as any).lastAutoTable.finalY + 10;
             }
         });
 
@@ -489,3 +479,5 @@ function SchoolFormDialog({ isOpen, onClose, onSave, school }: SchoolFormDialogP
         </Dialog>
     )
 }
+
+    
