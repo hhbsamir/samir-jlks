@@ -33,7 +33,7 @@ export function AppLogo({ className }: { className?: string }) {
       </svg>
       <div className="flex flex-col">
         <h1 className="text-4xl md:text-6xl font-extrabold font-headline animated-gradient">
-            JLKS Paradip
+            JAGANNATH LALIT KALA SANSAD, PARADIP
         </h1>
       </div>
     </div>

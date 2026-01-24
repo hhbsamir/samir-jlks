@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { ConditionalFooter } from '@/components/common/ConditionalFooter';
 
 export const metadata: Metadata = {
-  title: "JLKS Paradip",
+  title: "JAGANNATH LALIT KALA SANSAD, PARADIP",
   description: '🙏 ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏',
 };
 

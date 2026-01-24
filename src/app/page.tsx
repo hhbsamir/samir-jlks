@@ -91,7 +91,7 @@ export default function Home() {
       <div className="text-center mb-12 mt-8">
         <div className="animate-fade-in-down">
            <h1 className="text-4xl md:text-6xl font-extrabold font-headline animated-gradient">
-              JLKS Paradip
+              JAGANNATH LALIT KALA SANSAD, PARADIP
             </h1>
            <p className="text-base mt-2 text-foreground/70">🙏 ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏</p>
         </div>
@@ -115,7 +115,7 @@ export default function Home() {
             <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl mb-4 border-4 border-primary/20">
                 <Image
                     src={homePageContent.imageUrl}
-                    alt="JLKS Paradip Event"
+                    alt="JAGANNATH LALIT KALA SANSAD, PARADIP Event"
                     layout="fill"
                     objectFit="cover"
                 />
