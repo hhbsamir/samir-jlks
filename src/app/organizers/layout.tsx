@@ -15,6 +15,9 @@ import { cn } from '@/lib/utils';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -96,6 +99,12 @@ function MobileNav() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Navigation Menu</SheetTitle>
+                <SheetDescription>
+                  A list of links to navigate the organizer's dashboard.
+                </SheetDescription>
+              </SheetHeader>
               <nav className="grid gap-6 text-lg font-medium">
                 <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-primary">
                     <Home />
