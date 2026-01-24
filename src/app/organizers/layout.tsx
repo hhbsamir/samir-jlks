@@ -7,8 +7,8 @@ import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
 import { app, db } from '@/lib/firebase';
 import { Loader2, Menu, Home, Trophy, School, Users, Shapes, Ticket, ClipboardList, Settings, Landmark, Star, Building, Briefcase } from 'lucide-react';
 import LoginPage from './login/page';
-import { collection, onSnapshot, Timestamp, query, orderBy } from 'firebase/firestore';
-import type { School as AppSchool, CompetitionCategory, Score, Feedback, Judge, Registration } from '@/lib/data';
+import { collection, onSnapshot, Timestamp, query, orderBy, doc } from 'firebase/firestore';
+import type { School as AppSchool, CompetitionCategory, Score, Feedback, Judge, Registration, HomePageContent } from '@/lib/data';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -31,6 +31,7 @@ interface CompetitionDataContextType {
   feedbacks: Feedback[];
   judges: Judge[];
   registrations: Registration[];
+  homePageContent: HomePageContent | null;
   loading: boolean;
 }
 
@@ -135,6 +136,7 @@ function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [judges, setJudges] = useState<Judge[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [homePageContent, setHomePageContent] = useState<HomePageContent | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -169,13 +171,20 @@ function CompetitionDataProvider({ children }: { children: React.ReactNode }) {
       onSnapshot(query(collection(db, 'registrations'), orderBy("createdAt", "desc")), (snapshot) => {
         setRegistrations(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration)));
       }),
+      onSnapshot(doc(db, 'settings', 'homePageContent'), (snapshot) => {
+        if (snapshot.exists()) {
+            setHomePageContent({ id: snapshot.id, ...snapshot.data() } as HomePageContent);
+        } else {
+            setHomePageContent(null);
+        }
+      }),
     ];
 
     // Cleanup listeners on component unmount
     return () => unsubscribes.forEach(unsub => unsub());
   }, []);
 
-  const value = { schools, categories, scores, feedbacks, judges, registrations, loading };
+  const value = { schools, categories, scores, feedbacks, judges, registrations, homePageContent, loading };
 
   return (
     <CompetitionDataContext.Provider value={value}>

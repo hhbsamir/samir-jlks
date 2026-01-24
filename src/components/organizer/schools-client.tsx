@@ -31,7 +31,7 @@ interface jsPDFWithAutoTable extends jsPDF {
 }
 
 export default function SchoolsClient() {
-  const { schools: initialSchools } = useCompetitionData();
+  const { schools: initialSchools, homePageContent } = useCompetitionData();
   const { toast } = useToast();
   const [schools, setSchools] = useState<School[]>(initialSchools);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -233,17 +233,21 @@ export default function SchoolsClient() {
         doc.text(`Generated on: ${reportDate}`, pageWidth / 2, 28, { align: 'center' });
 
         let lastY = 40;
+        
+        // Add home page note if it exists
+        if (homePageContent?.note) {
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(80, 80, 80);
+            const noteLines = doc.splitTextToSize(homePageContent.note, pageWidth - (pageMargin * 2));
+            doc.text(noteLines, pageWidth / 2, lastY, { align: 'center' });
+            lastY += (noteLines.length * 4) + 8;
+        }
 
         validCategories.forEach(category => {
             const schoolsInCategory = categorizedSchools[category];
             if (schoolsInCategory && schoolsInCategory.length > 0) {
                 
-                const tableHeight = (schoolsInCategory.length * 10) + 20; // Approximation
-                if (lastY + tableHeight > 270 && lastY > 40) {
-                    doc.addPage();
-                    lastY = 20;
-                }
-
                 // Category Title
                 doc.setFontSize(18);
                 doc.setFont('helvetica', 'bold');
@@ -261,8 +265,8 @@ export default function SchoolsClient() {
                     head,
                     body,
                     theme: 'striped',
-                    headStyles: { fillColor: primaryColor, textColor: 255 },
-                    styles: { fontSize: 12, cellPadding: 3 },
+                    headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10 },
+                    styles: { fontSize: 9, cellPadding: 2 },
                     margin: { left: pageMargin, right: pageMargin },
                 });
 
