@@ -105,12 +105,17 @@ export default function JudgesClient() {
 
   const handleSave = async (judgeData: Partial<Omit<Judge, 'id' | 'createdAt'>>) => {
     try {
+      const dataToSave: any = { ...judgeData };
+      if (judgeData.serialNumber === undefined) {
+        dataToSave.serialNumber = null;
+      }
+      
       if (editingJudge) {
         const judgeDoc = doc(db, "judges", editingJudge.id);
-        await updateDoc(judgeDoc, judgeData);
+        await updateDoc(judgeDoc, dataToSave);
         toast({ title: "Success", description: "Judge updated successfully." });
       } else {
-        await addDoc(collection(db, "judges"), { ...judgeData, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "judges"), { ...dataToSave, createdAt: serverTimestamp() });
         toast({ title: "Success", description: "Judge added successfully." });
       }
       closeDialog();
@@ -138,6 +143,18 @@ export default function JudgesClient() {
   }
   
   const sortedJudges = [...judges].sort((a, b) => {
+    const aSerial = a.serialNumber;
+    const bSerial = b.serialNumber;
+    if (aSerial != null && bSerial != null) {
+        if (aSerial !== bSerial) {
+            return aSerial - bSerial;
+        }
+    } else if (aSerial != null) {
+        return -1;
+    } else if (bSerial != null) {
+        return 1;
+    }
+
     const aTime = a.createdAt ?? 0;
     const bTime = b.createdAt ?? 0;
     if (aTime !== bTime) {
@@ -162,6 +179,7 @@ export default function JudgesClient() {
                 <TableRow>
                   <TableHead>Photo</TableHead>
                   <TableHead>Judge Name</TableHead>
+                  <TableHead>Serial No.</TableHead>
                   <TableHead>Mobile Number</TableHead>
                   <TableHead>Password</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -179,6 +197,7 @@ export default function JudgesClient() {
                     <TableCell className="font-medium">
                         {judge.name}
                     </TableCell>
+                    <TableCell>{judge.serialNumber ?? 'N/A'}</TableCell>
                     <TableCell>{judge.mobile}</TableCell>
                     <TableCell>
                       {judge.password || 'Not Set'}
@@ -253,6 +272,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
     const [password, setPassword] = useState('');
+    const [serialNumber, setSerialNumber] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [imagePublicId, setImagePublicId] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -266,6 +286,7 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
             setName(judge?.name || '');
             setMobile(judge?.mobile || '');
             setPassword(judge?.password || '');
+            setSerialNumber(judge?.serialNumber?.toString() || '');
             setImageUrl(judge?.imageUrl || '');
             setImagePublicId(publicId || '');
         }
@@ -338,7 +359,13 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
         
         setIsSaving(true);
         try {
-            await onSave({ name, mobile, password, imageUrl });
+            await onSave({ 
+                name, 
+                mobile, 
+                password, 
+                imageUrl, 
+                serialNumber: serialNumber ? parseInt(serialNumber, 10) : undefined 
+            });
         } finally {
             setIsSaving(false);
         }
@@ -384,6 +411,10 @@ function JudgeFormDialog({ isOpen, onClose, onSave, judge }: JudgeFormDialogProp
                     <div className="space-y-2">
                         <Label htmlFor="name" className="text-lg">Judge Name</Label>
                         <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="serialNumber" className="text-lg">Serial Number</Label>
+                        <Input id="serialNumber" type="number" value={serialNumber} onChange={e => setSerialNumber(e.target.value)} placeholder="Optional, for ordering" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="mobile" className="text-lg">Mobile Number</Label>

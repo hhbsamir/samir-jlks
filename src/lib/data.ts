@@ -17,6 +17,7 @@ export type Judge = {
   password?: string;
   createdAt: number | null;
   imageUrl?: string;
+  serialNumber?: number;
 };
 
 export type CompetitionCategory = {

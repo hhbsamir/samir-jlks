@@ -85,6 +85,18 @@ export default function JudgesPage() {
         });
 
         judgesList.sort((a, b) => {
+            const aSerial = a.serialNumber;
+            const bSerial = b.serialNumber;
+            if (aSerial != null && bSerial != null) {
+                if (aSerial !== bSerial) {
+                    return aSerial - bSerial;
+                }
+            } else if (aSerial != null) {
+                return -1;
+            } else if (bSerial != null) {
+                return 1;
+            }
+
             const aTime = a.createdAt ?? 0;
             const bTime = b.createdAt ?? 0;
             if (aTime !== bTime) {
