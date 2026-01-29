@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 300 47% 88%; /* #F0D0F0 */
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 300 100% 50%; /* #FF00FF */
-    --primary-foreground: 300 0% 100%; /* White for better contrast on magenta */
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,15 +22,15 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 182 100% 74%; /* #7DF9FF */
-    --accent-foreground: 222.2 47.4% 11.2%; /* Dark for contrast on light blue */
+    --accent: 173 80% 40%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 300 100% 50%;
+    --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.5rem;
     --chart-1: 222.2 47.4% 11.2%;
@@ -50,8 +50,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 300 100% 50%;
-    --primary-foreground: 300 0% 100%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -59,15 +59,15 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 182 100% 74%;
-    --accent-foreground: 222.2 47.4% 11.2%; /* Dark for contrast on light blue */
+    --accent: 173 80% 40%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 300 100% 50%;
+    --ring: 217.2 91.2% 59.8%;
     --chart-1: 210 40% 98%;
     --chart-2: 217.2 32.6% 17.5%;
     --chart-3: 222.2 47.4% 11.2%;
@@ -82,34 +82,5 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer utilities {
-  .animated-gradient {
-    background-image: linear-gradient(
-      -45deg,
-      hsl(var(--primary)),
-      #c084fc,
-      hsl(var(--accent)),
-      hsl(var(--primary))
-    );
-    background-size: 300% 300%;
-    animation: gradient 10s ease infinite;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  @keyframes gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
   }
 }

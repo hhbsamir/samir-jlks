@@ -89,7 +89,7 @@ export default function Home() {
 
       <div className="text-center mb-12 mt-8">
         <div className="animate-fade-in-down">
-           <h1 className="text-4xl md:text-6xl font-extrabold font-headline animated-gradient">
+           <h1 className="text-4xl md:text-6xl font-extrabold font-headline text-primary">
               JAGANNATH LALIT KALA SANSAD, PARADIP
             </h1>
            <p className="text-base mt-2 text-foreground/70">🙏 ଜୟ ଶ୍ରୀ ଜଗନ୍ନାଥ 🙏</p>
