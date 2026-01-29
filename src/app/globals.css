@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 300 47% 88%; /* #F0D0F0 */
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 300 100% 50%; /* #FF00FF */
+    --primary-foreground: 300 0% 100%; /* White for better contrast on magenta */
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,15 +22,15 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 181 100% 74%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 182 100% 74%; /* #7DF9FF */
+    --accent-foreground: 222.2 47.4% 11.2%; /* Dark for contrast on light blue */
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 142.1 76.2% 36.3%;
+    --ring: 300 100% 50%;
 
     --radius: 0.5rem;
     --chart-1: 222.2 47.4% 11.2%;
@@ -50,8 +50,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 300 100% 50%;
+    --primary-foreground: 300 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -59,15 +59,15 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 181 100% 74%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 182 100% 74%;
+    --accent-foreground: 222.2 47.4% 11.2%; /* Dark for contrast on light blue */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 142.1 76.2% 36.3%;
+    --ring: 300 100% 50%;
     --chart-1: 210 40% 98%;
     --chart-2: 217.2 32.6% 17.5%;
     --chart-3: 222.2 47.4% 11.2%;
@@ -89,11 +89,10 @@
   .animated-gradient {
     background-image: linear-gradient(
       -45deg,
-      #4f46e5,
-      #d946ef,
-      #f97316,
-      #d946ef,
-      #4f46e5
+      hsl(var(--primary)),
+      #c084fc,
+      hsl(var(--accent)),
+      hsl(var(--primary))
     );
     background-size: 300% 300%;
     animation: gradient 10s ease infinite;

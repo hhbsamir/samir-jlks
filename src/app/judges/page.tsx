@@ -361,12 +361,12 @@ export default function JudgesPage() {
                         <button
                             onClick={() => handleJudgeSelection(judge)}
                             className={cn(
-                                'relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-background bg-card'
+                                'relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center text-white font-bold text-5xl shadow-lg transition-all duration-300 transform group-hover:scale-110 group-hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background bg-card/80 backdrop-blur-sm border-2 border-white/50'
                             )}
                         >
                             <Avatar className="h-full w-full">
                                 <AvatarImage src={judge.imageUrl} alt={judge.name} />
-                                <AvatarFallback className="text-muted-foreground">
+                                <AvatarFallback className="bg-primary/20 text-primary">
                                     <User className="w-16 h-16 sm:w-20 sm:h-20" />
                                 </AvatarFallback>
                             </Avatar>

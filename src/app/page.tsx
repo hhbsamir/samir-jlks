@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import Image from 'next/image';
 import type { HomePageContent } from '@/lib/data';
@@ -19,7 +18,7 @@ import { getHomePageContent } from './actions';
 
 const PortalCard = ({ href, icon, title, className }: { href: string, icon: React.ReactNode, title: string, className: string }) => (
     <Link href={href} className="w-full">
-        <div className={`relative flex flex-col items-center justify-center p-8 sm:p-12 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 group bg-gradient-to-br ${className}`}>
+        <div className={`relative flex flex-col items-center justify-center p-8 sm:p-12 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 group ${className}`}>
             <div className="z-10 flex flex-col items-center text-center">
                 {icon}
                 <h2 className="mt-4 text-2xl sm:text-3xl font-bold font-headline">{title}</h2>
@@ -133,13 +132,13 @@ export default function Home() {
           href="/judges"
           icon={<Gavel className="w-12 h-12 sm:w-16 sm:h-16" />}
           title="Judge's Portal"
-          className="from-teal-400 to-green-500 text-white"
+          className="bg-primary text-primary-foreground"
         />
         <PortalCard
           href="/organizers"
           icon={<Crown className="w-12 h-12 sm:w-16 sm:h-16" />}
           title="Organizer's Dashboard"
-          className="from-pink-500 to-red-500 text-white"
+          className="bg-accent text-accent-foreground"
         />
       </div>
 
